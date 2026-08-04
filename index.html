@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ARTUR ARAUJO | Portfolio</title>
+  <meta name="description" content="Portfólio de Artur Araújo - Desenvolvedor & Criativo">
+  
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- Fullscreen Cinema Looping Video & Overlays -->
+  <div class="video-background-wrapper">
+    <video id="bg-video" autoplay loop muted playsinline preload="auto">
+      <source src="assets/videos/bg-cinema.mp4" type="video/mp4">
+      <source src="https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4" type="video/mp4">
+    </video>
+    <div class="video-overlay"></div>
+    <div class="projection-beam"></div>
+    <div class="film-grain-overlay"></div>
+    <div class="film-scratches-overlay"></div>
+    <div class="soft-vignette"></div>
+  </div>
+  <div class="cursor-shadow" id="cursor-shadow"></div>
+
+  <!-- Main Content Centered -->
+  <main class="hero-container">
+    <div class="content-box">
+      <h1 class="brand-title" id="main-title" data-text="ARTUR ARAUJO">ARTUR ARAUJO</h1>
+      
+      <p class="brand-subtitle">
+        <span class="subtitle-text" data-text="VFX GENERALIST">VFX GENERALIST</span>
+      </p>
+      
+      <div class="action-wrapper">
+        <a href="featured-work.html" class="enter-btn" id="enter-button" aria-label="Entrar no portfólio">
+          <span class="btn-text" data-text="ENTER">ENTER</span>
+        </a>
+      </div>
+    </div>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>

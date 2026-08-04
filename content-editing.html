@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ARTUR ARAUJO | Content Editing</title>
+  <meta name="description" content="Edição de Conteúdo & Montagem Cinematográfica por Artur Araújo">
+  
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="page-scrollable">
+  <!-- Fullscreen Cinema Looping Video & Overlays -->
+  <div class="video-background-wrapper">
+    <video id="bg-video" autoplay loop muted playsinline preload="auto">
+      <source src="assets/videos/bg-cinema.mp4" type="video/mp4">
+      <source src="https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4" type="video/mp4">
+    </video>
+    <div class="video-overlay"></div>
+    <div class="projection-beam"></div>
+    <div class="film-grain-overlay"></div>
+    <div class="film-scratches-overlay"></div>
+    <div class="soft-vignette"></div>
+  </div>
+  <div class="cursor-shadow" id="cursor-shadow"></div>
+
+  <!-- Navigation Header -->
+  <header class="nav-header">
+    <a href="index.html" class="nav-brand" data-text="ARTUR ARAUJO">ARTUR ARAUJO</a>
+    <button class="nav-toggle" id="nav-toggle" aria-label="Abrir Menu">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+    <nav>
+      <ul class="nav-menu" id="nav-menu">
+        <li class="nav-item"><a href="featured-work.html" class="nav-link">FEATURED WORK</a></li>
+        <li class="nav-item"><a href="content-editing.html" class="nav-link active">CONTENT EDITING</a></li>
+        <li class="nav-item"><a href="digital-alchemy.html" class="nav-link">DIGITAL ALCHEMY</a></li>
+        <li class="nav-item"><a href="contact.html" class="nav-link">CONTACT</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <!-- Main Content Page -->
+  <main class="page-container">
+    <header class="section-header">
+      <h1 class="section-title" data-text="CONTENT EDITING">CONTENT EDITING</h1>
+      <p class="section-subtitle">Montagem Narrativa, Edição Comercial, Ritmo & Color Grading Cinematográfico</p>
+    </header>
+
+    <!-- Filter Bar -->
+    <div class="filter-bar">
+      <button class="filter-btn active" data-filter="all">TODAS AS EDIÇÕES</button>
+      <button class="filter-btn" data-filter="commercial">COMERCIAIS</button>
+      <button class="filter-btn" data-filter="music">MUSIC VIDEOS</button>
+      <button class="filter-btn" data-filter="reels">HIGH-IMPACT REELS</button>
+    </div>
+
+    <!-- Portfolio Grid -->
+    <div class="portfolio-grid">
+      <!-- Project Card 1 -->
+      <article class="project-card" data-category="commercial">
+        <div class="card-thumb">
+          <video autoplay loop muted playsinline poster="assets/videos/bg-cinema.mp4">
+            <source src="assets/videos/bg-cinema.mp4" type="video/mp4">
+          </video>
+          <span class="card-overlay-tag">COMMERCIAL CUT</span>
+        </div>
+        <div class="card-body">
+          <span class="card-role">VIDEO EDITOR</span>
+          <h2 class="card-title">URBAN RHYTHM</h2>
+          <p class="card-desc">Corte comercial dinâmico focado em sync musical preciso, ritmo vertiginoso e sound design envolvente.</p>
+          <div class="card-tech">
+            <span class="tech-badge">PREMIERE PRO</span>
+            <span class="tech-badge">SOUND DESIGN</span>
+            <span class="tech-badge">SPEED RAMPING</span>
+          </div>
+        </div>
+      </article>
+
+      <!-- Project Card 2 -->
+      <article class="project-card" data-category="music">
+        <div class="card-thumb">
+          <video autoplay loop muted playsinline poster="assets/videos/bg-cinema.mp4">
+            <source src="https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4" type="video/mp4">
+          </video>
+          <span class="card-overlay-tag">MUSIC VIDEO</span>
+        </div>
+        <div class="card-body">
+          <span class="card-role">EDITOR & COLORIST</span>
+          <h2 class="card-title">ECHOES IN THE DARK</h2>
+          <p class="card-desc">Videoclipe com estética 16mm analog, cortes invisíveis e tratamento de cor em DaVinci Resolve com curvas Kodak 5219.</p>
+          <div class="card-tech">
+            <span class="tech-badge">DAVINCI RESOLVE</span>
+            <span class="tech-badge">COLOR GRADING</span>
+            <span class="tech-badge">FILM EMULATION</span>
+          </div>
+        </div>
+      </article>
+
+      <!-- Project Card 3 -->
+      <article class="project-card" data-category="reels">
+        <div class="card-thumb">
+          <video autoplay loop muted playsinline poster="assets/videos/bg-cinema.mp4">
+            <source src="assets/videos/bg-cinema.mp4" type="video/mp4">
+          </video>
+          <span class="card-overlay-tag">EDITORIAL REEL</span>
+        </div>
+        <div class="card-body">
+          <span class="card-role">LEAD EDITOR</span>
+          <h2 class="card-title">CINEMATIC SHOWREEL 2026</h2>
+          <p class="card-desc">Compilação dos melhores trabalhos de edição, destacando técnicas avançadas de match cut e estrutura narrativa visual.</p>
+          <div class="card-tech">
+            <span class="tech-badge">PREMIERE PRO</span>
+            <span class="tech-badge">AFTER EFFECTS</span>
+            <span class="tech-badge">AUDIO MIXING</span>
+          </div>
+        </div>
+      </article>
+    </div>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ARTUR ARAUJO | Contact</title>
+  <meta name="description" content="Entre em contato com Artur Araújo para projetos de VFX, Edição e Direção 3D">
+  
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="page-scrollable">
+  <!-- Fullscreen Cinema Looping Video & Overlays -->
+  <div class="video-background-wrapper">
+    <video id="bg-video" autoplay loop muted playsinline preload="auto">
+      <source src="assets/videos/bg-cinema.mp4" type="video/mp4">
+      <source src="https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4" type="video/mp4">
+    </video>
+    <div class="video-overlay"></div>
+    <div class="projection-beam"></div>
+    <div class="film-grain-overlay"></div>
+    <div class="film-scratches-overlay"></div>
+    <div class="soft-vignette"></div>
+  </div>
+  <div class="cursor-shadow" id="cursor-shadow"></div>
+
+  <!-- Navigation Header -->
+  <header class="nav-header">
+    <a href="index.html" class="nav-brand" data-text="ARTUR ARAUJO">ARTUR ARAUJO</a>
+    <button class="nav-toggle" id="nav-toggle" aria-label="Abrir Menu">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+    <nav>
+      <ul class="nav-menu" id="nav-menu">
+        <li class="nav-item"><a href="featured-work.html" class="nav-link">FEATURED WORK</a></li>
+        <li class="nav-item"><a href="content-editing.html" class="nav-link">CONTENT EDITING</a></li>
+        <li class="nav-item"><a href="digital-alchemy.html" class="nav-link">DIGITAL ALCHEMY</a></li>
+        <li class="nav-item"><a href="contact.html" class="nav-link active">CONTACT</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <!-- Main Content Page -->
+  <main class="page-container">
+    <header class="section-header">
+      <h1 class="section-title" data-text="CONTACT">CONTACT</h1>
+      <p class="section-subtitle">Disponível para Produções Cinematográficas, Projetos VFX & Consultoria Criativa</p>
+    </header>
+
+    <div class="contact-wrapper">
+      <!-- Left Column: Direct Info -->
+      <div class="contact-info">
+        <div class="status-box">
+          <div class="status-dot"></div>
+          <span class="status-text">DISPONÍVEL PARA PROJETOS Q3/Q4</span>
+        </div>
+
+        <div class="contact-channels">
+          <div class="channel-item">
+            <span class="channel-label">EMAIL DIRETO</span>
+            <a href="mailto:contact@arturaraujo.com" class="channel-value">contact@arturaraujo.com</a>
+          </div>
+
+          <div class="channel-item">
+            <span class="channel-label">LOCALIZAÇÃO</span>
+            <span class="channel-value">SÃO PAULO & REMOTO WORLDWIDE</span>
+          </div>
+
+          <div class="channel-item">
+            <span class="channel-label">REPRESENTAÇÃO</span>
+            <span class="channel-value">FREELANCE & BOUTIQUE VFX STUDIO</span>
+          </div>
+        </div>
+
+        <div class="social-grid">
+          <a href="https://instagram.com" target="_blank" rel="noopener" class="social-link">INSTAGRAM</a>
+          <a href="https://vimeo.com" target="_blank" rel="noopener" class="social-link">VIMEO</a>
+          <a href="https://artstation.com" target="_blank" rel="noopener" class="social-link">ARTSTATION</a>
+          <a href="https://linkedin.com" target="_blank" rel="noopener" class="social-link">LINKEDIN</a>
+        </div>
+      </div>
+
+      <!-- Right Column: Form -->
+      <form class="contact-form" id="contact-form" onsubmit="event.preventDefault(); alert('Mensagem enviada com sucesso! Artur entrará em contato em breve.');">
+        <div class="form-group">
+          <label class="form-label" for="name">SEU NOME / EMPRESA</label>
+          <input type="text" id="name" class="form-input" placeholder="Ex: Maria Silva / Produtora X" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="email">SEU EMAIL DE CONTATO</label>
+          <input type="email" id="email" class="form-input" placeholder="email@dominio.com" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="category">CATEGORIA DO PROJETO</label>
+          <select id="category" class="form-select" required>
+            <option value="" disabled selected>SELECIONE O TIPO DE SERVIÇO</option>
+            <option value="vfx">VFX & COMPOSITING</option>
+            <option value="editing">CONTENT EDITING & MONTAGEM</option>
+            <option value="alchemy">DIGITAL ALCHEMY & 3D SIMULATION</option>
+            <option value="full">DIREÇÃO COMPLETA DE PÓS-PRODUÇÃO</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="message">DETALHES DO PROJETO & DEADLINE</label>
+          <textarea id="message" class="form-textarea" placeholder="Descreva brevemente o projeto, escopo e prazos esperados..." required></textarea>
+        </div>
+
+        <button type="submit" class="submit-btn">ENVIAR MENSAGEM</button>
+      </form>
+    </div>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
