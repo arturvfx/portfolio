@@ -2,4 +2,4 @@ User-agent: *
 Allow: /
 Disallow: /admin.html
 
-# Add the absolute sitemap URL here after the final domain is connected.
+Sitemap: https://arturaraujo.com/sitemap.xml

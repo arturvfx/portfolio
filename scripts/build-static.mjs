@@ -17,6 +17,7 @@ const publicFiles = [
   'project-detail.js',
   'project.html',
   'robots.txt',
+  'sitemap.xml',
   'script.js',
   'styles.css'
 ];

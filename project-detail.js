@@ -337,6 +337,10 @@ function updateProjectMetadata(project) {
   document.querySelector('meta[property="og:title"]')?.setAttribute('content', title);
   document.querySelector('meta[property="og:description"]')?.setAttribute('content', description);
 
+  const canonicalUrl = `https://arturaraujo.com/project.html?slug=${encodeURIComponent(project.slug)}`;
+  document.querySelector('link[rel="canonical"]')?.setAttribute('href', canonicalUrl);
+  setProjectMeta('property', 'og:url', canonicalUrl);
+
   if (project.coverImage) {
     const imageUrl = new URL(project.coverImage, window.location.href).href;
     setProjectMeta('property', 'og:image', imageUrl);
