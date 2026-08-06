@@ -1,130 +1,15 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, follow">
   <title>ARTUR ARAUJO | Digital Alchemy</title>
-  <meta name="description" content="Digital Alchemy, 3D Procedural & Arte Generativa por Artur Araújo">
-  
-  <!-- Google Fonts: Inter -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
-  
-  <link rel="stylesheet" href="styles.css">
+  <meta http-equiv="refresh" content="0; url=gallery.html?section=digital-alchemy">
+  <link rel="canonical" href="gallery.html?section=digital-alchemy">
 </head>
-<body class="page-scrollable">
-  <!-- Fullscreen Cinema Looping Video & Overlays -->
-  <div class="video-background-wrapper">
-    <video id="bg-video" autoplay loop muted playsinline preload="auto">
-      <source src="assets/videos/bg-cinema.mp4" type="video/mp4">
-      <source src="https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4" type="video/mp4">
-    </video>
-    <div class="video-overlay"></div>
-    <div class="projection-beam"></div>
-    <div class="film-grain-overlay"></div>
-    <div class="film-scratches-overlay"></div>
-    <div class="soft-vignette"></div>
-  </div>
-  <div class="cursor-shadow" id="cursor-shadow"></div>
-
-  <!-- Navigation Header -->
-  <header class="nav-header">
-    <a href="index.html" class="nav-brand" data-text="ARTUR ARAUJO">ARTUR ARAUJO</a>
-    <button class="nav-toggle" id="nav-toggle" aria-label="Abrir Menu">
-      <span></span>
-      <span></span>
-      <span></span>
-    </button>
-    <nav>
-      <ul class="nav-menu" id="nav-menu">
-        <li class="nav-item"><a href="featured-work.html" class="nav-link">FEATURED WORK</a></li>
-        <li class="nav-item"><a href="content-editing.html" class="nav-link">CONTENT EDITING</a></li>
-        <li class="nav-item"><a href="digital-alchemy.html" class="nav-link active">DIGITAL ALCHEMY</a></li>
-        <li class="nav-item"><a href="contact.html" class="nav-link">CONTACT</a></li>
-      </ul>
-    </nav>
-  </header>
-
-  <!-- Main Content Page -->
-  <main class="page-container">
-    <header class="section-header">
-      <h1 class="section-title" data-text="DIGITAL ALCHEMY">DIGITAL ALCHEMY</h1>
-      <p class="section-subtitle">Laboratório de Experimentos 3D, CGI Procedural, Shaders & Arte Digital Generativa</p>
-    </header>
-
-    <!-- Filter Bar -->
-    <div class="filter-bar">
-      <button class="filter-btn active" data-filter="all">TODAS AS ALQUIMIAS</button>
-      <button class="filter-btn" data-filter="procedural">PROCEDURAL & SIMULATION</button>
-      <button class="filter-btn" data-filter="shaders">SHADERS & LIGHTING</button>
-      <button class="filter-btn" data-filter="experimental">EXPERIMENTAL R&D</button>
-    </div>
-
-    <!-- Portfolio Grid -->
-    <div class="portfolio-grid">
-      <!-- Project Card 1 -->
-      <article class="project-card" data-category="procedural">
-        <div class="card-thumb">
-          <video autoplay loop muted playsinline poster="assets/videos/bg-cinema.mp4">
-            <source src="assets/videos/bg-cinema.mp4" type="video/mp4">
-          </video>
-          <span class="card-overlay-tag">PROCEDURAL R&D</span>
-        </div>
-        <div class="card-body">
-          <span class="card-role">TECHNICAL ARTIST</span>
-          <h2 class="card-title">QUANTUM FLUIDS</h2>
-          <p class="card-desc">Simulação de mecânica de fluidos não-newtonianos em Houdini com dispersão de luz volumétrica e caustics físicos.</p>
-          <div class="card-tech">
-            <span class="tech-badge">HOUDINI VOP</span>
-            <span class="tech-badge">KARMA RENDER</span>
-            <span class="tech-badge">OPENGL SHADERS</span>
-          </div>
-        </div>
-      </article>
-
-      <!-- Project Card 2 -->
-      <article class="project-card" data-category="shaders">
-        <div class="card-thumb">
-          <video autoplay loop muted playsinline poster="assets/videos/bg-cinema.mp4">
-            <source src="https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4" type="video/mp4">
-          </video>
-          <span class="card-overlay-tag">SHADER ART</span>
-        </div>
-        <div class="card-body">
-          <span class="card-role">SHADER DEVELOPER</span>
-          <h2 class="card-title">ANALOG MEMORY SHADER</h2>
-          <p class="card-desc">Algoritmo customizado de aberração cromática, grão de filme óptico e lente de projeção desenvolvido para Unreal Engine 5.</p>
-          <div class="card-tech">
-            <span class="tech-badge">HLSL / GLSL</span>
-            <span class="tech-badge">UNREAL ENGINE 5</span>
-            <span class="tech-badge">POST-PROCESS</span>
-          </div>
-        </div>
-      </article>
-
-      <!-- Project Card 3 -->
-      <article class="project-card" data-category="experimental">
-        <div class="card-thumb">
-          <video autoplay loop muted playsinline poster="assets/videos/bg-cinema.mp4">
-            <source src="assets/videos/bg-cinema.mp4" type="video/mp4">
-          </video>
-          <span class="card-overlay-tag">COMPOSITING LAB</span>
-        </div>
-        <div class="card-body">
-          <span class="card-role">CREATIVE TECHNOLOGIST</span>
-          <h2 class="card-title">KINETIC GEOMETRY</h2>
-          <p class="card-desc">Estudo experimental de formas geométricas vivas guiadas por frequências de áudio com distorção de refração óptica em tempo real.</p>
-          <div class="card-tech">
-            <span class="tech-badge">TOUCHDESIGNER</span>
-            <span class="tech-badge">BLENDER GEONODES</span>
-            <span class="tech-badge">OCTANE</span>
-          </div>
-        </div>
-      </article>
-    </div>
-  </main>
-
-  <script src="script.js"></script>
+<body>
+  <p><a href="gallery.html?section=digital-alchemy">Open Digital Alchemy</a></p>
+  <script>window.location.replace('gallery.html?section=digital-alchemy');</script>
 </body>
 </html>

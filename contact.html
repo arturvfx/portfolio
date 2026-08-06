@@ -1,124 +1,116 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="en" class="page-scrollable-root">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ARTUR ARAUJO | Contact</title>
-  <meta name="description" content="Entre em contato com Artur Araújo para projetos de VFX, Edição e Direção 3D">
+  <meta name="description" content="Contact Artur Araujo for VFX, editing and 3D direction projects">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#070709">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="ARTUR ARAUJO">
+  <meta property="og:title" content="ARTUR ARAUJO | Contact">
+  <meta property="og:description" content="Contact Artur Araujo for VFX, editing and 3D direction projects.">
+  <meta name="twitter:card" content="summary">
   
-  <!-- Google Fonts: Inter -->
+  <!-- Google Fonts: Inter + Inter Tight -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@600;700;800;900&family=Inter:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
   
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css?v=20260805-mobile-readiness">
+  <script src="config/site-settings.js?v=20260805-contact-english"></script>
 </head>
-<body class="page-scrollable">
-  <!-- Fullscreen Cinema Looping Video & Overlays -->
-  <div class="video-background-wrapper">
-    <video id="bg-video" autoplay loop muted playsinline preload="auto">
-      <source src="assets/videos/bg-cinema.mp4" type="video/mp4">
-      <source src="https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4" type="video/mp4">
-    </video>
-    <div class="video-overlay"></div>
-    <div class="projection-beam"></div>
-    <div class="film-grain-overlay"></div>
-    <div class="film-scratches-overlay"></div>
-    <div class="soft-vignette"></div>
-  </div>
+<body class="page-scrollable contact-page">
   <div class="cursor-shadow" id="cursor-shadow"></div>
 
   <!-- Navigation Header -->
   <header class="nav-header">
-    <a href="index.html" class="nav-brand" data-text="ARTUR ARAUJO">ARTUR ARAUJO</a>
-    <button class="nav-toggle" id="nav-toggle" aria-label="Abrir Menu">
+    <a href="index.html" class="nav-brand" data-text="ARTUR ARAUJO" aria-label="ARTUR ARAUJO — home">ARTUR ARAUJO</a>
+    <button class="nav-toggle" id="nav-toggle" aria-label="Open menu" aria-controls="nav-menu" aria-expanded="false">
       <span></span>
       <span></span>
       <span></span>
     </button>
     <nav>
-      <ul class="nav-menu" id="nav-menu">
-        <li class="nav-item"><a href="featured-work.html" class="nav-link">FEATURED WORK</a></li>
-        <li class="nav-item"><a href="content-editing.html" class="nav-link">CONTENT EDITING</a></li>
-        <li class="nav-item"><a href="digital-alchemy.html" class="nav-link">DIGITAL ALCHEMY</a></li>
-        <li class="nav-item"><a href="contact.html" class="nav-link active">CONTACT</a></li>
-      </ul>
+      <ul class="nav-menu" id="nav-menu"></ul>
     </nav>
   </header>
 
-  <!-- Main Content Page -->
-  <main class="page-container">
-    <header class="section-header">
-      <h1 class="section-title" data-text="CONTACT">CONTACT</h1>
-      <p class="section-subtitle">Disponível para Produções Cinematográficas, Projetos VFX & Consultoria Criativa</p>
+  <main class="page-container contact-page-container">
+    <header class="contact-page-header">
+      <p class="contact-page-kicker">CONTACT</p>
+      <h1 class="contact-page-title" data-site-setting="contact-title">LET'S WORK TOGETHER</h1>
+      <p class="contact-page-intro" data-site-setting="contact-intro">Available for film productions, VFX projects and creative consulting.</p>
     </header>
 
     <div class="contact-wrapper">
-      <!-- Left Column: Direct Info -->
-      <div class="contact-info">
-        <div class="status-box">
-          <div class="status-dot"></div>
-          <span class="status-text">DISPONÍVEL PARA PROJETOS Q3/Q4</span>
+      <aside class="contact-info" aria-label="Contact information">
+        <div class="contact-info-item">
+          <span class="contact-info-label">STATUS</span>
+          <span class="contact-info-value" data-site-setting="contact-availability">AVAILABLE FOR NEW PROJECTS</span>
+        </div>
+        <div class="contact-info-item">
+          <span class="contact-info-label">LOCATION</span>
+          <span class="contact-info-value" data-site-setting="contact-location">SÃO PAULO / REMOTE WORLDWIDE</span>
+        </div>
+        <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" class="contact-instagram-link" data-site-setting="footer-instagram-url">
+          <span data-site-setting="footer-instagram-label">INSTAGRAM</span>
+          <span aria-hidden="true">↗</span>
+        </a>
+      </aside>
+
+      <form class="contact-form" id="contact-form" novalidate aria-describedby="contact-form-status">
+        <div class="form-group">
+          <label class="form-label" for="name">YOUR NAME / COMPANY</label>
+          <input type="text" id="name" name="name" class="form-input" placeholder="E.g. Maria Silva / Production Company" minlength="2" maxlength="100" autocomplete="name" required>
         </div>
 
-        <div class="contact-channels">
-          <div class="channel-item">
-            <span class="channel-label">EMAIL DIRETO</span>
-            <a href="mailto:contact@arturaraujo.com" class="channel-value">contact@arturaraujo.com</a>
+        <div class="form-group">
+          <label class="form-label" for="email">YOUR CONTACT EMAIL</label>
+          <input type="email" id="email" name="email" class="form-input" placeholder="email@domain.com" maxlength="254" autocomplete="email" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="category">PROJECT CATEGORY</label>
+          <div class="contact-category-fields" id="contact-category-fields">
+            <select id="category" name="category" class="form-select" required>
+              <option value="" disabled selected>SELECT A SERVICE</option>
+              <option value="vfx" data-site-setting="contact-category-vfx">VFX & COMPOSITING</option>
+              <option value="editing" data-site-setting="contact-category-editing">CONTENT EDITING</option>
+              <option value="alchemy" data-site-setting="contact-category-alchemy">DIGITAL ALCHEMY & 3D SIMULATION</option>
+              <option value="full" data-site-setting="contact-category-full">POST-PRODUCTION DIRECTION</option>
+              <option value="other" data-site-setting="contact-category-other">OTHER</option>
+            </select>
+            <input type="text" id="category-other" name="categoryOther" class="form-input contact-category-other" placeholder="ENTER A CATEGORY" aria-label="Other project category" minlength="2" maxlength="80" autocomplete="off" hidden>
           </div>
-
-          <div class="channel-item">
-            <span class="channel-label">LOCALIZAÇÃO</span>
-            <span class="channel-value">SÃO PAULO & REMOTO WORLDWIDE</span>
-          </div>
-
-          <div class="channel-item">
-            <span class="channel-label">REPRESENTAÇÃO</span>
-            <span class="channel-value">FREELANCE & BOUTIQUE VFX STUDIO</span>
-          </div>
-        </div>
-
-        <div class="social-grid">
-          <a href="https://instagram.com" target="_blank" rel="noopener" class="social-link">INSTAGRAM</a>
-          <a href="https://vimeo.com" target="_blank" rel="noopener" class="social-link">VIMEO</a>
-          <a href="https://artstation.com" target="_blank" rel="noopener" class="social-link">ARTSTATION</a>
-          <a href="https://linkedin.com" target="_blank" rel="noopener" class="social-link">LINKEDIN</a>
-        </div>
-      </div>
-
-      <!-- Right Column: Form -->
-      <form class="contact-form" id="contact-form" onsubmit="event.preventDefault(); alert('Mensagem enviada com sucesso! Artur entrará em contato em breve.');">
-        <div class="form-group">
-          <label class="form-label" for="name">SEU NOME / EMPRESA</label>
-          <input type="text" id="name" class="form-input" placeholder="Ex: Maria Silva / Produtora X" required>
         </div>
 
         <div class="form-group">
-          <label class="form-label" for="email">SEU EMAIL DE CONTATO</label>
-          <input type="email" id="email" class="form-input" placeholder="email@dominio.com" required>
+          <label class="form-label" for="message">PROJECT DETAILS & DEADLINE</label>
+          <textarea id="message" name="message" class="form-textarea" placeholder="Briefly describe the project, scope and expected timeline..." minlength="20" maxlength="5000" required></textarea>
         </div>
 
-        <div class="form-group">
-          <label class="form-label" for="category">CATEGORIA DO PROJETO</label>
-          <select id="category" class="form-select" required>
-            <option value="" disabled selected>SELECIONE O TIPO DE SERVIÇO</option>
-            <option value="vfx">VFX & COMPOSITING</option>
-            <option value="editing">CONTENT EDITING & MONTAGEM</option>
-            <option value="alchemy">DIGITAL ALCHEMY & 3D SIMULATION</option>
-            <option value="full">DIREÇÃO COMPLETA DE PÓS-PRODUÇÃO</option>
-          </select>
+        <div class="contact-honeypot" aria-hidden="true">
+          <label for="website">Website</label>
+          <input type="text" id="website" name="website" tabindex="-1" autocomplete="off">
         </div>
 
-        <div class="form-group">
-          <label class="form-label" for="message">DETALHES DO PROJETO & DEADLINE</label>
-          <textarea id="message" class="form-textarea" placeholder="Descreva brevemente o projeto, escopo e prazos esperados..." required></textarea>
-        </div>
-
-        <button type="submit" class="submit-btn">ENVIAR MENSAGEM</button>
+        <button type="submit" class="submit-btn" data-site-setting="contact-submit-label">SEND MESSAGE</button>
+        <p id="contact-form-status" class="contact-form-status" role="status" aria-live="polite" hidden></p>
       </form>
     </div>
   </main>
 
-  <script src="script.js"></script>
+  <script src="config/page-configs.js?v=20260804-sections-2"></script>
+  <script src="admin/admin-storage.js?v=20260804-sections-2"></script>
+  <script src="portfolio.js?v=20260805-publication-readiness"></script>
+  <script>renderInitialGalleryNavigation();</script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config/supabase-config.js"></script>
+  <script>siteSettings.hydrate();</script>
+  <script src="data/supabase-service.js?v=20260804-youtube"></script>
+  <script src="components/contact-form.js?v=20260805-contact-english"></script>
+  <script src="script.js?v=20260805-mobile-readiness"></script>
 </body>
 </html>

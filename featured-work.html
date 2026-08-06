@@ -1,150 +1,15 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, follow">
   <title>ARTUR ARAUJO | Featured Work</title>
-  <meta name="description" content="Trabalhos em Destaque por Artur Araújo - VFX Generalist & Compositor">
-  
-  <!-- Google Fonts: Inter -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
-  
-  <link rel="stylesheet" href="styles.css">
+  <meta http-equiv="refresh" content="0; url=gallery.html?section=featured-work">
+  <link rel="canonical" href="gallery.html?section=featured-work">
 </head>
-<body class="page-scrollable">
-  <!-- Fullscreen Cinema Looping Video & Overlays -->
-  <div class="video-background-wrapper">
-    <video id="bg-video" autoplay loop muted playsinline preload="auto">
-      <source src="assets/videos/bg-cinema.mp4" type="video/mp4">
-      <source src="https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4" type="video/mp4">
-    </video>
-    <div class="video-overlay"></div>
-    <div class="projection-beam"></div>
-    <div class="film-grain-overlay"></div>
-    <div class="film-scratches-overlay"></div>
-    <div class="soft-vignette"></div>
-  </div>
-  <div class="cursor-shadow" id="cursor-shadow"></div>
-
-  <!-- Navigation Header -->
-  <header class="nav-header">
-    <a href="index.html" class="nav-brand" data-text="ARTUR ARAUJO">ARTUR ARAUJO</a>
-    <button class="nav-toggle" id="nav-toggle" aria-label="Abrir Menu">
-      <span></span>
-      <span></span>
-      <span></span>
-    </button>
-    <nav>
-      <ul class="nav-menu" id="nav-menu">
-        <li class="nav-item"><a href="featured-work.html" class="nav-link active">FEATURED WORK</a></li>
-        <li class="nav-item"><a href="content-editing.html" class="nav-link">CONTENT EDITING</a></li>
-        <li class="nav-item"><a href="digital-alchemy.html" class="nav-link">DIGITAL ALCHEMY</a></li>
-        <li class="nav-item"><a href="contact.html" class="nav-link">CONTACT</a></li>
-      </ul>
-    </nav>
-  </header>
-
-  <!-- Main Content Page -->
-  <main class="page-container">
-    <header class="section-header">
-      <h1 class="section-title" data-text="FEATURED WORK">FEATURED WORK</h1>
-      <p class="section-subtitle">Destaques em Visual Effects, Compositing de Cinema e Direção 3D</p>
-    </header>
-
-    <!-- Filter Bar -->
-    <div class="filter-bar">
-      <button class="filter-btn active" data-filter="all">TODOS OS PROJETOS</button>
-      <button class="filter-btn" data-filter="vfx">VFX & COMPOSITING</button>
-      <button class="filter-btn" data-filter="simulation">SIMULAÇÕES 3D</button>
-      <button class="filter-btn" data-filter="commercial">COMERCIAIS & REELS</button>
-    </div>
-
-    <!-- Portfolio Project Grid -->
-    <div class="portfolio-grid">
-      <!-- Project Card 1 -->
-      <article class="project-card" data-category="vfx">
-        <div class="card-thumb">
-          <video autoplay loop muted playsinline poster="assets/videos/bg-cinema.mp4">
-            <source src="assets/videos/bg-cinema.mp4" type="video/mp4">
-          </video>
-          <span class="card-overlay-tag">COMPOSITING</span>
-        </div>
-        <div class="card-body">
-          <span class="card-role">LEAD COMPOSITOR</span>
-          <h2 class="card-title">NEON GATEWAY</h2>
-          <p class="card-desc">Integração CGI foto-realista de ambientes cyberpunk com substituição de fundo live-action e rotoscopia avançada.</p>
-          <div class="card-tech">
-            <span class="tech-badge">NUKE</span>
-            <span class="tech-badge">HOUDINI</span>
-            <span class="tech-badge">MATCHMOVE</span>
-          </div>
-        </div>
-      </article>
-
-      <!-- Project Card 2 -->
-      <article class="project-card" data-category="simulation">
-        <div class="card-thumb">
-          <video autoplay loop muted playsinline poster="assets/videos/bg-cinema.mp4">
-            <source src="https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4" type="video/mp4">
-          </video>
-          <span class="card-overlay-tag">FX SIMULATION</span>
-        </div>
-        <div class="card-body">
-          <span class="card-role">3D FX ARTIST</span>
-          <h2 class="card-title">CHRONO DUST</h2>
-          <p class="card-desc">Simulação procedural de partículas, desintegração volumétrica de fluidos e renderização fotorealista Octane/Karma.</p>
-          <div class="card-tech">
-            <span class="tech-badge">HOUDINI VELUM</span>
-            <span class="tech-badge">UNREAL 5</span>
-            <span class="tech-badge">REDSHIFT</span>
-          </div>
-        </div>
-      </article>
-
-      <!-- Project Card 3 -->
-      <article class="project-card" data-category="commercial">
-        <div class="card-thumb">
-          <video autoplay loop muted playsinline poster="assets/videos/bg-cinema.mp4">
-            <source src="assets/videos/bg-cinema.mp4" type="video/mp4">
-          </video>
-          <span class="card-overlay-tag">COMMERCIAL</span>
-        </div>
-        <div class="card-body">
-          <span class="card-role">VFX DIRECTING</span>
-          <h2 class="card-title">AETHERIA BRAND FILM</h2>
-          <p class="card-desc">Filme publicitário de alta escala com transições invisíveis de câmera, animação 3D e color grading estilo A24.</p>
-          <div class="card-tech">
-            <span class="tech-badge">AFTER EFFECTS</span>
-            <span class="tech-badge">DAVINCI RESOLVE</span>
-            <span class="tech-badge">BLENDER</span>
-          </div>
-        </div>
-      </article>
-
-      <!-- Project Card 4 -->
-      <article class="project-card" data-category="vfx">
-        <div class="card-thumb">
-          <video autoplay loop muted playsinline poster="assets/videos/bg-cinema.mp4">
-            <source src="https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4" type="video/mp4">
-          </video>
-          <span class="card-overlay-tag">CLEANUP & MATTE</span>
-        </div>
-        <div class="card-body">
-          <span class="card-role">SENIOR GENERALIST</span>
-          <h2 class="card-title">SILENT SHADOWS</h2>
-          <p class="card-desc">Matte painting digital 3D de cenários cinematográficos, rig de projeção e remoção de elementos indesejados de plate.</p>
-          <div class="card-tech">
-            <span class="tech-badge">PHOTOSHOP 3D</span>
-            <span class="tech-badge">NUKE X</span>
-            <span class="tech-badge">SYNTHEYES</span>
-          </div>
-        </div>
-      </article>
-    </div>
-  </main>
-
-  <script src="script.js"></script>
+<body>
+  <p><a href="gallery.html?section=featured-work">Open Featured Work</a></p>
+  <script>window.location.replace('gallery.html?section=featured-work');</script>
 </body>
 </html>

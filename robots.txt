@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /admin.html
+
+# Add the absolute sitemap URL here after the final domain is connected.

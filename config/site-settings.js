@@ -1,0 +1,166 @@
+/**
+ * Global public-site settings shared by the landing, contact and footer surfaces.
+ * Supabase is the public source of truth; localStorage is an immediate backup.
+ */
+(function () {
+  'use strict';
+
+  const STORAGE_KEY = 'portfolio-site-settings-v1';
+  const DEFAULTS = Object.freeze({
+    landingTitle: 'ARTUR ARAUJO',
+    landingSubtitle: 'VFX GENERALIST',
+    landingEnterLabel: 'ENTER',
+    landingBackgroundVideo: 'assets/videos/bg-cinema.mp4',
+    galleryBackgroundVideo: 'assets/videos/bg-cinema.mp4',
+    contactTitle: "LET'S WORK TOGETHER",
+    contactIntro: 'Available for film productions, VFX projects and creative consulting.',
+    contactAvailability: 'AVAILABLE FOR NEW PROJECTS',
+    contactLocation: 'SÃO PAULO / REMOTE WORLDWIDE',
+    contactSubmitLabel: 'SEND MESSAGE',
+    contactCategoryVfx: 'VFX & COMPOSITING',
+    contactCategoryEditing: 'CONTENT EDITING',
+    contactCategoryAlchemy: 'DIGITAL ALCHEMY & 3D SIMULATION',
+    contactCategoryFull: 'POST-PRODUCTION DIRECTION',
+    contactCategoryOther: 'OTHER',
+    footerTitle: "LET'S WORK TOGETHER",
+    footerContactLabel: 'CONTACT',
+    footerInstagramLabel: 'INSTAGRAM',
+    footerInstagramUrl: 'https://instagram.com',
+    footerCopyright: '© 2026 ARTUR ARAUJO'
+  });
+
+  function normalize(value) {
+    const source = value && typeof value === 'object' ? value : {};
+    return Object.keys(DEFAULTS).reduce((settings, key) => {
+      const candidate = typeof source[key] === 'string' ? source[key].trim() : '';
+      settings[key] = candidate || DEFAULTS[key];
+      return settings;
+    }, {});
+  }
+
+  function loadLocal() {
+    try {
+      const raw = window.localStorage.getItem(STORAGE_KEY);
+      return raw ? normalize(JSON.parse(raw)) : normalize(DEFAULTS);
+    } catch (error) {
+      return normalize(DEFAULTS);
+    }
+  }
+
+  function saveLocal(settings) {
+    const normalized = normalize(settings);
+    try {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized));
+    } catch (error) {
+      // Public rendering still works from the in-memory value.
+    }
+    return normalized;
+  }
+
+  function clearLocal() {
+    window.localStorage.removeItem(STORAGE_KEY);
+  }
+
+  function setText(selector, value, syncDataText) {
+    document.querySelectorAll(selector).forEach(element => {
+      element.textContent = value;
+      if (syncDataText) element.setAttribute('data-text', value);
+    });
+  }
+
+  function safeExternalUrl(value) {
+    try {
+      const url = new URL(value);
+      return ['http:', 'https:'].includes(url.protocol) ? url.toString() : DEFAULTS.footerInstagramUrl;
+    } catch (error) {
+      return DEFAULTS.footerInstagramUrl;
+    }
+  }
+
+  function apply(settings) {
+    const current = normalize(settings);
+    setText('[data-site-setting="landing-title"]', current.landingTitle, true);
+    setText('[data-site-setting="landing-subtitle"]', current.landingSubtitle, true);
+    setText('[data-site-setting="landing-enter-label"]', current.landingEnterLabel, true);
+    setText('[data-site-setting="contact-title"]', current.contactTitle, false);
+    setText('[data-site-setting="contact-intro"]', current.contactIntro, false);
+    setText('[data-site-setting="contact-availability"]', current.contactAvailability, false);
+    setText('[data-site-setting="contact-location"]', current.contactLocation, false);
+    setText('[data-site-setting="contact-submit-label"]', current.contactSubmitLabel, false);
+    setText('[data-site-setting="contact-category-vfx"]', current.contactCategoryVfx, false);
+    setText('[data-site-setting="contact-category-editing"]', current.contactCategoryEditing, false);
+    setText('[data-site-setting="contact-category-alchemy"]', current.contactCategoryAlchemy, false);
+    setText('[data-site-setting="contact-category-full"]', current.contactCategoryFull, false);
+    setText('[data-site-setting="contact-category-other"]', current.contactCategoryOther, false);
+    setText('[data-site-setting="footer-title"]', current.footerTitle, false);
+    setText('[data-site-setting="footer-contact-label"]', current.footerContactLabel, false);
+    setText('[data-site-setting="footer-instagram-label"]', current.footerInstagramLabel, false);
+    setText('[data-site-setting="footer-copyright"]', current.footerCopyright, false);
+
+    document.querySelectorAll('[data-site-setting="footer-instagram-url"]').forEach(link => {
+      link.href = safeExternalUrl(current.footerInstagramUrl);
+    });
+
+    applyVideoSource('landing-background-video', current.landingBackgroundVideo);
+    applyVideoSource('gallery-background-video', current.galleryBackgroundVideo);
+
+    if (document.querySelector('[data-site-setting="landing-title"]')) {
+      document.title = `${current.landingTitle} | Portfolio`;
+    }
+
+    return current;
+  }
+
+  function applyVideoSource(settingName, value) {
+    const videoSource = document.querySelector(`[data-site-setting="${settingName}"]`);
+    if (!videoSource || videoSource.getAttribute('src') === value) return;
+    videoSource.setAttribute('src', value);
+    videoSource.setAttribute(
+      'type',
+      value.toLowerCase().split('?')[0].endsWith('.webm') ? 'video/webm' : 'video/mp4'
+    );
+    const video = videoSource.closest('video');
+    if (video) video.load();
+  }
+
+  async function loadRemote() {
+    const config = window.SUPABASE_CONFIG || {};
+    if (!config.url || !config.publishableKey || !window.fetch) return null;
+    const endpoint = `${config.url.replace(/\/$/, '')}/rest/v1/portfolio_site_settings` +
+      '?select=settings&id=eq.global';
+    const response = await fetch(endpoint, {
+      headers: {
+        apikey: config.publishableKey,
+        Authorization: `Bearer ${config.publishableKey}`
+      }
+    });
+    if (!response.ok) throw new Error(`Site settings request failed (${response.status}).`);
+    const rows = await response.json();
+    return rows[0] && rows[0].settings ? normalize(rows[0].settings) : null;
+  }
+
+  async function hydrate() {
+    let current = apply(loadLocal());
+    try {
+      const remote = await loadRemote();
+      if (remote) current = apply(saveLocal(remote));
+    } catch (error) {
+      console.warn('Could not load remote site settings; using local defaults.', error);
+    } finally {
+      document.body.classList.remove('site-settings-loading');
+      document.body.classList.add('site-settings-ready');
+    }
+    return current;
+  }
+
+  window.SITE_SETTINGS_DEFAULTS = DEFAULTS;
+  window.siteSettings = {
+    STORAGE_KEY,
+    normalize,
+    loadLocal,
+    saveLocal,
+    clearLocal,
+    apply,
+    hydrate
+  };
+}());

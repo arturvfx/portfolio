@@ -1,29 +1,35 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ARTUR ARAUJO | Portfolio</title>
-  <meta name="description" content="Portfólio de Artur Araújo - Desenvolvedor & Criativo">
+  <meta name="description" content="Artur Araujo is a VFX generalist working across compositing, motion, editing and 3D.">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#030305">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="ARTUR ARAUJO">
+  <meta property="og:title" content="ARTUR ARAUJO | VFX Generalist">
+  <meta property="og:description" content="VFX, compositing, motion, editing and 3D portfolio by Artur Araujo.">
+  <meta name="twitter:card" content="summary">
   
-  <!-- Google Fonts: Inter -->
+  <!-- Google Fonts: Inter + Inter Tight -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@600;700;800;900&family=Inter:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
   
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css?v=20260805-mobile-readiness">
+  <script src="config/site-settings.js?v=20260805-separate-backgrounds"></script>
 </head>
-<body>
+<body class="landing-page site-settings-loading">
   <!-- Fullscreen Cinema Looping Video & Overlays -->
   <div class="video-background-wrapper">
     <video id="bg-video" autoplay loop muted playsinline preload="auto">
-      <source src="assets/videos/bg-cinema.mp4" type="video/mp4">
+      <source src="assets/videos/bg-cinema.mp4" type="video/mp4" data-site-setting="landing-background-video">
       <source src="https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4" type="video/mp4">
     </video>
     <div class="video-overlay"></div>
     <div class="projection-beam"></div>
-    <div class="film-grain-overlay"></div>
-    <div class="film-scratches-overlay"></div>
     <div class="soft-vignette"></div>
   </div>
   <div class="cursor-shadow" id="cursor-shadow"></div>
@@ -31,20 +37,26 @@
   <!-- Main Content Centered -->
   <main class="hero-container">
     <div class="content-box">
-      <h1 class="brand-title" id="main-title" data-text="ARTUR ARAUJO">ARTUR ARAUJO</h1>
+      <h1 class="brand-title" id="main-title" data-text="ARTUR ARAUJO" data-site-setting="landing-title">ARTUR ARAUJO</h1>
       
       <p class="brand-subtitle">
-        <span class="subtitle-text" data-text="VFX GENERALIST">VFX GENERALIST</span>
+        <span class="subtitle-text" data-text="VFX GENERALIST" data-site-setting="landing-subtitle">VFX GENERALIST</span>
       </p>
       
       <div class="action-wrapper">
-        <a href="featured-work.html" class="enter-btn" id="enter-button" aria-label="Entrar no portfólio">
-          <span class="btn-text" data-text="ENTER">ENTER</span>
+        <a href="gallery.html?section=featured-work" class="enter-btn" id="enter-button" aria-label="Enter portfolio">
+          <span class="btn-text" data-text="ENTER" data-site-setting="landing-enter-label">ENTER</span>
         </a>
       </div>
     </div>
   </main>
 
-  <script src="script.js"></script>
+  <!-- Film texture sits above the complete projection, including typography. -->
+  <div class="film-grain-overlay" aria-hidden="true"></div>
+  <div class="film-scratches-overlay" aria-hidden="true"></div>
+
+  <script src="config/supabase-config.js?v=20260804-public-db"></script>
+  <script>siteSettings.hydrate();</script>
+  <script src="script.js?v=20260805-mobile-readiness"></script>
 </body>
 </html>

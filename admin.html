@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portfolio Control Panel — Local Admin</title>
+  <meta name="robots" content="noindex, nofollow">
+  <style>
+    /* ── Reset & Base ─────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:         #0f1014;
+      --bg-surface: #181a20;
+      --bg-raised:  #1f2128;
+      --bg-hover:   #272a33;
+      --bg-selected:#252b3a;
+      --border:     rgba(255,255,255,0.08);
+      --border-focus: rgba(99,140,255,0.6);
+      --text-primary:   #e8eaf0;
+      --text-secondary: #8a8ea8;
+      --text-muted:     #555870;
+      --accent:     #638cff;
+      --accent-dim: rgba(99,140,255,0.15);
+      --success:    #3ecf8e;
+      --success-dim:rgba(62,207,142,0.12);
+      --warning:    #f5a623;
+      --error:      #e05c5c;
+      --error-dim:  rgba(224,92,92,0.12);
+      --tag-bg:     rgba(255,255,255,0.07);
+      --radius:     6px;
+      --radius-sm:  4px;
+      --font: 'Inter', system-ui, -apple-system, sans-serif;
+      --mono: 'JetBrains Mono', 'Fira Code', monospace;
+    }
+
+    html, body {
+      min-height: 100%;
+      background: var(--bg);
+      color: var(--text-primary);
+      font-family: var(--font);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .auth-gate {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      background: var(--bg);
+    }
+
+    .auth-gate[hidden] { display: none; }
+
+    .auth-card {
+      width: min(400px, 100%);
+      padding: 2rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--bg-surface);
+      box-shadow: 0 24px 80px rgba(0,0,0,0.45);
+    }
+
+    .auth-title {
+      margin-bottom: 0.35rem;
+      font-size: 16px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .auth-description {
+      margin-bottom: 1.5rem;
+      color: var(--text-secondary);
+      font-size: 12px;
+    }
+
+    .auth-fields { display: grid; gap: 1rem; }
+    .auth-actions { margin-top: 1.25rem; display: flex; align-items: center; gap: 0.75rem; }
+    .auth-actions .btn { flex-shrink: 0; }
+
+    #auth-error {
+      color: var(--error);
+      font-size: 11px;
+    }
+
+    #auth-user {
+      color: var(--text-muted);
+      font-size: 10px;
+      max-width: 180px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    /* ── Layout ───────────────────────────────────────────── */
+    .admin-layout {
+      display: grid;
+      grid-template-rows: auto auto auto;
+      grid-template-columns: 340px 1fr;
+      grid-template-areas:
+        "topbar  topbar"
+        "notice  notice"
+        "sidebar main";
+      min-height: 100vh;
+      height: auto;
+      overflow: visible;
+      align-content: start;
+    }
+
+    /* ── Top Bar ──────────────────────────────────────────── */
+    .topbar {
+      grid-area: topbar;
+      background: var(--bg-surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      padding: 0 1.25rem;
+      height: 52px;
+    }
+
+    .topbar-brand {
+      display: flex;
+      flex-direction: column;
+      line-height: 1.2;
+    }
+
+    .topbar-brand .brand-title {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-primary);
+    }
+
+    .topbar-brand .brand-sub {
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+
+    .topbar-sep {
+      width: 1px;
+      height: 24px;
+      background: var(--border);
+    }
+
+    .topbar-section-label {
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+    }
+
+    .topbar-section-select {
+      width: auto;
+      min-width: 180px;
+      padding: 0.4rem 2rem 0.4rem 0.65rem;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .topbar-actions {
+      display: flex;
+      gap: 0.5rem;
+      margin-left: auto;
+      align-items: center;
+    }
+
+    #admin-status {
+      display: none;
+      font-size: 12px;
+      padding: 0.3rem 0.75rem;
+      border-radius: var(--radius-sm);
+      max-width: 420px;
+      white-space: pre-wrap;
+    }
+
+    .status-success { background: var(--success-dim); color: var(--success); }
+    .status-error   { background: var(--error-dim);   color: var(--error);   }
+    .status-info    { background: var(--accent-dim);  color: var(--accent);  }
+
+    /* ── Override Notice ──────────────────────────────────── */
+    .override-notice {
+      grid-area: notice;
+      padding: 0.45rem 1.25rem;
+      font-size: 11px;
+      letter-spacing: 0.05em;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .override-active { background: rgba(245,166,35,0.1); color: var(--warning); }
+    .override-source { background: rgba(62,207,142,0.08); color: var(--success); }
+
+    /* ── Sidebar — Project List ───────────────────────────── */
+    .sidebar {
+      grid-area: sidebar;
+      background: var(--bg-surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: visible;
+    }
+
+    .sidebar-header {
+      padding: 0.85rem 1rem;
+      border-bottom: 1px solid var(--border);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      flex-shrink: 0;
+    }
+
+    #admin-project-list {
+      list-style: none;
+      overflow: visible;
+      flex: 1;
+    }
+
+    .project-list-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.65rem 1rem;
+      cursor: pointer;
+      border-bottom: 1px solid var(--border);
+      transition: background 0.15s;
+    }
+
+    .project-list-item:hover { background: var(--bg-hover); }
+    .project-list-item.selected { background: var(--bg-selected); border-left: 2px solid var(--accent); }
+
+    .list-item-thumb {
+      width: 60px;
+      height: 38px;
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      flex-shrink: 0;
+      background: var(--bg-raised);
+      display: grid;
+      place-items: center;
+    }
+
+    .list-item-thumb img,
+    .list-item-thumb video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .list-thumb-empty {
+      color: var(--text-muted);
+      font-size: 8px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .list-item-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .list-item-title {
+      font-size: 12px;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      color: var(--text-primary);
+      margin-bottom: 0.2rem;
+    }
+
+    .list-item-client {
+      font-size: 10px;
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-top: 0.2rem;
+    }
+
+    .list-item-meta {
+      display: flex;
+      gap: 0.3rem;
+      flex-wrap: wrap;
+    }
+
+    .tag {
+      font-size: 9px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 0.15rem 0.4rem;
+      border-radius: 3px;
+      background: var(--tag-bg);
+      color: var(--text-secondary);
+    }
+
+    .tag-pub   { background: var(--success-dim); color: var(--success); }
+    .tag-unpub { background: var(--error-dim); color: var(--error); }
+
+    .list-item-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+      flex-shrink: 0;
+    }
+
+    .btn-icon {
+      background: var(--bg-raised);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      width: 24px;
+      height: 24px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.12s, color 0.12s;
+      line-height: 1;
+    }
+
+    .btn-icon:hover:not([disabled]) { background: var(--bg-hover); color: var(--text-primary); }
+    .btn-icon[disabled] { opacity: 0.3; cursor: not-allowed; }
+
+    .list-empty {
+      padding: 2rem 1rem;
+      color: var(--text-muted);
+      font-size: 12px;
+      text-align: center;
+    }
+
+    /* ── Main — Edit Panel ────────────────────────────────── */
+    .main-panel {
+      grid-area: main;
+      display: flex;
+      flex-direction: column;
+      overflow: visible;
+    }
+
+    #admin-empty-state {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      gap: 0.5rem;
+    }
+
+    .empty-icon { font-size: 2rem; opacity: 0.3; }
+    .empty-label { font-size: 12px; letter-spacing: 0.05em; }
+
+    #admin-form-wrap {
+      display: none;
+      flex: 1;
+      overflow: visible;
+      padding: 1.5rem;
+    }
+
+    /* ── Edit Form ────────────────────────────────────────── */
+    .form-header {
+      margin-bottom: 1.25rem;
+      padding-bottom: 0.85rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .form-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    .form-title span {
+      color: var(--text-primary);
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    .form-group.span-2 { grid-column: span 2; }
+
+    .form-section-heading {
+      grid-column: span 2;
+      margin-top: 0.5rem;
+      padding: 0.75rem 0 0.15rem;
+      border-top: 1px solid var(--border);
+      color: var(--text-secondary);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .form-subsection-heading {
+      margin: 0.25rem 0 0;
+      color: var(--text-muted);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .media-input-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 0.5rem;
+      align-items: center;
+    }
+
+    .media-input-row .btn { white-space: nowrap; }
+    .media-file-input { display: none; }
+
+    .media-upload-note {
+      color: var(--text-muted);
+      font-size: 10px;
+      line-height: 1.4;
+    }
+
+    .project-stills-editor {
+      grid-column: span 2;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0.75rem;
+    }
+
+    .project-still-slot {
+      display: flex;
+      min-width: 0;
+      flex-direction: column;
+      gap: 0.55rem;
+      padding: 0.85rem;
+      border: 1px solid var(--border);
+      background: var(--bg-surface);
+    }
+
+    .project-still-slot .media-input-row {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .project-still-actions {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 0.5rem;
+      align-items: center;
+    }
+
+    label {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    input[type="text"],
+    input[type="number"],
+    input[type="email"],
+    input[type="password"],
+    textarea,
+    select {
+      background: var(--bg-raised);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text-primary);
+      font-family: var(--font);
+      font-size: 13px;
+      padding: 0.5rem 0.7rem;
+      width: 100%;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    textarea {
+      min-height: 5rem;
+      line-height: 1.5;
+      resize: vertical;
+    }
+
+    input[type="text"]:focus,
+    input[type="number"]:focus,
+    input[type="email"]:focus,
+    input[type="password"]:focus,
+    textarea:focus,
+    select:focus {
+      border-color: var(--border-focus);
+    }
+
+    select option { background: var(--bg-raised); }
+
+    /* ── Form Actions ─────────────────────────────────────── */
+    .form-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border);
+    }
+
+    .form-dirty-hint {
+      font-size: 11px;
+      color: var(--warning);
+      margin-left: auto;
+    }
+
+    /* ── Buttons ──────────────────────────────────────────── */
+    .btn {
+      padding: 0.5rem 1.1rem;
+      border-radius: var(--radius);
+      font-family: var(--font);
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+    .btn-primary:hover { background: #7aa5ff; }
+
+    .btn-secondary {
+      background: var(--bg-raised);
+      color: var(--text-secondary);
+      border-color: var(--border);
+    }
+    .btn-secondary:hover { background: var(--bg-hover); color: var(--text-primary); }
+
+    .btn-danger {
+      background: transparent;
+      color: var(--error);
+      border-color: rgba(224,92,92,0.3);
+    }
+    .btn-danger:hover { background: var(--error-dim); }
+
+    /* ── Scrollbar ────────────────────────────────────────── */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.15); }
+  </style>
+</head>
+<body>
+
+<div id="auth-gate" class="auth-gate" aria-live="polite">
+  <form id="auth-form" class="auth-card" novalidate>
+    <h1 class="auth-title">Portfolio Admin</h1>
+    <p class="auth-description" id="auth-description">Sign in with the administrator account configured in Supabase.</p>
+    <div class="auth-fields">
+      <div class="form-group">
+        <label for="auth-email">Email</label>
+        <input id="auth-email" type="email" autocomplete="username" required>
+      </div>
+      <div class="form-group">
+        <label for="auth-password">Password</label>
+        <input id="auth-password" type="password" autocomplete="current-password" required>
+      </div>
+    </div>
+    <div class="auth-actions">
+      <button id="btn-login" class="btn btn-primary" type="submit">Sign In</button>
+      <span id="auth-error" role="alert"></span>
+    </div>
+  </form>
+</div>
+
+<div class="admin-layout">
+
+  <!-- ── Top Bar ──────────────────────────────────────────── -->
+  <header class="topbar">
+    <div class="topbar-brand">
+      <span class="brand-title">Portfolio Control</span>
+      <span class="brand-sub">Local Only — Changes stored in this browser</span>
+    </div>
+
+    <div class="topbar-sep"></div>
+    <label class="topbar-section-label" for="section-select">Section</label>
+    <select id="section-select" class="topbar-section-select" aria-label="Portfolio section">
+      <option value="featured-work">Featured Work</option>
+    </select>
+
+    <button id="btn-new-section" class="btn btn-secondary" type="button">＋ Section</button>
+    <button id="btn-edit-section" class="btn btn-secondary" type="button">Edit Section</button>
+    <button id="btn-section-up" class="btn btn-secondary" type="button" title="Move section up">↑</button>
+    <button id="btn-section-down" class="btn btn-secondary" type="button" title="Move section down">↓</button>
+    <button id="btn-delete-section" class="btn btn-danger" type="button">Delete Section</button>
+    <button id="btn-site-settings" class="btn btn-secondary" type="button">Site Settings</button>
+
+    <div class="topbar-actions">
+      <div id="admin-status" class="status-bar" role="status" aria-live="polite"></div>
+      <span id="auth-user"></span>
+      <button id="btn-migrate-supabase" class="btn btn-primary" type="button" style="display:none">Sync All to Supabase</button>
+      <button id="btn-logout" class="btn btn-secondary" type="button" style="display:none">Sign Out</button>
+
+      <button id="btn-new-project" class="btn btn-primary" type="button">＋ New Project</button>
+
+      <button id="btn-export" class="btn btn-secondary" type="button">↓ Export JSON</button>
+
+      <button id="btn-import" class="btn btn-secondary" type="button">↑ Import JSON</button>
+      <input id="import-file-input" type="file" accept=".json,application/json" style="display:none" aria-label="Import JSON file">
+
+      <button id="btn-reset" class="btn btn-danger" type="button">↺ Reset</button>
+    </div>
+  </header>
+
+  <!-- ── Override Notice ──────────────────────────────────── -->
+  <div id="override-notice" class="override-notice override-source" role="status">
+    Checking override status…
+  </div>
+
+  <!-- ── Sidebar — Project List ───────────────────────────── -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      Projects — click to edit · ↑↓ to reorder
+    </div>
+    <ul id="admin-project-list" role="list" aria-label="Featured Work project list"></ul>
+  </aside>
+
+  <!-- ── Main — Edit Panel ────────────────────────────────── -->
+  <main class="main-panel" aria-label="Project editor">
+
+    <div id="admin-empty-state" role="status">
+      <span class="empty-icon">◻</span>
+      <span class="empty-label">Select a project to edit</span>
+    </div>
+
+    <div id="admin-form-wrap">
+      <form id="admin-edit-form" novalidate aria-labelledby="form-heading"></form>
+    </div>
+
+  </main>
+
+</div>
+
+<!-- Load order: data → gallery config → storage → admin UI -->
+<script src="../data/projects-data.js"></script>
+<script src="../config/page-configs.js?v=20260804-sections-2"></script>
+<script src="../config/site-settings.js?v=20260805-contact-english"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../config/supabase-config.js?v=20260804-import"></script>
+<script src="../data/supabase-service.js?v=20260806-project-stills"></script>
+<script src="../admin/admin-storage.js?v=20260806-project-stills"></script>
+<script src="../components/youtube-player.js?v=20260804-youtube-cover"></script>
+<script src="../admin/admin.js?v=20260806-project-stills"></script>
+
+</body>
+</html>

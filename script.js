@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   // Slow background video playback rate for projected cinema feel
   const video = document.getElementById('bg-video');
   if (video) {
@@ -37,83 +37,70 @@ document.addEventListener('DOMContentLoaded', () => {
   // Mechanical Projector Shutter Click & Organic Projector Flicker Handling
   const enterBtn = document.getElementById('enter-button');
   if (enterBtn) {
-    let startTime = performance.now();
     let isHovered = false;
+    let interactionFlickerToken = 0;
+    const enterReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-    enterBtn.addEventListener('mouseenter', () => { isHovered = true; resetFlickerState(); });
-    enterBtn.addEventListener('mouseleave', () => { isHovered = false; });
-
-    // 1. Continuous Organic Gate-Weave / Lens Micro-Drift (Non-periodic trigonometric superposition)
-    function animateEnterDrift(time) {
-      const elapsed = (time - startTime) * 0.001;
-      
-      // Superposition of non-harmonic sine waves creates a natural, organic drift pattern
-      const dx = Math.sin(elapsed * 0.7) * 0.25 + Math.cos(elapsed * 1.3) * 0.15;
-      const dy = Math.cos(elapsed * 0.9) * 0.3 + Math.sin(elapsed * 1.7) * 0.1;
-      
-      enterBtn.style.setProperty('--btn-drift-x', `${dx.toFixed(3)}px`);
-      enterBtn.style.setProperty('--btn-drift-y', `${dy.toFixed(3)}px`);
-
-      requestAnimationFrame(animateEnterDrift);
-    }
-    requestAnimationFrame(animateEnterDrift);
-
-    // 2. Non-Periodic Imperceptible Projector Flicker Bursts
+    // Non-periodic projector flicker: light/focus only, never positional movement.
     function triggerFlicker() {
-      if (document.hidden) {
+      if (document.hidden || isHovered || enterReducedMotion) {
         scheduleNextFlicker();
         return;
       }
 
-      // Random selection of projector artifact types
       const flickerType = Math.floor(Math.random() * 4);
-      
-      // Organic pulse durations (milliseconds) & ultra-subtle visual parameter shifts
-      if (flickerType === 0) {
-        // Type 0: Subtle shutter light dip (opacity drops ~0.08, slight focus softness)
-        applyFlickerState({ op: -0.09, blur: '0.75px', y: '0.3px' });
-        setTimeout(() => resetFlickerState(), 70 + Math.random() * 40);
 
+      if (flickerType === 0) {
+        applyFlickerState({ op: -0.12, blur: '0.82px', brightness: 0.72 });
+        setTimeout(() => resetFlickerState(), 70 + Math.random() * 40);
       } else if (flickerType === 1) {
-        // Type 1: Rapid double flutter (shutter flutter)
-        applyFlickerState({ op: -0.07, blur: '0.65px', x: '-0.2px' });
+        applyFlickerState({ op: -0.09, blur: '0.72px', brightness: 0.8 });
         setTimeout(() => {
           resetFlickerState();
           setTimeout(() => {
-            applyFlickerState({ op: -0.11, blur: '0.8px', x: '0.3px', chroma: '0.4px' });
+            applyFlickerState({ op: 0.05, blur: '0.46px', brightness: 1.2 });
             setTimeout(() => resetFlickerState(), 50);
           }, 40 + Math.random() * 30);
         }, 60);
-
       } else if (flickerType === 2) {
-        // Type 2: Lens optic chromatic refraction twitch
-        applyFlickerState({ chroma: '0.6px', blur: '0.6px', x: '0.2px' });
+        applyFlickerState({ op: 0.08, blur: '0.45px', brightness: 1.22 });
         setTimeout(() => resetFlickerState(), 80 + Math.random() * 30);
-
       } else {
-        // Type 3: Voltage micro-bump / light flash (tiny brightness surge)
-        applyFlickerState({ op: 0.06, blur: '0.35px', y: '-0.2px' });
+        applyFlickerState({ op: -0.05, blur: '0.7px', brightness: 0.88 });
         setTimeout(() => resetFlickerState(), 60 + Math.random() * 30);
       }
 
       scheduleNextFlicker();
     }
 
-    function applyFlickerState({ op = 0, blur = '0.5px', x = '0px', y = '0px', chroma = '0px' }) {
-      if (isHovered) return; // Maintain crisp focus during hover interaction
+    function applyFlickerState({ op = 0, blur = '0.62px', brightness = 1 }, force = false) {
+      if (isHovered && !force) return;
       enterBtn.style.setProperty('--btn-flicker-op', `${op}`);
       enterBtn.style.setProperty('--btn-blur', blur);
-      enterBtn.style.setProperty('--btn-flicker-x', x);
-      enterBtn.style.setProperty('--btn-flicker-y', y);
-      enterBtn.style.setProperty('--chroma-shift', chroma);
+      enterBtn.style.setProperty('--btn-brightness', `${brightness}`);
     }
 
     function resetFlickerState() {
       enterBtn.style.setProperty('--btn-flicker-op', '0');
-      enterBtn.style.setProperty('--btn-blur', isHovered ? '0px' : '0.5px');
-      enterBtn.style.setProperty('--btn-flicker-x', '0px');
-      enterBtn.style.setProperty('--btn-flicker-y', '0px');
-      enterBtn.style.setProperty('--chroma-shift', '0px');
+      enterBtn.style.setProperty('--btn-blur', isHovered ? '0px' : '0.62px');
+      enterBtn.style.setProperty('--btn-brightness', '1');
+    }
+
+    function runEnterInteractionFlicker() {
+      if (enterReducedMotion) {
+        resetFlickerState();
+        return;
+      }
+
+      const token = ++interactionFlickerToken;
+      applyFlickerState({ op: -0.28, blur: '0.72px', brightness: 0.68 }, true);
+      setTimeout(() => {
+        if (token !== interactionFlickerToken) return;
+        applyFlickerState({ op: 0, blur: '0px', brightness: 1.26 }, true);
+        setTimeout(() => {
+          if (token === interactionFlickerToken) resetFlickerState();
+        }, 52);
+      }, 58);
     }
 
     function scheduleNextFlicker() {
@@ -122,13 +109,31 @@ document.addEventListener('DOMContentLoaded', () => {
       setTimeout(triggerFlicker, nextDelay);
     }
 
-    // Initialize first flicker burst after brief landing delay
-    setTimeout(scheduleNextFlicker, 2000);
+    enterBtn.addEventListener('mouseenter', () => {
+      isHovered = true;
+      runEnterInteractionFlicker();
+    });
+    enterBtn.addEventListener('mouseleave', () => {
+      isHovered = false;
+      interactionFlickerToken += 1;
+      resetFlickerState();
+    });
+    enterBtn.addEventListener('focus', () => {
+      isHovered = true;
+      runEnterInteractionFlicker();
+    });
+    enterBtn.addEventListener('blur', () => {
+      isHovered = false;
+      interactionFlickerToken += 1;
+      resetFlickerState();
+    });
+
+    if (!enterReducedMotion) setTimeout(scheduleNextFlicker, 2000);
 
     // Mechanical Shutter Click & Page Navigation Handling for ENTER
     enterBtn.addEventListener('click', (e) => {
       e.preventDefault();
-      const targetUrl = enterBtn.getAttribute('href') || 'featured-work.html';
+      const targetUrl = enterBtn.getAttribute('href') || 'gallery.html?section=featured-work';
 
       document.body.classList.add('shutter-click-active');
 
@@ -141,50 +146,198 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // --- Smooth Inter-Page Transitions for Navigation Links ---
-  const navLinks = document.querySelectorAll('.nav-link, .nav-brand');
-  navLinks.forEach(link => {
-    link.addEventListener('click', (e) => {
-      const href = link.getAttribute('href');
-      if (!href || href === '#' || href.startsWith('mailto:') || link.target === '_blank') return;
-      
-      const currentPath = window.location.pathname.split('/').pop() || 'index.html';
-      if (href === currentPath) {
-        e.preventDefault();
+  // Build the current data-driven page before binding its generated links.
+  if (typeof initProjectDetail === 'function') {
+    await initProjectDetail();
+  } else if (typeof initPortfolioSystem === 'function') {
+    await initPortfolioSystem();
+  }
+
+  // Projector-voltage artifacts: light variation only, never positional movement.
+  const navBrand = document.querySelector('.nav-brand');
+  const reducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const menuNavLinks = document.querySelectorAll('.nav-link');
+  const navToggle = document.getElementById('nav-toggle');
+  const navMenu = document.getElementById('nav-menu');
+  const flickerClasses = ['is-nav-light-dip', 'is-nav-light-flare', 'is-nav-light-pulse'];
+  const navFlickerTokens = new WeakMap();
+
+  function setMobileMenuOpen(open) {
+    if (!navMenu || !navToggle) return;
+    navMenu.classList.toggle('open', open);
+    navToggle.setAttribute('aria-expanded', String(open));
+    navToggle.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+    document.documentElement.classList.toggle('mobile-menu-open', open);
+    document.body.classList.toggle('mobile-menu-open', open);
+  }
+
+  function clearNavFlicker(link) {
+    link.classList.remove(...flickerClasses);
+  }
+
+  function nextNavFlickerToken(link) {
+    const token = (navFlickerTokens.get(link) || 0) + 1;
+    navFlickerTokens.set(link, token);
+    return token;
+  }
+
+  function runNavInteractionFlicker(link) {
+    if (reducedMotion) return;
+    const token = nextNavFlickerToken(link);
+    clearNavFlicker(link);
+    link.classList.add('is-nav-light-dip');
+
+    window.setTimeout(() => {
+      if (navFlickerTokens.get(link) !== token) return;
+      clearNavFlicker(link);
+      link.classList.add('is-nav-light-flare');
+
+      window.setTimeout(() => {
+        if (navFlickerTokens.get(link) === token) clearNavFlicker(link);
+      }, 52);
+    }, 58);
+  }
+
+  menuNavLinks.forEach(link => {
+    link.addEventListener('mouseenter', () => {
+      if (!link.classList.contains('active')) runNavInteractionFlicker(link);
+    });
+    link.addEventListener('focus', () => {
+      if (!link.classList.contains('active')) runNavInteractionFlicker(link);
+    });
+    link.addEventListener('mouseleave', () => {
+      nextNavFlickerToken(link);
+      clearNavFlicker(link);
+    });
+    link.addEventListener('blur', () => {
+      nextNavFlickerToken(link);
+      clearNavFlicker(link);
+    });
+    link.addEventListener('click', event => {
+      setMobileMenuOpen(false);
+      const currentUrl = new URL(window.location.href);
+      const targetUrl = new URL(link.href, window.location.href);
+      const targetSection = link.getAttribute('data-section') || targetUrl.searchParams.get('section');
+      const isGalleryPage = currentUrl.pathname.endsWith('/gallery.html');
+
+      if (isGalleryPage && targetSection && typeof navigatePortfolioSection === 'function') {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        if (link.classList.contains('active')) {
+          runNavInteractionFlicker(link);
+          return;
+        }
+        menuNavLinks.forEach(clearNavFlicker);
+        navigatePortfolioSection(targetSection, { history: 'push', scroll: true });
         return;
       }
 
-      e.preventDefault();
-      document.body.classList.add('shutter-click-active');
-      setTimeout(() => {
-        document.body.classList.add('page-transition-out');
-        setTimeout(() => {
-          window.location.href = href;
-        }, 300);
-      }, 200);
+      if (!link.classList.contains('active')) return;
+      runNavInteractionFlicker(link);
+
+      const currentGallerySection = currentUrl.searchParams.get('section') ||
+        document.getElementById('project-gallery')?.getAttribute('data-page') ||
+        'featured-work';
+      const isCurrentGalleryFilter = currentUrl.pathname.endsWith('/gallery.html') &&
+        targetUrl.pathname === currentUrl.pathname &&
+        targetUrl.searchParams.get('section') === currentGallerySection;
+      const isCurrentExactPage = targetUrl.pathname === currentUrl.pathname &&
+        targetUrl.search === currentUrl.search;
+
+      if (isCurrentGalleryFilter || isCurrentExactPage) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+      }
     });
   });
 
+  if (navBrand) {
+    navBrand.addEventListener('mouseenter', () => runNavInteractionFlicker(navBrand));
+    navBrand.addEventListener('focus', () => runNavInteractionFlicker(navBrand));
+    navBrand.addEventListener('mouseleave', () => {
+      nextNavFlickerToken(navBrand);
+      clearNavFlicker(navBrand);
+    });
+    navBrand.addEventListener('blur', () => {
+      nextNavFlickerToken(navBrand);
+      clearNavFlicker(navBrand);
+    });
+    navBrand.addEventListener('click', event => {
+      event.preventDefault();
+      runNavInteractionFlicker(navBrand);
+      const href = navBrand.getAttribute('href') || 'index.html';
+      window.setTimeout(() => {
+        window.location.href = href;
+      }, reducedMotion ? 0 : 112);
+    });
+  }
+
+  if (document.querySelector('.nav-link.active') && !reducedMotion) {
+    function scheduleNavFlicker() {
+      const delay = 3800 + Math.random() * 5200;
+      window.setTimeout(triggerNavFlicker, delay);
+    }
+
+    function triggerNavFlicker() {
+      const activeNavLink = document.querySelector('.nav-link.active');
+      if (!activeNavLink) {
+        scheduleNavFlicker();
+        return;
+      }
+      if (document.hidden || activeNavLink.matches(':hover, :focus-visible')) {
+        scheduleNavFlicker();
+        return;
+      }
+
+      clearNavFlicker(activeNavLink);
+      const effect = flickerClasses[Math.floor(Math.random() * flickerClasses.length)];
+      activeNavLink.classList.add(effect);
+
+      const duration = effect === 'is-nav-light-dip' ? 72 : 90;
+      window.setTimeout(() => {
+        clearNavFlicker(activeNavLink);
+
+        if (effect === 'is-nav-light-dip' && Math.random() > 0.45) {
+          window.setTimeout(() => {
+            if (!activeNavLink.classList.contains('active')) return;
+            activeNavLink.classList.add('is-nav-light-flare');
+            window.setTimeout(() => clearNavFlicker(activeNavLink), 48);
+          }, 46);
+        }
+      }, duration);
+
+      scheduleNavFlicker();
+    }
+
+    scheduleNavFlicker();
+  }
+
   // --- Mobile Navigation Menu Toggle ---
-  const navToggle = document.getElementById('nav-toggle');
-  const navMenu = document.getElementById('nav-menu');
   if (navToggle && navMenu) {
     navToggle.addEventListener('click', () => {
-      navMenu.classList.toggle('open');
+      setMobileMenuOpen(!navMenu.classList.contains('open'));
+    });
+    document.addEventListener('keydown', event => {
+      if (event.key === 'Escape') setMobileMenuOpen(false);
+    });
+    document.addEventListener('click', event => {
+      if (!navMenu.classList.contains('open')) return;
+      if (navMenu.contains(event.target) || navToggle.contains(event.target)) return;
+      setMobileMenuOpen(false);
     });
   }
 
   // --- Portfolio Category Filter Bar ---
   const filterBtns = document.querySelectorAll('.filter-btn');
-  const projectCards = document.querySelectorAll('.project-card');
 
-  if (filterBtns.length > 0 && projectCards.length > 0) {
+  if (filterBtns.length > 0) {
     filterBtns.forEach(btn => {
       btn.addEventListener('click', () => {
         filterBtns.forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
 
         const filter = btn.getAttribute('data-filter');
+        const projectCards = document.querySelectorAll('.project-card');
 
         projectCards.forEach(card => {
           const category = card.getAttribute('data-category');

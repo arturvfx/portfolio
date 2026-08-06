@@ -1,0 +1,1610 @@
+/**
+ * admin/admin.js
+ *
+ * Portfolio Admin — UI Layer
+ * Responsibility: Render and manage the admin panel interface.
+ *
+ * Dependencies (loaded before this file):
+ *   - data/projects-data.js      → PROJECTS_DATA
+ *   - admin/admin-storage.js     → adminStorage, SUPPORTED_SIZES
+ */
+
+(function () {
+  'use strict';
+
+  // ─── State ───────────────────────────────────────────────────
+
+  let managedSection = 'featured-work';
+
+  /** Working copy of the effective project list (all sections) */
+  let workingProjects = [];
+  let workingGalleries = [];
+  let workingSettings = window.siteSettings
+    ? siteSettings.loadLocal()
+    : {};
+
+  /** Currently selected project id */
+  let selectedId = null;
+
+  /** Whether there are unsaved changes to the selected form */
+  let formDirty = false;
+  let adminStarted = false;
+  let remoteEnabled = false;
+  let remoteWriteQueue = Promise.resolve();
+
+  // ─── DOM References ──────────────────────────────────────────
+
+  const dom = {
+    get list()        { return document.getElementById('admin-project-list'); },
+    get form()        { return document.getElementById('admin-edit-form'); },
+    get formWrap()    { return document.getElementById('admin-form-wrap'); },
+    get emptyState()  { return document.getElementById('admin-empty-state'); },
+    get status()      { return document.getElementById('admin-status'); },
+    get saveBtn()     { return document.getElementById('btn-save'); },
+    get exportBtn()   { return document.getElementById('btn-export'); },
+    get importBtn()   { return document.getElementById('btn-import'); },
+    get importFile()  { return document.getElementById('import-file-input'); },
+    get resetBtn()    { return document.getElementById('btn-reset'); },
+    get previewBtn()  { return document.getElementById('btn-preview'); },
+    get newProjectBtn() { return document.getElementById('btn-new-project'); },
+    get newSectionBtn() { return document.getElementById('btn-new-section'); },
+    get editSectionBtn() { return document.getElementById('btn-edit-section'); },
+    get sectionUpBtn() { return document.getElementById('btn-section-up'); },
+    get sectionDownBtn() { return document.getElementById('btn-section-down'); },
+    get deleteSectionBtn() { return document.getElementById('btn-delete-section'); },
+    get siteSettingsBtn() { return document.getElementById('btn-site-settings'); },
+    get sectionSelect() { return document.getElementById('section-select'); },
+    get sidebarHeader() { return document.querySelector('.sidebar-header'); },
+    get overrideNotice() { return document.getElementById('override-notice'); },
+    get authGate()    { return document.getElementById('auth-gate'); },
+    get authForm()    { return document.getElementById('auth-form'); },
+    get authError()   { return document.getElementById('auth-error'); },
+    get authUser()    { return document.getElementById('auth-user'); },
+    get logoutBtn()   { return document.getElementById('btn-logout'); },
+    get migrateBtn()  { return document.getElementById('btn-migrate-supabase'); },
+  };
+
+  // ─── Init ────────────────────────────────────────────────────
+
+  async function init() {
+    if (typeof PROJECTS_DATA === 'undefined') {
+      showStatus('ERROR: PROJECTS_DATA not loaded. Check script order.', 'error');
+      return;
+    }
+    if (typeof GALLERIES_DATA === 'undefined') {
+      showStatus('ERROR: GALLERIES_DATA not loaded. Check script order.', 'error');
+      return;
+    }
+
+    if (window.portfolioBackend && portfolioBackend.hasCredentials()) {
+      bindAuthActions();
+      if (!portfolioBackend.isConfigured()) {
+        showLogin('Could not load the Supabase client. Check the connection and reload.');
+        return;
+      }
+      try {
+        const session = await portfolioBackend.getSession();
+        if (!session) {
+          showLogin();
+          return;
+        }
+        await authorizeAndStart(session);
+      } catch (error) {
+        showLogin(error.message || 'Could not validate the current session.');
+      }
+      return;
+    }
+
+    hideLogin();
+    await startAdmin();
+  }
+
+  async function startAdmin() {
+    if (adminStarted) return;
+    adminStarted = true;
+    let loadedFromSupabase = false;
+    if (remoteEnabled) {
+      try {
+        const remote = await portfolioBackend.loadPortfolio({ includeDrafts: true });
+        if (remote) {
+          workingProjects = JSON.parse(JSON.stringify(remote.projects));
+          workingGalleries = JSON.parse(JSON.stringify(remote.galleries));
+          adminStorage.save(workingProjects, []);
+          adminStorage.saveGalleries(workingGalleries, []);
+          loadedFromSupabase = true;
+        }
+      } catch (error) {
+        console.warn('Could not load Supabase admin data; using local backup.', error);
+      }
+      try {
+        const remoteSettings = await portfolioBackend.loadSiteSettings();
+        if (remoteSettings) {
+          workingSettings = siteSettings.saveLocal(remoteSettings);
+        }
+      } catch (error) {
+        console.warn('Could not load Supabase site settings; using local settings.', error);
+      }
+    }
+    if (!loadedFromSupabase) loadWorkingData();
+    if (!workingGalleries.some(gallery => gallery.id === managedSection)) {
+      managedSection = workingGalleries[0] ? workingGalleries[0].id : '';
+    }
+    renderSectionSelect();
+    renderProjectList();
+    bindActions();
+    return loadedFromSupabase;
+  }
+
+  function bindAuthActions() {
+    if (dom.authForm) dom.authForm.addEventListener('submit', handleLogin);
+    if (dom.logoutBtn) dom.logoutBtn.addEventListener('click', handleLogout);
+    if (dom.migrateBtn) dom.migrateBtn.addEventListener('click', migrateToSupabase);
+  }
+
+  async function handleLogin(event) {
+    event.preventDefault();
+    const email = document.getElementById('auth-email').value.trim();
+    const password = document.getElementById('auth-password').value;
+    const button = document.getElementById('btn-login');
+    if (!email || !password) return showLogin('Enter your email and password.');
+    button.disabled = true;
+    if (dom.authError) dom.authError.textContent = 'Signing in…';
+    try {
+      const data = await portfolioBackend.signIn(email, password);
+      await authorizeAndStart(data.session);
+    } catch (error) {
+      showLogin(error.message || 'Sign in failed.');
+    } finally {
+      button.disabled = false;
+    }
+  }
+
+  async function authorizeAndStart(session) {
+    const authorized = await portfolioBackend.isAdmin();
+    if (!authorized) {
+      await portfolioBackend.signOut();
+      throw new Error('This account is not authorized for the portfolio admin.');
+    }
+    remoteEnabled = true;
+    hideLogin();
+    if (dom.authUser) dom.authUser.textContent = session.user.email || 'Authenticated admin';
+    if (dom.logoutBtn) dom.logoutBtn.style.display = 'inline-block';
+    if (dom.migrateBtn) dom.migrateBtn.style.display = 'inline-block';
+    const brandSub = document.querySelector('.brand-sub');
+    if (brandSub) brandSub.textContent = 'Connected to Supabase — local backup enabled';
+    const loadedFromSupabase = await startAdmin();
+    showStatus(
+      loadedFromSupabase
+        ? 'Connected to Supabase. Admin data is up to date.'
+        : 'Supabase is connected, but the local backup was loaded.',
+      loadedFromSupabase ? 'success' : 'error'
+    );
+  }
+
+  async function handleLogout() {
+    await portfolioBackend.signOut();
+    window.location.reload();
+  }
+
+  async function migrateToSupabase() {
+    const galleryCount = workingGalleries.length;
+    const projectCount = workingProjects.length;
+    const confirmed = confirm(
+      `Upload the current effective portfolio to Supabase?\n\n` +
+      `${galleryCount} section(s)\n${projectCount} project(s)\n\n` +
+      'Rows with matching IDs will be updated. This does not delete extra remote rows.'
+    );
+    if (!confirmed) return;
+
+    dom.migrateBtn.disabled = true;
+    showStatus('Uploading portfolio data to Supabase…', 'info');
+    try {
+      const result = await syncPortfolioSnapshot();
+      await portfolioBackend.saveSiteSettings(workingSettings);
+      showStatus(
+        `Supabase import complete: ${result.importedGalleries} sections, ${result.importedProjects} projects and site settings verified.`,
+        'success'
+      );
+      dom.migrateBtn.textContent = 'Uploaded to Supabase';
+    } catch (error) {
+      showStatus(`SUPABASE ERROR: ${error.message || error}`, 'error');
+    } finally {
+      dom.migrateBtn.disabled = false;
+    }
+  }
+
+  function verifyRemoteImport(result) {
+    if (result.missingGalleryIds.length || result.missingProjectIds.length) {
+      throw new Error(
+        `${result.missingGalleryIds.length} section(s) and ` +
+        `${result.missingProjectIds.length} project(s) could not be verified.`
+      );
+    }
+    return result;
+  }
+
+  function enqueueRemoteWrite(operation) {
+    remoteWriteQueue = remoteWriteQueue
+      .catch(() => undefined)
+      .then(operation);
+    return remoteWriteQueue;
+  }
+
+  function syncPortfolioSnapshot() {
+    const galleries = JSON.parse(JSON.stringify(workingGalleries));
+    const projects = JSON.parse(JSON.stringify(workingProjects));
+    return enqueueRemoteWrite(async () => {
+      const result = await portfolioBackend.importPortfolio(galleries, projects);
+      return verifyRemoteImport(result);
+    });
+  }
+
+  async function syncAndReport(successMessage, localMessage) {
+    if (!remoteEnabled) {
+      showStatus(localMessage || successMessage, 'success');
+      return true;
+    }
+    showStatus('Saving to Supabase…', 'info');
+    try {
+      await syncPortfolioSnapshot();
+      showStatus(successMessage, 'success');
+      return true;
+    } catch (error) {
+      showStatus(`Saved locally, but Supabase failed: ${error.message || error}`, 'error');
+      return false;
+    }
+  }
+
+  function deleteRemoteProjectAndSync(id) {
+    const galleries = JSON.parse(JSON.stringify(workingGalleries));
+    const projects = JSON.parse(JSON.stringify(workingProjects));
+    return enqueueRemoteWrite(async () => {
+      await portfolioBackend.deleteProject(id);
+      return verifyRemoteImport(await portfolioBackend.importPortfolio(galleries, projects));
+    });
+  }
+
+  function deleteRemoteGalleryAndSync(id) {
+    const galleries = JSON.parse(JSON.stringify(workingGalleries));
+    const projects = JSON.parse(JSON.stringify(workingProjects));
+    return enqueueRemoteWrite(async () => {
+      await portfolioBackend.deleteGallery(id);
+      return verifyRemoteImport(await portfolioBackend.importPortfolio(galleries, projects));
+    });
+  }
+
+  function replaceRemoteGalleryAndSync(previousId) {
+    const galleries = JSON.parse(JSON.stringify(workingGalleries));
+    const projects = JSON.parse(JSON.stringify(workingProjects));
+    return enqueueRemoteWrite(async () => {
+      const result = verifyRemoteImport(await portfolioBackend.importPortfolio(galleries, projects));
+      await portfolioBackend.deleteGallery(previousId);
+      return result;
+    });
+  }
+
+  function showLogin(message) {
+    if (dom.authGate) dom.authGate.hidden = false;
+    if (dom.authError) dom.authError.textContent = message || '';
+  }
+
+  function hideLogin() {
+    if (dom.authGate) dom.authGate.hidden = true;
+  }
+
+  function loadWorkingData() {
+    const effective = adminStorage.getEffective(PROJECTS_DATA);
+    // Deep-clone so we never mutate source data
+    workingProjects = JSON.parse(JSON.stringify(effective));
+    workingGalleries = adminStorage.getEffectiveGalleries(GALLERIES_DATA);
+    if (!workingGalleries.some(gallery => gallery.id === managedSection)) {
+      managedSection = workingGalleries[0] ? workingGalleries[0].id : '';
+    }
+    updateOverrideNotice();
+  }
+
+  function updateOverrideNotice() {
+    const overrides = adminStorage.load();
+    const galleryOverrides = adminStorage.loadGalleries();
+    if (dom.overrideNotice) {
+      if (overrides || galleryOverrides) {
+        const latest = [overrides, galleryOverrides]
+          .filter(Boolean)
+          .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))[0];
+        const date = new Date(latest.updatedAt).toLocaleString();
+        dom.overrideNotice.textContent = `Local overrides active — last saved ${date}`;
+        dom.overrideNotice.className = 'override-notice override-active';
+      } else {
+        dom.overrideNotice.textContent = 'Showing source data — no local overrides saved yet';
+        dom.overrideNotice.className = 'override-notice override-source';
+      }
+    }
+  }
+
+  // ─── Project List ────────────────────────────────────────────
+
+  function renderSectionSelect() {
+    if (!dom.sectionSelect) return;
+    dom.sectionSelect.innerHTML = '';
+    adminStorage.normalizeGalleryOrder(workingGalleries).forEach(gallery => {
+      const option = document.createElement('option');
+      option.value = gallery.id;
+      option.textContent = gallery.title + (gallery.published === false ? ' — Hidden' : '');
+      dom.sectionSelect.appendChild(option);
+    });
+    dom.sectionSelect.value = managedSection;
+  }
+
+  function getSectionProjects() {
+    return workingProjects
+      .filter(p => p.section === managedSection)
+      .sort((a, b) => Number(a.order) - Number(b.order));
+  }
+
+  function renderProjectList() {
+    const listEl = dom.list;
+    if (!listEl) return;
+
+    const projects = getSectionProjects();
+    listEl.innerHTML = '';
+    const sectionLabel = getSectionLabel(managedSection);
+    listEl.setAttribute('aria-label', `${sectionLabel} project list`);
+    if (dom.sidebarHeader) {
+      dom.sidebarHeader.textContent = `${sectionLabel} — click to edit · ↑↓ to reorder`;
+    }
+
+    if (projects.length === 0) {
+      listEl.innerHTML = '<li class="list-empty">No projects found in this section.</li>';
+      return;
+    }
+
+    projects.forEach((project, idx) => {
+      const li = document.createElement('li');
+      li.className = 'project-list-item' + (project.id === selectedId ? ' selected' : '');
+      li.setAttribute('data-id', project.id);
+
+      const hasCover = Boolean(project.coverImage);
+      const hasPreview = Boolean(project.previewVideo);
+
+      li.innerHTML = `
+        <div class="list-item-thumb">
+          ${hasCover
+            ? `<img src="${escAdm(project.coverImage)}" alt="${escAdm(project.title)}" />`
+            : hasPreview
+              ? `<video src="${escAdm(project.previewVideo)}" muted playsinline preload="metadata"></video>`
+              : '<span class="list-thumb-empty">No media</span>'
+          }
+        </div>
+        <div class="list-item-info">
+          <div class="list-item-title">${escAdm(project.title)}</div>
+          <div class="list-item-meta">
+            <span class="tag">${escAdm(project.size)}</span>
+            <span class="tag ${project.published ? 'tag-pub' : 'tag-unpub'}">${project.published ? 'Published' : 'Hidden'}</span>
+            <span class="tag">Order: ${project.order}</span>
+          </div>
+          <div class="list-item-client">${escAdm(project.client || '')} — ${escAdm(project.category || '')}</div>
+        </div>
+        <div class="list-item-actions">
+          <button class="btn-icon" type="button" data-action="up" data-id="${escAdm(project.id)}" title="Move up" ${idx === 0 ? 'disabled' : ''}>↑</button>
+          <button class="btn-icon" type="button" data-action="down" data-id="${escAdm(project.id)}" title="Move down" ${idx === projects.length - 1 ? 'disabled' : ''}>↓</button>
+        </div>
+      `;
+
+      li.addEventListener('click', (e) => {
+        if (e.target.closest('[data-action]')) return;
+        selectProject(project.id);
+      });
+
+      listEl.appendChild(li);
+    });
+
+    // Bind order buttons
+    listEl.querySelectorAll('[data-action]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const action = btn.getAttribute('data-action');
+        const id = btn.getAttribute('data-id');
+        if (action === 'up') moveProject(id, -1);
+        if (action === 'down') moveProject(id, 1);
+      });
+    });
+  }
+
+  // ─── Select & Form ───────────────────────────────────────────
+
+  function selectProject(id) {
+    if (formDirty && selectedId !== id) {
+      if (!confirm('You have unsaved changes. Discard them?')) return;
+    }
+
+    selectedId = id;
+    formDirty = false;
+    const project = workingProjects.find(p => p.id === id);
+    if (!project) return;
+
+    renderProjectList();
+    renderEditForm(project);
+  }
+
+  function renderProjectStillSlots(project) {
+    const stills = normalizeProjectStills(project.projectStills);
+    return Array.from({ length: 3 }, (_, index) => {
+      const still = stills[index] || { url: '', size: '16-9' };
+      const slot = index + 1;
+      return `
+        <div class="project-still-slot">
+          <label for="field-projectStillUrl-${index}">Image ${slot}</label>
+          <input id="field-projectStillUrl-${index}" type="text" value="${escAdm(still.url)}" data-still-url="${index}" placeholder="Image path / URL" />
+          <div class="project-still-actions">
+            <select id="field-projectStillSize-${index}" data-still-size="${index}" aria-label="Image ${slot} aspect ratio">
+              ${SUPPORTED_SIZES.map(size =>
+                `<option value="${size}" ${still.size === size ? 'selected' : ''}>${size} ${size === '16-9' ? '— Widescreen' : size === '9-16' ? '— Portrait' : '— Classic 4:3'}</option>`
+              ).join('')}
+            </select>
+            <button id="btn-clear-projectStill-${index}" class="btn btn-danger" type="button">Clear</button>
+          </div>
+          <button id="btn-upload-projectStill-${index}" class="btn btn-secondary" type="button">Upload Image ${slot}</button>
+          <input id="file-projectStill-${index}" class="media-file-input" type="file" accept="image/*" />
+        </div>`;
+    }).join('');
+  }
+
+  function markProjectFormDirty() {
+    formDirty = true;
+    const hint = document.getElementById('dirty-hint');
+    if (hint) hint.style.display = 'inline';
+  }
+
+  function renderEditForm(project) {
+    const wrap = dom.formWrap;
+    const empty = dom.emptyState;
+    if (!wrap || !empty) return;
+
+    wrap.style.display = 'block';
+    empty.style.display = 'none';
+
+    const form = dom.form;
+    if (!form) return;
+
+    form.innerHTML = `
+      <div class="form-header">
+        <h2 class="form-title" id="form-heading">Editing: <span>${escAdm(project.title)}</span></h2>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="field-title">Title</label>
+          <input id="field-title" type="text" value="${escAdm(project.title)}" data-field="title" />
+        </div>
+
+        <div class="form-group">
+          <label for="field-client">Client</label>
+          <input id="field-client" type="text" value="${escAdm(project.client || '')}" data-field="client" />
+        </div>
+
+        <div class="form-group">
+          <label for="field-category">Category</label>
+          <input id="field-category" type="text" value="${escAdm(project.category || '')}" data-field="category" />
+        </div>
+
+        <div class="form-group">
+          <label for="field-year">Year</label>
+          <input id="field-year" type="text" value="${escAdm(project.year || '')}" data-field="year" />
+        </div>
+
+        <div class="form-group span-2">
+          <label for="field-services">Areas of Work</label>
+          <input id="field-services" type="text" value="${escAdm((project.services || []).join(', '))}" data-field="services" placeholder="Editing, VFX Compositing, Motion Design" />
+          <span class="media-upload-note">Separate each area with a comma. These appear as tags on the project page.</span>
+        </div>
+
+        <div class="form-group span-2">
+          <label for="field-projectSummary">Project Context</label>
+          <textarea id="field-projectSummary" rows="3" data-field="projectSummary" placeholder="A short description of the series, film or campaign.">${escAdm(project.projectSummary || '')}</textarea>
+        </div>
+
+        <div class="form-group span-2">
+          <label for="field-contribution">My Contribution</label>
+          <textarea id="field-contribution" rows="4" data-field="contribution" placeholder="Describe exactly what you handled on this project.">${escAdm(project.contribution || '')}</textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="field-director">Director</label>
+          <input id="field-director" type="text" value="${escAdm(project.director || '')}" data-field="director" />
+        </div>
+
+        <div class="form-group">
+          <label for="field-productionCompany">Production Company</label>
+          <input id="field-productionCompany" type="text" value="${escAdm(project.productionCompany || '')}" data-field="productionCompany" />
+        </div>
+
+        <div class="form-group">
+          <label for="field-slug">Slug</label>
+          <input id="field-slug" type="text" value="${escAdm(project.slug || '')}" data-field="slug" />
+        </div>
+
+        <div class="form-group">
+          <label for="field-order">Display Order</label>
+          <input id="field-order" type="number" min="1" value="${project.order}" data-field="order" />
+        </div>
+
+        <div class="form-group span-2">
+          <label for="field-coverImage">Cover Image Path / URL</label>
+          <div class="media-input-row">
+            <input id="field-coverImage" type="text" value="${escAdm(project.coverImage || '')}" data-field="coverImage" />
+            <button id="btn-upload-coverImage" class="btn btn-secondary" type="button">Upload Cover</button>
+          </div>
+          <input id="file-coverImage" class="media-file-input" type="file" accept="image/*" />
+          <span class="media-upload-note">The still image shown before the visitor hovers over the project.</span>
+        </div>
+
+        <div class="form-group span-2">
+          <label for="field-previewVideo">Hover Video Path / URL</label>
+          <div class="media-input-row">
+            <input id="field-previewVideo" type="text" value="${escAdm(project.previewVideo || '')}" data-field="previewVideo" />
+            <button id="btn-upload-previewVideo" class="btn btn-secondary" type="button">Upload Hover Video</button>
+          </div>
+          <input id="file-previewVideo" class="media-file-input" type="file" accept="video/mp4,video/webm" />
+          <span class="media-upload-note">Optional. Plays only while the visitor hovers; without a cover, its first frame is used.</span>
+        </div>
+
+        <div class="form-group span-2">
+          <label for="field-youtubeUrl">YouTube Video URL</label>
+          <input id="field-youtubeUrl" type="text" value="${escAdm(project.youtubeUrl || '')}" data-field="youtubeUrl" placeholder="https://www.youtube.com/watch?v=..." />
+          <span class="media-upload-note">Optional full video for the individual project page. Public, unlisted, Shorts and youtu.be links are accepted.</span>
+        </div>
+
+        <h3 class="form-section-heading">Project Page Stills</h3>
+        <div class="project-stills-editor">
+          ${renderProjectStillSlots(project)}
+        </div>
+        <div class="form-group span-2">
+          <span class="media-upload-note">Up to three images. Each slot keeps its own gallery-style aspect ratio and appears on the individual project page.</span>
+        </div>
+
+        <div class="form-group">
+          <label for="field-watchNowEnabled">Watch Now</label>
+          <select id="field-watchNowEnabled" data-field="watchNowEnabled">
+            <option value="false" ${!project.watchNowEnabled ? 'selected' : ''}>Disabled — hidden from project page</option>
+            <option value="true" ${project.watchNowEnabled ? 'selected' : ''}>Enabled — show external link</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="field-watchNowUrl">Watch Now External URL</label>
+          <input id="field-watchNowUrl" type="text" value="${escAdm(project.watchNowUrl || '')}" data-field="watchNowUrl" placeholder="https://streaming-service.com/project" />
+          <span class="media-upload-note">The URL is preserved when Watch Now is disabled.</span>
+        </div>
+
+        <div class="form-group">
+          <label for="field-size">Aspect Ratio / Size</label>
+          <select id="field-size" data-field="size">
+            ${SUPPORTED_SIZES.map(s =>
+              `<option value="${s}" ${project.size === s ? 'selected' : ''}>${s} ${s === '16-9' ? '— Widescreen' : s === '9-16' ? '— Portrait' : '— Classic 4:3'}</option>`
+            ).join('')}
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="field-published">Visibility</label>
+          <select id="field-published" data-field="published">
+            <option value="true" ${project.published ? 'selected' : ''}>Published — visible in gallery</option>
+            <option value="false" ${!project.published ? 'selected' : ''}>Hidden — excluded from gallery</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="field-section">Section</label>
+          <select id="field-section" data-field="section">
+            ${workingGalleries.map(gallery =>
+              `<option value="${escAdm(gallery.id)}" ${project.section === gallery.id ? 'selected' : ''}>${escAdm(gallery.title)}</option>`
+            ).join('')}
+          </select>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button id="btn-save" class="btn btn-primary" type="button" data-id="${escAdm(project.id)}">Save Changes</button>
+        <button id="btn-duplicate" class="btn btn-secondary" type="button">Duplicate</button>
+        <button id="btn-preview" class="btn btn-secondary" type="button">Preview in Gallery</button>
+        <button id="btn-delete" class="btn btn-danger" type="button">Delete Project</button>
+        <span class="form-dirty-hint" id="dirty-hint" style="display:none">Unsaved changes</span>
+      </div>
+    `;
+
+    // Mark form dirty on any change
+    form.querySelectorAll('[data-field]').forEach(el => {
+      el.addEventListener('input', markProjectFormDirty);
+    });
+    form.querySelectorAll('[data-still-url], [data-still-size]').forEach(el => {
+      el.addEventListener('input', markProjectFormDirty);
+    });
+
+    // Re-bind save and preview
+    const saveBtn = document.getElementById('btn-save');
+    if (saveBtn) saveBtn.addEventListener('click', () => saveProject(project.id));
+
+    const previewBtn = document.getElementById('btn-preview');
+    if (previewBtn) previewBtn.addEventListener('click', previewGallery);
+
+    const duplicateBtn = document.getElementById('btn-duplicate');
+    if (duplicateBtn) duplicateBtn.addEventListener('click', () => duplicateProject(project.id));
+
+    const deleteBtn = document.getElementById('btn-delete');
+    if (deleteBtn) deleteBtn.addEventListener('click', () => deleteProject(project.id));
+
+    bindMediaUpload(project.id, 'coverImage');
+    bindMediaUpload(project.id, 'previewVideo');
+    [0, 1, 2].forEach(index => bindProjectStillControls(project.id, index));
+  }
+
+  // ─── Create, Duplicate & Delete ─────────────────────────────
+
+  function bindMediaUpload(projectId, field) {
+    const button = document.getElementById(`btn-upload-${field}`);
+    const fileInput = document.getElementById(`file-${field}`);
+    if (!button || !fileInput) return;
+
+    button.addEventListener('click', () => {
+      if (!remoteEnabled) {
+        showStatus('ERROR: Sign in to Supabase before uploading media.', 'error');
+        return;
+      }
+      fileInput.click();
+    });
+
+    fileInput.addEventListener('change', async () => {
+      const file = fileInput.files && fileInput.files[0];
+      if (!file) return;
+      await uploadProjectMedia(projectId, field, file, button);
+      fileInput.value = '';
+    });
+  }
+
+  function bindProjectStillControls(projectId, index) {
+    const uploadButton = document.getElementById(`btn-upload-projectStill-${index}`);
+    const clearButton = document.getElementById(`btn-clear-projectStill-${index}`);
+    const fileInput = document.getElementById(`file-projectStill-${index}`);
+    const urlInput = document.getElementById(`field-projectStillUrl-${index}`);
+    const sizeInput = document.getElementById(`field-projectStillSize-${index}`);
+    if (!uploadButton || !clearButton || !fileInput || !urlInput || !sizeInput) return;
+
+    uploadButton.addEventListener('click', () => {
+      if (!remoteEnabled) {
+        showStatus('ERROR: Sign in to Supabase before uploading media.', 'error');
+        return;
+      }
+      fileInput.click();
+    });
+
+    fileInput.addEventListener('change', async () => {
+      const file = fileInput.files && fileInput.files[0];
+      if (!file) return;
+      if (!file.type.startsWith('image/')) {
+        showStatus('ERROR: Project stills must be image files.', 'error');
+        fileInput.value = '';
+        return;
+      }
+      const originalLabel = uploadButton.textContent;
+      uploadButton.disabled = true;
+      uploadButton.textContent = 'Uploading…';
+      showStatus(`Uploading ${file.name} to Supabase Storage…`, 'info');
+      try {
+        const safeProjectId = String(projectId || 'project').replace(/[^a-zA-Z0-9_-]+/g, '-');
+        urlInput.value = await portfolioBackend.uploadMedia(
+          file,
+          `projects/${safeProjectId}/stills/slot-${index + 1}`
+        );
+        markProjectFormDirty();
+        showStatus('Upload complete. Click Save Changes to publish the project still.', 'success');
+      } catch (error) {
+        showStatus(`UPLOAD ERROR: ${error.message || error}`, 'error');
+      } finally {
+        uploadButton.disabled = false;
+        uploadButton.textContent = originalLabel;
+        fileInput.value = '';
+      }
+    });
+
+    clearButton.addEventListener('click', () => {
+      urlInput.value = '';
+      sizeInput.value = '16-9';
+      markProjectFormDirty();
+    });
+  }
+
+  async function uploadProjectMedia(projectId, field, file, button) {
+    const isImage = file.type.startsWith('image/');
+    const isVideo = file.type === 'video/mp4' || file.type === 'video/webm';
+    if (field === 'coverImage' && !isImage) {
+      showStatus('ERROR: The cover must be an image file.', 'error');
+      return;
+    }
+    if (field === 'previewVideo' && !isVideo) {
+      showStatus('ERROR: The hover preview must be an MP4 or WebM video.', 'error');
+      return;
+    }
+
+    const originalLabel = button.textContent;
+    button.disabled = true;
+    button.textContent = 'Uploading…';
+    showStatus(`Uploading ${file.name} to Supabase Storage…`, 'info');
+    try {
+      const safeProjectId = String(projectId || 'project').replace(/[^a-zA-Z0-9_-]+/g, '-');
+      const publicUrl = await portfolioBackend.uploadMedia(
+        file,
+        `projects/${safeProjectId}/${field === 'coverImage' ? 'cover' : 'preview-video'}`
+      );
+      const fieldInput = document.getElementById(`field-${field}`);
+      if (!fieldInput) throw new Error('The media URL field is no longer available.');
+      fieldInput.value = publicUrl;
+      formDirty = true;
+      const hint = document.getElementById('dirty-hint');
+      if (hint) hint.style.display = 'inline';
+      showStatus('Upload complete. Click Save Changes to publish the new media URL.', 'success');
+    } catch (error) {
+      showStatus(`UPLOAD ERROR: ${error.message || error}`, 'error');
+    } finally {
+      button.disabled = false;
+      button.textContent = originalLabel;
+    }
+  }
+
+  async function createProject() {
+    if (formDirty && !confirm('You have unsaved changes. Discard them?')) return;
+
+    const slug = uniqueSlug('untitled-project');
+    const project = {
+      id: slug,
+      slug: slug,
+      title: 'UNTITLED PROJECT',
+      client: '',
+      category: '',
+      year: String(new Date().getFullYear()),
+      coverImage: '',
+      previewVideo: '',
+      youtubeUrl: '',
+      projectStills: [],
+      services: [],
+      projectSummary: '',
+      contribution: '',
+      director: '',
+      productionCompany: '',
+      watchNowEnabled: false,
+      watchNowUrl: '',
+      section: managedSection,
+      size: '16-9',
+      published: false,
+      order: getSectionProjects().length + 1
+    };
+
+    workingProjects.push(project);
+    adminStorage.save(workingProjects);
+    selectedId = project.id;
+    formDirty = false;
+    updateOverrideNotice();
+    renderProjectList();
+    renderEditForm(project);
+    await syncAndReport(
+      'New draft project created in Supabase. Complete the fields and save.',
+      'New draft project created. Complete the fields and save.'
+    );
+  }
+
+  async function duplicateProject(id) {
+    if (formDirty && !confirm('Duplicate the last saved version and discard unsaved changes?')) return;
+    const source = workingProjects.find(project => project.id === id);
+    if (!source) return;
+
+    const slug = uniqueSlug(`${source.slug || source.id || 'project'}-copy`);
+    const duplicate = {
+      ...source,
+      projectStills: normalizeProjectStills(source.projectStills).map(still => ({ ...still })),
+      id: slug,
+      slug: slug,
+      title: `${source.title} COPY`,
+      published: false,
+      order: Number(source.order) + 1
+    };
+
+    workingProjects.push(duplicate);
+    workingProjects = adminStorage.setOrder(
+      workingProjects,
+      managedSection,
+      { id: duplicate.id, slug: duplicate.slug },
+      duplicate.order
+    );
+    adminStorage.save(workingProjects);
+    selectedId = duplicate.id;
+    formDirty = false;
+    updateOverrideNotice();
+    renderProjectList();
+    renderEditForm(workingProjects.find(project => project.id === duplicate.id));
+    await syncAndReport('Project duplicated in Supabase as an unpublished draft.');
+  }
+
+  async function deleteProject(id) {
+    const project = workingProjects.find(item => item.id === id);
+    if (!project) return;
+    if (!confirm(`Delete “${project.title}”?\n\nReset Local Changes can restore source projects.`)) return;
+
+    workingProjects = adminStorage.deleteProject(workingProjects, project);
+    selectedId = null;
+    formDirty = false;
+    updateOverrideNotice();
+    renderProjectList();
+    clearForm();
+    if (!remoteEnabled) {
+      showStatus('Project deleted and section order updated.', 'success');
+      return;
+    }
+    showStatus('Deleting project from Supabase…', 'info');
+    try {
+      await deleteRemoteProjectAndSync(id);
+      showStatus('Project deleted from Supabase and section order updated.', 'success');
+    } catch (error) {
+      showStatus(`Deleted locally, but Supabase failed: ${error.message || error}`, 'error');
+    }
+  }
+
+  // ─── Save ────────────────────────────────────────────────────
+
+  async function saveProject(id) {
+    const form = dom.form;
+    if (!form) return;
+
+    const idx = workingProjects.findIndex(p => p.id === id);
+    if (idx === -1) return;
+
+    const updated = { ...workingProjects[idx] };
+    const previousSection = updated.section;
+
+    form.querySelectorAll('[data-field]').forEach(el => {
+      const field = el.getAttribute('data-field');
+      const raw = el.value.trim();
+
+      if (field === 'order') {
+        updated[field] = parseInt(raw, 10) || updated[field];
+      } else if (field === 'published' || field === 'watchNowEnabled') {
+        updated[field] = raw === 'true';
+      } else if (field === 'services') {
+        updated[field] = [...new Set(raw.split(',').map(item => item.trim()).filter(Boolean))];
+      } else {
+        updated[field] = raw;
+      }
+    });
+    updated.projectStills = normalizeProjectStills(
+      Array.from(form.querySelectorAll('[data-still-url]')).map(input => {
+        const index = input.getAttribute('data-still-url');
+        const sizeInput = form.querySelector(`[data-still-size="${index}"]`);
+        return {
+          url: input.value.trim(),
+          size: sizeInput ? sizeInput.value : '16-9'
+        };
+      })
+    );
+    if (!updated.title) {
+      showStatus('ERROR: Title cannot be empty.', 'error');
+      return;
+    }
+    if (!updated.slug) {
+      showStatus('ERROR: Slug cannot be empty.', 'error');
+      return;
+    }
+    if (updated.youtubeUrl) {
+      const youtubeUrl = getYouTubeWatchUrl(updated.youtubeUrl);
+      if (!youtubeUrl) {
+        showStatus('ERROR: Enter a valid YouTube video URL.', 'error');
+        return;
+      }
+      updated.youtubeUrl = youtubeUrl;
+    }
+    if (updated.watchNowUrl) {
+      let watchNowUrl;
+      try {
+        watchNowUrl = new URL(updated.watchNowUrl);
+      } catch (error) {
+        showStatus('ERROR: Enter a valid Watch Now URL.', 'error');
+        return;
+      }
+      if (!['http:', 'https:'].includes(watchNowUrl.protocol)) {
+        showStatus('ERROR: Watch Now must use an http:// or https:// URL.', 'error');
+        return;
+      }
+      updated.watchNowUrl = watchNowUrl.toString();
+    }
+    if (updated.watchNowEnabled && !updated.watchNowUrl) {
+      showStatus('ERROR: Add a Watch Now URL before enabling the button.', 'error');
+      return;
+    }
+    const duplicateSlug = workingProjects.some(project =>
+      project.id !== id && project.slug === updated.slug
+    );
+    if (duplicateSlug) {
+      showStatus(`ERROR: Slug “${updated.slug}” is already in use.`, 'error');
+      return;
+    }
+    if (!Number.isInteger(updated.order) || updated.order < 1) {
+      showStatus('ERROR: Display Order must be a whole number greater than 0.', 'error');
+      return;
+    }
+
+    const requestedOrder = updated.order;
+    workingProjects[idx] = updated;
+    workingProjects = adminStorage.setOrder(
+      workingProjects,
+      updated.section,
+      { id: updated.id, slug: updated.slug },
+      requestedOrder
+    );
+    if (previousSection !== updated.section) {
+      workingProjects = adminStorage.normalizeOrder(workingProjects, previousSection);
+    }
+
+    adminStorage.save(workingProjects);
+    formDirty = false;
+
+    const hint = document.getElementById('dirty-hint');
+    if (hint) hint.style.display = 'none';
+
+    updateOverrideNotice();
+    renderProjectList();
+    if (updated.section !== managedSection) {
+      selectedId = null;
+      clearForm();
+    }
+    await syncAndReport(
+      `Changes saved to Supabase. Reload ${getSectionLabel(managedSection)} to see updates.`
+    );
+  }
+
+  // ─── Reorder ─────────────────────────────────────────────────
+
+  async function moveProject(id, direction) {
+    const sectionProjects = getSectionProjects();
+    const idx = sectionProjects.findIndex(p => p.id === id);
+    if (idx === -1) return;
+
+    const swapIdx = idx + direction;
+    if (swapIdx < 0 || swapIdx >= sectionProjects.length) return;
+
+    // Swap order values
+    const orderA = sectionProjects[idx].order;
+    const orderB = sectionProjects[swapIdx].order;
+
+    const idxInWorking = workingProjects.findIndex(p => p.id === sectionProjects[idx].id);
+    const swapInWorking = workingProjects.findIndex(p => p.id === sectionProjects[swapIdx].id);
+
+    workingProjects[idxInWorking] = { ...workingProjects[idxInWorking], order: orderB };
+    workingProjects[swapInWorking] = { ...workingProjects[swapInWorking], order: orderA };
+
+    // Normalize in display-order, rather than the source array's physical order.
+    workingProjects = adminStorage.normalizeOrder(workingProjects, managedSection);
+
+    adminStorage.save(workingProjects);
+    updateOverrideNotice();
+    renderProjectList();
+
+    // Keep form in sync if the moved project was selected
+    if (selectedId === id) {
+      const updated = workingProjects.find(p => p.id === id);
+      if (updated) renderEditForm(updated);
+    }
+
+    await syncAndReport('Order updated in Supabase.', 'Order updated.');
+  }
+
+  // ─── Preview ─────────────────────────────────────────────────
+
+  function previewGallery() {
+    window.open(`gallery.html?section=${encodeURIComponent(managedSection)}`, '_blank');
+  }
+
+  // ─── Export ──────────────────────────────────────────────────
+
+  function exportJson() {
+    adminStorage.exportJson(managedSection, workingProjects);
+    showStatus('JSON file exported successfully.', 'success');
+  }
+
+  // ─── Import ──────────────────────────────────────────────────
+
+  function triggerImport() {
+    const fileInput = dom.importFile;
+    if (fileInput) fileInput.click();
+  }
+
+  function handleImportFile(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async function (ev) {
+      let payload;
+      try {
+        payload = JSON.parse(ev.target.result);
+      } catch (err) {
+        showStatus('ERROR: File is not valid JSON. No changes made.', 'error');
+        return;
+      }
+
+      const errors = adminStorage.validate(payload);
+      if (errors.length > 0) {
+        showStatus('VALIDATION ERRORS:\n' + errors.join('\n'), 'error');
+        return;
+      }
+
+      // Merge: replace only projects matching this section; keep others intact
+      const importedSectionProjects = payload.projects.filter(p => p.section === managedSection);
+      const otherProjects = workingProjects.filter(p => p.section !== managedSection);
+
+      workingProjects = [...otherProjects, ...importedSectionProjects];
+      workingProjects = adminStorage.normalizeOrder(workingProjects, managedSection);
+
+      adminStorage.restoreProjects(workingProjects, importedSectionProjects);
+      selectedId = null;
+      formDirty = false;
+
+      updateOverrideNotice();
+      renderProjectList();
+      clearForm();
+      await syncAndReport(
+        `Imported ${importedSectionProjects.length} projects and saved them to Supabase.`,
+        `Imported ${importedSectionProjects.length} projects successfully.`
+      );
+    };
+
+    reader.readAsText(file);
+    // Reset input so same file can be re-imported
+    e.target.value = '';
+  }
+
+  // ─── Reset ───────────────────────────────────────────────────
+
+  async function resetOverrides() {
+    const message = remoteEnabled
+      ? 'Discard the local backup and reload the current data from Supabase?'
+      : 'Reset all local changes and restore source project data?\n\nThis cannot be undone.';
+    if (!confirm(message)) return;
+
+    adminStorage.clear();
+    if (window.siteSettings) siteSettings.clearLocal();
+    workingSettings = window.siteSettings
+      ? siteSettings.normalize(SITE_SETTINGS_DEFAULTS)
+      : {};
+    selectedId = null;
+    formDirty = false;
+
+    if (remoteEnabled) {
+      try {
+        const remote = await portfolioBackend.loadPortfolio({ includeDrafts: true });
+        workingProjects = JSON.parse(JSON.stringify(remote.projects));
+        workingGalleries = JSON.parse(JSON.stringify(remote.galleries));
+        adminStorage.save(workingProjects, []);
+        adminStorage.saveGalleries(workingGalleries, []);
+        const remoteSettings = await portfolioBackend.loadSiteSettings();
+        if (remoteSettings) workingSettings = siteSettings.saveLocal(remoteSettings);
+      } catch (error) {
+        loadWorkingData();
+        showStatus(`Could not reload Supabase: ${error.message || error}`, 'error');
+        return;
+      }
+    } else {
+      loadWorkingData();
+    }
+    if (!workingGalleries.some(gallery => gallery.id === managedSection)) {
+      managedSection = workingGalleries[0] ? workingGalleries[0].id : '';
+    }
+    renderSectionSelect();
+    renderProjectList();
+    clearForm();
+    showStatus(
+      remoteEnabled ? 'Local backup refreshed from Supabase.' : 'Reset complete. Showing source data.',
+      'success'
+    );
+  }
+
+  // ─── Helpers ─────────────────────────────────────────────────
+
+  function renderSiteSettingsForm() {
+    if (formDirty && !confirm('You have unsaved changes. Discard them?')) return;
+    selectedId = null;
+    formDirty = false;
+    renderProjectList();
+    if (!dom.form || !dom.formWrap || !dom.emptyState) return;
+    dom.formWrap.style.display = 'block';
+    dom.emptyState.style.display = 'none';
+    const settings = siteSettings.normalize(workingSettings);
+
+    dom.form.innerHTML = `
+      <div class="form-header">
+        <h2 class="form-title" id="form-heading">Editing: <span>Global Site Settings</span></h2>
+      </div>
+      <div class="form-grid">
+        <h3 class="form-section-heading">Landing Page</h3>
+        <div class="form-group">
+          <label for="setting-landingTitle">Main Title</label>
+          <input id="setting-landingTitle" type="text" value="${escAdm(settings.landingTitle)}" data-site-field="landingTitle" />
+        </div>
+        <div class="form-group">
+          <label for="setting-landingSubtitle">Subtitle</label>
+          <input id="setting-landingSubtitle" type="text" value="${escAdm(settings.landingSubtitle)}" data-site-field="landingSubtitle" />
+        </div>
+        <div class="form-group">
+          <label for="setting-landingEnterLabel">Enter Button Label</label>
+          <input id="setting-landingEnterLabel" type="text" value="${escAdm(settings.landingEnterLabel)}" data-site-field="landingEnterLabel" />
+        </div>
+        <div class="form-group span-2">
+          <label for="setting-landingBackgroundVideo">Landing Background Video Path / URL</label>
+          <div class="media-input-row">
+            <input id="setting-landingBackgroundVideo" type="text" value="${escAdm(settings.landingBackgroundVideo)}" data-site-field="landingBackgroundVideo" />
+            <button id="btn-upload-landing-video" class="btn btn-secondary" type="button">Upload Video</button>
+          </div>
+          <input id="file-landing-video" class="media-file-input" type="file" accept="video/mp4,video/webm" />
+          <span class="media-upload-note">MP4 or WebM. The uploaded URL is saved only after clicking Save Site Settings.</span>
+        </div>
+
+        <h3 class="form-section-heading">Project Selection Page</h3>
+        <div class="form-group span-2">
+          <label for="setting-galleryBackgroundVideo">Gallery Background Video Path / URL</label>
+          <div class="media-input-row">
+            <input id="setting-galleryBackgroundVideo" type="text" value="${escAdm(settings.galleryBackgroundVideo)}" data-site-field="galleryBackgroundVideo" />
+            <button id="btn-upload-gallery-video" class="btn btn-secondary" type="button">Upload Video</button>
+          </div>
+          <input id="file-gallery-video" class="media-file-input" type="file" accept="video/mp4,video/webm" />
+          <span class="media-upload-note">Used behind every project filter. It stays mounted while the visitor changes sections.</span>
+        </div>
+
+        <h3 class="form-section-heading">Contact Page</h3>
+        <div class="form-group span-2">
+          <label for="setting-contactTitle">Contact Title</label>
+          <input id="setting-contactTitle" type="text" value="${escAdm(settings.contactTitle)}" data-site-field="contactTitle" />
+        </div>
+        <div class="form-group span-2">
+          <label for="setting-contactIntro">Intro Text</label>
+          <textarea id="setting-contactIntro" rows="3" data-site-field="contactIntro">${escAdm(settings.contactIntro)}</textarea>
+        </div>
+        <div class="form-group">
+          <label for="setting-contactAvailability">Availability</label>
+          <input id="setting-contactAvailability" type="text" value="${escAdm(settings.contactAvailability)}" data-site-field="contactAvailability" />
+        </div>
+        <div class="form-group">
+          <label for="setting-contactLocation">Location</label>
+          <input id="setting-contactLocation" type="text" value="${escAdm(settings.contactLocation)}" data-site-field="contactLocation" />
+        </div>
+        <div class="form-group span-2">
+          <label for="setting-contactSubmitLabel">Submit Button Label</label>
+          <input id="setting-contactSubmitLabel" type="text" value="${escAdm(settings.contactSubmitLabel)}" data-site-field="contactSubmitLabel" />
+        </div>
+        <h4 class="form-subsection-heading span-2">Project Categories</h4>
+        <div class="form-group">
+          <label for="setting-contactCategoryVfx">Category 1</label>
+          <input id="setting-contactCategoryVfx" type="text" value="${escAdm(settings.contactCategoryVfx)}" data-site-field="contactCategoryVfx" />
+        </div>
+        <div class="form-group">
+          <label for="setting-contactCategoryEditing">Category 2</label>
+          <input id="setting-contactCategoryEditing" type="text" value="${escAdm(settings.contactCategoryEditing)}" data-site-field="contactCategoryEditing" />
+        </div>
+        <div class="form-group">
+          <label for="setting-contactCategoryAlchemy">Category 3</label>
+          <input id="setting-contactCategoryAlchemy" type="text" value="${escAdm(settings.contactCategoryAlchemy)}" data-site-field="contactCategoryAlchemy" />
+        </div>
+        <div class="form-group">
+          <label for="setting-contactCategoryFull">Category 4</label>
+          <input id="setting-contactCategoryFull" type="text" value="${escAdm(settings.contactCategoryFull)}" data-site-field="contactCategoryFull" />
+        </div>
+        <div class="form-group span-2">
+          <label for="setting-contactCategoryOther">Other Category Label</label>
+          <input id="setting-contactCategoryOther" type="text" value="${escAdm(settings.contactCategoryOther)}" data-site-field="contactCategoryOther" />
+          <span class="media-upload-note">Selecting this option opens a free-text field for the visitor.</span>
+        </div>
+
+        <h3 class="form-section-heading">Footer</h3>
+        <div class="form-group span-2">
+          <label for="setting-footerTitle">Footer Title</label>
+          <input id="setting-footerTitle" type="text" value="${escAdm(settings.footerTitle)}" data-site-field="footerTitle" />
+        </div>
+        <div class="form-group">
+          <label for="setting-footerContactLabel">Contact Button Label</label>
+          <input id="setting-footerContactLabel" type="text" value="${escAdm(settings.footerContactLabel)}" data-site-field="footerContactLabel" />
+        </div>
+        <div class="form-group">
+          <label for="setting-footerInstagramLabel">Instagram Button Label</label>
+          <input id="setting-footerInstagramLabel" type="text" value="${escAdm(settings.footerInstagramLabel)}" data-site-field="footerInstagramLabel" />
+        </div>
+        <div class="form-group span-2">
+          <label for="setting-footerInstagramUrl">Instagram Profile URL</label>
+          <input id="setting-footerInstagramUrl" type="text" value="${escAdm(settings.footerInstagramUrl)}" data-site-field="footerInstagramUrl" placeholder="https://instagram.com/your-profile" />
+        </div>
+        <div class="form-group span-2">
+          <label for="setting-footerCopyright">Copyright</label>
+          <input id="setting-footerCopyright" type="text" value="${escAdm(settings.footerCopyright)}" data-site-field="footerCopyright" />
+        </div>
+      </div>
+      <div class="form-actions">
+        <button id="btn-save-site-settings" class="btn btn-primary" type="button">Save Site Settings</button>
+        <button id="btn-preview-landing" class="btn btn-secondary" type="button">Preview Landing</button>
+        <button id="btn-preview-contact" class="btn btn-secondary" type="button">Preview Contact</button>
+        <button id="btn-preview-footer" class="btn btn-secondary" type="button">Preview Footer</button>
+        <span class="form-dirty-hint" id="dirty-hint" style="display:none">Unsaved changes</span>
+      </div>`;
+
+    dom.form.querySelectorAll('[data-site-field]').forEach(input => {
+      input.addEventListener('input', () => {
+        formDirty = true;
+        const hint = document.getElementById('dirty-hint');
+        if (hint) hint.style.display = 'inline';
+      });
+    });
+    document.getElementById('btn-save-site-settings').addEventListener('click', saveSiteSettings);
+    document.getElementById('btn-preview-landing').addEventListener('click', () => window.open('index.html', '_blank'));
+    document.getElementById('btn-preview-contact').addEventListener('click', () => window.open('contact.html', '_blank'));
+    document.getElementById('btn-preview-footer').addEventListener('click', () => window.open('gallery.html?section=featured-work#site-footer', '_blank'));
+    bindSiteVideoUpload('landing', 'landingBackgroundVideo');
+    bindSiteVideoUpload('gallery', 'galleryBackgroundVideo');
+  }
+
+  function bindSiteVideoUpload(kind, field) {
+    const button = document.getElementById(`btn-upload-${kind}-video`);
+    const fileInput = document.getElementById(`file-${kind}-video`);
+    if (!button || !fileInput) return;
+    button.addEventListener('click', () => {
+      if (!remoteEnabled) return showStatus('ERROR: Sign in to Supabase before uploading media.', 'error');
+      fileInput.click();
+    });
+    fileInput.addEventListener('change', async () => {
+      const file = fileInput.files && fileInput.files[0];
+      if (!file) return;
+      if (!['video/mp4', 'video/webm'].includes(file.type)) {
+        showStatus(`ERROR: The ${kind} background must be an MP4 or WebM video.`, 'error');
+        fileInput.value = '';
+        return;
+      }
+      const originalLabel = button.textContent;
+      button.disabled = true;
+      button.textContent = 'Uploading…';
+      try {
+        const publicUrl = await portfolioBackend.uploadMedia(file, `site/${kind}`);
+        const input = document.getElementById(`setting-${field}`);
+        if (input) input.value = publicUrl;
+        formDirty = true;
+        const hint = document.getElementById('dirty-hint');
+        if (hint) hint.style.display = 'inline';
+        showStatus('Upload complete. Click Save Site Settings to publish it.', 'success');
+      } catch (error) {
+        showStatus(`UPLOAD ERROR: ${error.message || error}`, 'error');
+      } finally {
+        button.disabled = false;
+        button.textContent = originalLabel;
+        fileInput.value = '';
+      }
+    });
+  }
+
+  async function saveSiteSettings() {
+    const updated = { ...workingSettings };
+    dom.form.querySelectorAll('[data-site-field]').forEach(input => {
+      updated[input.getAttribute('data-site-field')] = input.value.trim();
+    });
+    const required = [
+      'landingTitle', 'landingSubtitle', 'landingEnterLabel', 'landingBackgroundVideo', 'galleryBackgroundVideo',
+      'contactTitle', 'contactIntro', 'contactAvailability', 'contactLocation', 'contactSubmitLabel',
+      'contactCategoryVfx', 'contactCategoryEditing', 'contactCategoryAlchemy', 'contactCategoryFull',
+      'contactCategoryOther',
+      'footerTitle', 'footerContactLabel', 'footerInstagramLabel', 'footerInstagramUrl', 'footerCopyright'
+    ];
+    if (required.some(field => !updated[field])) {
+      showStatus('ERROR: All site settings fields are required.', 'error');
+      return;
+    }
+    try {
+      const instagramUrl = new URL(updated.footerInstagramUrl);
+      if (!['http:', 'https:'].includes(instagramUrl.protocol)) throw new Error('Invalid protocol.');
+      updated.footerInstagramUrl = instagramUrl.toString();
+    } catch (error) {
+      showStatus('ERROR: Enter a valid Instagram http:// or https:// URL.', 'error');
+      return;
+    }
+
+    workingSettings = siteSettings.saveLocal(updated);
+    formDirty = false;
+    const hint = document.getElementById('dirty-hint');
+    if (hint) hint.style.display = 'none';
+    if (!remoteEnabled) {
+      showStatus('Site settings saved locally.', 'success');
+      return;
+    }
+    showStatus('Saving site settings to Supabase…', 'info');
+    try {
+      await portfolioBackend.saveSiteSettings(workingSettings);
+      showStatus('Site settings saved to Supabase.', 'success');
+    } catch (error) {
+      showStatus(`Saved locally, but Supabase failed: ${error.message || error}`, 'error');
+    }
+  }
+
+  function clearForm() {
+    const wrap = dom.formWrap;
+    const empty = dom.emptyState;
+    if (wrap) wrap.style.display = 'none';
+    if (empty) empty.style.display = 'flex';
+  }
+
+  function getSectionLabel(section) {
+    if (dom.sectionSelect) {
+      const option = Array.from(dom.sectionSelect.options)
+        .find(item => item.value === section);
+      if (option) return option.textContent;
+    }
+    return section.replace(/-/g, ' ');
+  }
+
+  // ─── Gallery Sections ───────────────────────────────────────
+
+  async function createGallery() {
+    if (formDirty && !confirm('You have unsaved changes. Discard them?')) return;
+    const id = uniqueGalleryId('untitled-section');
+    const gallery = {
+      id,
+      title: 'UNTITLED SECTION',
+      description: '',
+      published: false,
+      order: workingGalleries.length + 1
+    };
+    workingGalleries.push(gallery);
+    adminStorage.saveGalleries(workingGalleries);
+    managedSection = gallery.id;
+    selectedId = null;
+    formDirty = false;
+    renderSectionSelect();
+    renderProjectList();
+    renderGalleryForm(gallery);
+    updateOverrideNotice();
+    await syncAndReport(
+      'New hidden section created in Supabase. Edit and publish it when ready.',
+      'New hidden section created. Edit and publish it when ready.'
+    );
+  }
+
+  function editGallery() {
+    const gallery = workingGalleries.find(item => item.id === managedSection);
+    if (gallery) renderGalleryForm(gallery);
+  }
+
+  function renderGalleryForm(gallery) {
+    selectedId = null;
+    formDirty = false;
+    renderProjectList();
+    if (!dom.form || !dom.formWrap || !dom.emptyState) return;
+    dom.formWrap.style.display = 'block';
+    dom.emptyState.style.display = 'none';
+    const projectCount = workingProjects.filter(project => project.section === gallery.id).length;
+    const idIsEditable = !GALLERIES_DATA.some(source => source.id === gallery.id) && projectCount === 0;
+    dom.form.innerHTML = `
+      <div class="form-header"><h2 class="form-title">Editing section: <span>${escAdm(gallery.title)}</span></h2></div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="gallery-title">Section Title</label>
+          <input id="gallery-title" type="text" value="${escAdm(gallery.title)}" data-gallery-field="title" />
+        </div>
+        <div class="form-group">
+          <label for="gallery-id">Section ID</label>
+          <input id="gallery-id" type="text" value="${escAdm(gallery.id)}" ${idIsEditable ? 'data-gallery-field="id"' : 'readonly'} />
+        </div>
+        <div class="form-group span-2">
+          <label for="gallery-description">Description</label>
+          <input id="gallery-description" type="text" value="${escAdm(gallery.description || '')}" data-gallery-field="description" />
+        </div>
+        <div class="form-group">
+          <label for="gallery-order">Menu Order</label>
+          <input id="gallery-order" type="number" min="1" value="${gallery.order}" data-gallery-field="order" />
+        </div>
+        <div class="form-group">
+          <label for="gallery-published">Visibility</label>
+          <select id="gallery-published" data-gallery-field="published">
+            <option value="true" ${gallery.published !== false ? 'selected' : ''}>Published — visible in menu</option>
+            <option value="false" ${gallery.published === false ? 'selected' : ''}>Hidden — admin only</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-actions">
+        <button id="btn-save-gallery" class="btn btn-primary" type="button">Save Section</button>
+        <button id="btn-preview" class="btn btn-secondary" type="button">Preview Section</button>
+        <span class="form-dirty-hint" id="dirty-hint" style="display:none">Unsaved changes</span>
+      </div>`;
+    dom.form.querySelectorAll('[data-gallery-field]').forEach(input => {
+      input.addEventListener('input', () => {
+        formDirty = true;
+        document.getElementById('dirty-hint').style.display = 'inline';
+      });
+    });
+    document.getElementById('btn-save-gallery').addEventListener('click', () => saveGallery(gallery.id));
+    document.getElementById('btn-preview').addEventListener('click', previewGallery);
+  }
+
+  async function saveGallery(id) {
+    const index = workingGalleries.findIndex(gallery => gallery.id === id);
+    if (index === -1) return;
+    const updated = { ...workingGalleries[index] };
+    dom.form.querySelectorAll('[data-gallery-field]').forEach(input => {
+      const field = input.getAttribute('data-gallery-field');
+      if (field === 'published') updated[field] = input.value === 'true';
+      else if (field === 'order') updated[field] = Number.parseInt(input.value, 10);
+      else updated[field] = input.value.trim();
+    });
+    if (!updated.title) return showStatus('ERROR: Section title cannot be empty.', 'error');
+    updated.id = String(updated.id || '')
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '');
+    if (!updated.id) return showStatus('ERROR: Section ID cannot be empty.', 'error');
+    if (workingGalleries.some(gallery => gallery.id === updated.id && gallery.id !== id)) {
+      return showStatus(`ERROR: Section ID “${updated.id}” is already in use.`, 'error');
+    }
+    if (!Number.isInteger(updated.order) || updated.order < 1) {
+      return showStatus('ERROR: Menu Order must be a whole number greater than 0.', 'error');
+    }
+    workingGalleries[index] = updated;
+    managedSection = updated.id;
+    workingGalleries = adminStorage.setGalleryOrder(workingGalleries, updated.id, updated.order);
+    adminStorage.saveGalleries(workingGalleries);
+    formDirty = false;
+    renderSectionSelect();
+    renderProjectList();
+    renderGalleryForm(workingGalleries.find(gallery => gallery.id === updated.id));
+    updateOverrideNotice();
+    if (!remoteEnabled) {
+      showStatus('Section saved.', 'success');
+      return;
+    }
+    showStatus('Saving section to Supabase…', 'info');
+    try {
+      if (updated.id !== id) await replaceRemoteGalleryAndSync(id);
+      else await syncPortfolioSnapshot();
+      showStatus('Section saved to Supabase.', 'success');
+    } catch (error) {
+      showStatus(`Saved locally, but Supabase failed: ${error.message || error}`, 'error');
+    }
+  }
+
+  async function moveGallery(direction) {
+    const ordered = adminStorage.normalizeGalleryOrder(workingGalleries);
+    const index = ordered.findIndex(gallery => gallery.id === managedSection);
+    const target = index + direction;
+    if (index === -1 || target < 0 || target >= ordered.length) return;
+    workingGalleries = adminStorage.setGalleryOrder(ordered, managedSection, target + 1);
+    adminStorage.saveGalleries(workingGalleries);
+    renderSectionSelect();
+    updateOverrideNotice();
+    await syncAndReport('Section order updated in Supabase.', 'Section order updated.');
+  }
+
+  async function deleteCurrentGallery() {
+    const gallery = workingGalleries.find(item => item.id === managedSection);
+    if (!gallery) return;
+    const projectCount = workingProjects.filter(project => project.section === gallery.id).length;
+    if (projectCount > 0) {
+      showStatus(`ERROR: This section still contains ${projectCount} project(s). Delete them first.`, 'error');
+      return;
+    }
+    if (!confirm(`Delete section “${gallery.title}”?`)) return;
+    workingGalleries = adminStorage.deleteGallery(workingGalleries, gallery.id);
+    managedSection = workingGalleries[0] ? workingGalleries[0].id : '';
+    selectedId = null;
+    formDirty = false;
+    renderSectionSelect();
+    renderProjectList();
+    clearForm();
+    updateOverrideNotice();
+    if (!remoteEnabled) {
+      showStatus('Section deleted.', 'success');
+      return;
+    }
+    showStatus('Deleting section from Supabase…', 'info');
+    try {
+      await deleteRemoteGalleryAndSync(gallery.id);
+      showStatus('Section deleted from Supabase.', 'success');
+    } catch (error) {
+      showStatus(`Deleted locally, but Supabase failed: ${error.message || error}`, 'error');
+    }
+  }
+
+  function uniqueGalleryId(base) {
+    const used = new Set(workingGalleries.map(gallery => gallery.id));
+    if (!used.has(base)) return base;
+    let suffix = 2;
+    while (used.has(`${base}-${suffix}`)) suffix += 1;
+    return `${base}-${suffix}`;
+  }
+
+  function uniqueSlug(base) {
+    const normalized = String(base || 'project')
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '') || 'project';
+    const used = new Set(workingProjects.flatMap(project => [project.id, project.slug]).filter(Boolean));
+    if (!used.has(normalized)) return normalized;
+    let suffix = 2;
+    while (used.has(`${normalized}-${suffix}`)) suffix += 1;
+    return `${normalized}-${suffix}`;
+  }
+
+  function changeSection(nextSection) {
+    if (!workingGalleries.some(gallery => gallery.id === nextSection) || nextSection === managedSection) return;
+    if (formDirty && !confirm('You have unsaved changes. Discard them?')) {
+      if (dom.sectionSelect) dom.sectionSelect.value = managedSection;
+      return;
+    }
+
+    managedSection = nextSection;
+    selectedId = null;
+    formDirty = false;
+    renderProjectList();
+    clearForm();
+    showStatus(`Now editing ${getSectionLabel(managedSection)}.`, 'info');
+  }
+
+  function showStatus(message, type) {
+    const el = dom.status;
+    if (!el) return;
+
+    el.textContent = message;
+    el.className = 'status-bar status-' + (type || 'info');
+    el.style.display = 'block';
+
+    clearTimeout(el._timeout);
+    el._timeout = setTimeout(() => {
+      el.style.display = 'none';
+    }, type === 'error' ? 8000 : 4000);
+  }
+
+  function escAdm(str) {
+    if (!str) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+
+  // ─── Bind Top-Level Actions ──────────────────────────────────
+
+  function bindActions() {
+    const newProjectBtn = dom.newProjectBtn;
+    if (newProjectBtn) newProjectBtn.addEventListener('click', createProject);
+
+    if (dom.newSectionBtn) dom.newSectionBtn.addEventListener('click', createGallery);
+    if (dom.editSectionBtn) dom.editSectionBtn.addEventListener('click', editGallery);
+    if (dom.sectionUpBtn) dom.sectionUpBtn.addEventListener('click', () => moveGallery(-1));
+    if (dom.sectionDownBtn) dom.sectionDownBtn.addEventListener('click', () => moveGallery(1));
+    if (dom.deleteSectionBtn) dom.deleteSectionBtn.addEventListener('click', deleteCurrentGallery);
+    if (dom.siteSettingsBtn) dom.siteSettingsBtn.addEventListener('click', renderSiteSettingsForm);
+
+    const exportBtn = document.getElementById('btn-export');
+    if (exportBtn) exportBtn.addEventListener('click', exportJson);
+
+    const importBtn = document.getElementById('btn-import');
+    if (importBtn) importBtn.addEventListener('click', triggerImport);
+
+    const importFile = document.getElementById('import-file-input');
+    if (importFile) importFile.addEventListener('change', handleImportFile);
+
+    const resetBtn = document.getElementById('btn-reset');
+    if (resetBtn) resetBtn.addEventListener('click', resetOverrides);
+
+    const sectionSelect = dom.sectionSelect;
+    if (sectionSelect) {
+      sectionSelect.value = managedSection;
+      sectionSelect.addEventListener('change', () => changeSection(sectionSelect.value));
+    }
+  }
+
+  // ─── Start ───────────────────────────────────────────────────
+
+  document.addEventListener('DOMContentLoaded', init);
+
+}());
