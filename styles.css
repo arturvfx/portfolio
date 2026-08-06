@@ -2295,11 +2295,47 @@ body.contact-page .cursor-shadow {
 /* Mobile Adjustments */
 @media (max-width: 900px) {
   .nav-header {
-    padding: 1rem 1.5rem;
+    height: 4.25rem;
+    padding: 0 1.5rem;
+  }
+
+  .nav-brand {
+    z-index: 110;
   }
 
   .nav-toggle {
-    display: block;
+    display: grid;
+    place-content: center;
+    flex: 0 0 44px;
+    margin-left: auto;
+    padding: 0;
+  }
+
+  .nav-toggle span {
+    width: 20px;
+    height: 2px;
+    margin: 3px auto;
+    transition: none;
+    transform-origin: center;
+  }
+
+  .nav-toggle[aria-expanded="true"] span:nth-child(1) {
+    transform: translateY(8px) rotate(45deg);
+  }
+
+  .nav-toggle[aria-expanded="true"] span:nth-child(2) {
+    opacity: 0;
+  }
+
+  .nav-toggle[aria-expanded="true"] span:nth-child(3) {
+    transform: translateY(-8px) rotate(-45deg);
+  }
+
+  .nav-header > nav {
+    position: fixed;
+    inset: 0;
+    z-index: 105;
+    pointer-events: none;
   }
 
   .project-detail-header {
@@ -2326,28 +2362,38 @@ body.contact-page .cursor-shadow {
 
   .nav-menu {
     position: fixed;
-    top: 0;
-    right: -100%;
-    width: 80%;
-    max-width: 320px;
+    inset: 0;
+    width: 100%;
+    max-width: none;
     height: 100vh;
+    height: 100dvh;
     background: #030305;
     backdrop-filter: none;
     border-left: 0;
     flex-direction: column;
     justify-content: center;
     align-items: flex-start;
-    padding: 3rem 2rem;
-    gap: 2rem;
-    transition: right 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    padding: calc(4.25rem + 2rem) 1.5rem 2.5rem;
+    gap: clamp(1.25rem, 4vh, 2rem);
+    visibility: hidden;
+    pointer-events: none;
+    transition: none;
     z-index: 105;
   }
 
   .nav-menu .nav-link {
-    display: inline-flex;
+    display: inline-grid;
     align-items: center;
+    width: auto;
+    max-width: 100%;
     min-height: 44px;
     opacity: 0.56;
+    white-space: nowrap;
+  }
+
+  .nav-menu .nav-link-label,
+  .nav-menu .nav-link-sizer {
+    white-space: nowrap;
   }
 
   .nav-menu .nav-link.active {
@@ -2359,7 +2405,8 @@ body.contact-page .cursor-shadow {
   }
 
   .nav-menu.open {
-    right: 0;
+    visibility: visible;
+    pointer-events: auto;
   }
 
   .page-container {
