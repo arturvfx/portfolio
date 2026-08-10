@@ -31,6 +31,8 @@
   let adminStarted = false;
   let remoteEnabled = false;
   let remoteWriteQueue = Promise.resolve();
+  let draggedProjectId = null;
+  let suppressProjectClick = false;
 
   // ─── DOM References ──────────────────────────────────────────
 
@@ -350,7 +352,7 @@
     const sectionLabel = getSectionLabel(managedSection);
     listEl.setAttribute('aria-label', `${sectionLabel} project list`);
     if (dom.sidebarHeader) {
-      dom.sidebarHeader.textContent = `${sectionLabel} — click to edit · ↑↓ to reorder`;
+      dom.sidebarHeader.textContent = `${sectionLabel} — click to edit · drag to reorder`;
     }
 
     if (projects.length === 0) {
@@ -384,29 +386,90 @@
           </div>
           <div class="list-item-client">${escAdm(project.client || '')} — ${escAdm(project.category || '')}</div>
         </div>
-        <div class="list-item-actions">
-          <button class="btn-icon" type="button" data-action="up" data-id="${escAdm(project.id)}" title="Move up" ${idx === 0 ? 'disabled' : ''}>↑</button>
-          <button class="btn-icon" type="button" data-action="down" data-id="${escAdm(project.id)}" title="Move down" ${idx === projects.length - 1 ? 'disabled' : ''}>↓</button>
-        </div>
+        <span
+          class="project-drag-handle"
+          draggable="true"
+          role="button"
+          tabindex="0"
+          aria-label="Drag ${escAdm(project.title)} to reorder. Use the arrow keys while focused."
+          title="Drag to reorder"
+        >⠿</span>
       `;
 
       li.addEventListener('click', (e) => {
-        if (e.target.closest('[data-action]')) return;
+        if (e.target.closest('.project-drag-handle') || suppressProjectClick) return;
         selectProject(project.id);
       });
 
+      bindProjectDragItem(li, project, idx, projects);
+
       listEl.appendChild(li);
     });
+  }
 
-    // Bind order buttons
-    listEl.querySelectorAll('[data-action]').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const action = btn.getAttribute('data-action');
-        const id = btn.getAttribute('data-id');
-        if (action === 'up') moveProject(id, -1);
-        if (action === 'down') moveProject(id, 1);
+  function clearProjectDragState() {
+    draggedProjectId = null;
+    document.querySelectorAll('.project-list-item').forEach(item => {
+      item.classList.remove('is-dragging', 'drag-before', 'drag-after');
+    });
+    window.setTimeout(() => { suppressProjectClick = false; }, 0);
+  }
+
+  function bindProjectDragItem(item, project, index, projects) {
+    const handle = item.querySelector('.project-drag-handle');
+    if (!handle) return;
+
+    handle.addEventListener('click', event => event.stopPropagation());
+    handle.addEventListener('keydown', event => {
+      if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return;
+      event.preventDefault();
+      event.stopPropagation();
+      const offset = event.key === 'ArrowUp' ? -1 : 1;
+      reorderProject(project.id, index + offset);
+    });
+
+    handle.addEventListener('dragstart', event => {
+      draggedProjectId = project.id;
+      suppressProjectClick = true;
+      event.dataTransfer.effectAllowed = 'move';
+      event.dataTransfer.setData('text/plain', project.id);
+      window.requestAnimationFrame(() => item.classList.add('is-dragging'));
+    });
+
+    handle.addEventListener('dragend', clearProjectDragState);
+
+    item.addEventListener('dragover', event => {
+      if (!draggedProjectId || draggedProjectId === project.id) return;
+      event.preventDefault();
+      event.dataTransfer.dropEffect = 'move';
+      document.querySelectorAll('.project-list-item').forEach(other => {
+        if (other !== item) other.classList.remove('drag-before', 'drag-after');
       });
+      const position = event.clientY < item.getBoundingClientRect().top + item.offsetHeight / 2
+        ? 'drag-before'
+        : 'drag-after';
+      item.classList.toggle('drag-before', position === 'drag-before');
+      item.classList.toggle('drag-after', position === 'drag-after');
+
+      if (event.clientY < 80) window.scrollBy(0, -12);
+      if (event.clientY > window.innerHeight - 80) window.scrollBy(0, 12);
+    });
+
+    item.addEventListener('drop', event => {
+      event.preventDefault();
+      const sourceId = draggedProjectId || event.dataTransfer.getData('text/plain');
+      const sourceProject = projects.find(candidate => candidate.id === sourceId);
+      if (!sourceProject || sourceProject.id === project.id) {
+        clearProjectDragState();
+        return;
+      }
+
+      const remaining = projects.filter(candidate => candidate.id !== sourceProject.id);
+      const targetIndex = remaining.findIndex(candidate => candidate.id === project.id);
+      const insertAfter = event.clientY >= item.getBoundingClientRect().top + item.offsetHeight / 2;
+      const requestedIndex = targetIndex + (insertAfter ? 1 : 0);
+      clearProjectDragState();
+      reorderProject(sourceProject.id, requestedIndex);
     });
   }
 
@@ -959,35 +1022,29 @@
 
   // ─── Reorder ─────────────────────────────────────────────────
 
-  async function moveProject(id, direction) {
+  async function reorderProject(id, requestedIndex) {
     const sectionProjects = getSectionProjects();
-    const idx = sectionProjects.findIndex(p => p.id === id);
-    if (idx === -1) return;
+    const currentIndex = sectionProjects.findIndex(project => project.id === id);
+    const targetIndex = Math.max(0, Math.min(sectionProjects.length - 1, requestedIndex));
+    if (currentIndex === -1 || currentIndex === targetIndex) return;
 
-    const swapIdx = idx + direction;
-    if (swapIdx < 0 || swapIdx >= sectionProjects.length) return;
-
-    // Swap order values
-    const orderA = sectionProjects[idx].order;
-    const orderB = sectionProjects[swapIdx].order;
-
-    const idxInWorking = workingProjects.findIndex(p => p.id === sectionProjects[idx].id);
-    const swapInWorking = workingProjects.findIndex(p => p.id === sectionProjects[swapIdx].id);
-
-    workingProjects[idxInWorking] = { ...workingProjects[idxInWorking], order: orderB };
-    workingProjects[swapInWorking] = { ...workingProjects[swapInWorking], order: orderA };
-
-    // Normalize in display-order, rather than the source array's physical order.
-    workingProjects = adminStorage.normalizeOrder(workingProjects, managedSection);
+    const project = sectionProjects[currentIndex];
+    workingProjects = adminStorage.setOrder(
+      workingProjects,
+      managedSection,
+      { id: project.id, slug: project.slug },
+      targetIndex + 1
+    );
 
     adminStorage.save(workingProjects);
     updateOverrideNotice();
     renderProjectList();
 
-    // Keep form in sync if the moved project was selected
-    if (selectedId === id) {
-      const updated = workingProjects.find(p => p.id === id);
-      if (updated) renderEditForm(updated);
+    // Preserve any unsaved form fields while keeping its order value accurate.
+    const selectedProject = workingProjects.find(projectItem => projectItem.id === selectedId);
+    const orderField = document.getElementById('field-order');
+    if (selectedProject && orderField) {
+      orderField.value = String(selectedProject.order);
     }
 
     await syncAndReport('Order updated in Supabase.', 'Order updated.');

@@ -240,6 +240,9 @@
 
     .project-list-item:hover { background: var(--bg-hover); }
     .project-list-item.selected { background: var(--bg-selected); border-left: 2px solid var(--accent); }
+    .project-list-item.is-dragging { opacity: 0.32; }
+    .project-list-item.drag-before { box-shadow: inset 0 2px 0 var(--accent); }
+    .project-list-item.drag-after { box-shadow: inset 0 -2px 0 var(--accent); }
 
     .list-item-thumb {
       width: 60px;
@@ -310,31 +313,30 @@
     .tag-pub   { background: var(--success-dim); color: var(--success); }
     .tag-unpub { background: var(--error-dim); color: var(--error); }
 
-    .list-item-actions {
-      display: flex;
-      flex-direction: column;
-      gap: 0.2rem;
+    .project-drag-handle {
+      width: 28px;
+      height: 38px;
+      display: grid;
+      place-items: center;
       flex-shrink: 0;
-    }
-
-    .btn-icon {
-      background: var(--bg-raised);
-      border: 1px solid var(--border);
-      color: var(--text-secondary);
-      width: 24px;
-      height: 24px;
+      border: 1px solid transparent;
       border-radius: var(--radius-sm);
-      cursor: pointer;
-      font-size: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: background 0.12s, color 0.12s;
+      color: var(--text-muted);
+      cursor: grab;
+      font-size: 18px;
       line-height: 1;
+      user-select: none;
     }
 
-    .btn-icon:hover:not([disabled]) { background: var(--bg-hover); color: var(--text-primary); }
-    .btn-icon[disabled] { opacity: 0.3; cursor: not-allowed; }
+    .project-drag-handle:hover,
+    .project-drag-handle:focus-visible {
+      color: var(--text-primary);
+      background: var(--bg-raised);
+      border-color: var(--border);
+      outline: none;
+    }
+
+    .project-drag-handle:active { cursor: grabbing; }
 
     .list-empty {
       padding: 2rem 1rem;
@@ -637,7 +639,7 @@
   <!-- ── Sidebar — Project List ───────────────────────────── -->
   <aside class="sidebar">
     <div class="sidebar-header">
-      Projects — click to edit · ↑↓ to reorder
+      Projects — click to edit · drag to reorder
     </div>
     <ul id="admin-project-list" role="list" aria-label="Featured Work project list"></ul>
   </aside>
@@ -668,7 +670,7 @@
 <script src="../data/supabase-service.js?v=20260806-project-stills"></script>
 <script src="../admin/admin-storage.js?v=20260806-project-stills"></script>
 <script src="../components/youtube-player.js?v=20260804-youtube-cover"></script>
-<script src="../admin/admin.js?v=20260806-project-stills"></script>
+<script src="../admin/admin.js?v=20260810-drag-reorder"></script>
 
 </body>
 </html>
