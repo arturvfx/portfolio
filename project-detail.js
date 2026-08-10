@@ -288,7 +288,7 @@ function renderProjectStills(project) {
 }
 
 async function initProjectDetail() {
-  const slug = new URLSearchParams(window.location.search).get('slug');
+  const slug = getProjectSlugFromLocation();
   const portfolioData = await getPublicPortfolioData();
   const project = portfolioData.projects.find(item =>
     item.slug === slug && item.published !== false
@@ -316,7 +316,7 @@ async function initProjectDetail() {
 
   const backLink = document.getElementById('project-back-link');
   if (backLink) {
-    backLink.href = `gallery.html?section=${encodeURIComponent(project.section)}`;
+    backLink.href = getGalleryHref(project.section);
     const gallery = portfolioData.galleries.find(item => item.id === project.section);
     backLink.textContent = `← ${gallery ? gallery.title : 'BACK TO GALLERY'}`;
   }
@@ -337,7 +337,7 @@ function updateProjectMetadata(project) {
   document.querySelector('meta[property="og:title"]')?.setAttribute('content', title);
   document.querySelector('meta[property="og:description"]')?.setAttribute('content', description);
 
-  const canonicalUrl = `https://arturaraujo.com/project.html?slug=${encodeURIComponent(project.slug)}`;
+  const canonicalUrl = getCanonicalProjectUrl(project.slug);
   document.querySelector('link[rel="canonical"]')?.setAttribute('href', canonicalUrl);
   setProjectMeta('property', 'og:url', canonicalUrl);
 

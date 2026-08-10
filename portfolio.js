@@ -87,6 +87,9 @@ function updateGalleryMetadata(gallery) {
   setPortfolioMeta('meta[name="description"]', description);
   setPortfolioMeta('meta[property="og:title"]', title);
   setPortfolioMeta('meta[property="og:description"]', description);
+  const canonicalUrl = getCanonicalGalleryUrl(gallery.id);
+  document.querySelector('link[rel="canonical"]')?.setAttribute('href', canonicalUrl);
+  setPortfolioMeta('meta[property="og:url"]', canonicalUrl);
 }
 
 /**
@@ -109,11 +112,8 @@ function navigatePortfolioSection(sectionId, options = {}) {
   renderPortfolioPage(pageConfig, publicPortfolioRuntime.projects);
 
   if (options.history === 'push' || options.history === 'replace') {
-    const url = new URL(window.location.href);
-    url.searchParams.set('section', gallery.id);
-    url.hash = '';
     const method = options.history === 'replace' ? 'replaceState' : 'pushState';
-    window.history[method]({ portfolioSection: gallery.id }, '', url);
+    window.history[method]({ portfolioSection: gallery.id }, '', getGalleryHref(gallery.id));
   }
 
   const menu = document.getElementById('nav-menu');
@@ -162,10 +162,6 @@ async function getPublicPortfolioData() {
   }
 }
 
-function getGalleryHref(galleryId) {
-  return `gallery.html?section=${encodeURIComponent(galleryId)}`;
-}
-
 function renderGalleryNavigation(galleries, activeId) {
   const menu = document.getElementById('nav-menu');
   if (!menu) return;
@@ -207,12 +203,13 @@ function renderInitialGalleryNavigation() {
   const currentPath = window.location.pathname;
   let activeId = null;
 
-  if (currentPath.endsWith('/gallery.html')) {
-    activeId = new URLSearchParams(window.location.search).get('section') ||
+  if (document.getElementById('project-gallery')) {
+    activeId = getGallerySectionFromLocation(
       document.getElementById('project-gallery')?.getAttribute('data-page') ||
-      'featured-work';
-  } else if (currentPath.endsWith('/project.html')) {
-    const slug = new URLSearchParams(window.location.search).get('slug');
+      'featured-work'
+    );
+  } else if (currentPath.endsWith('/project.html') || currentPath.includes('/project/')) {
+    const slug = getProjectSlugFromLocation();
     const storedPreview = typeof readProjectPreview === 'function'
       ? readProjectPreview(slug)
       : null;
@@ -241,8 +238,9 @@ async function initPortfolioSystem() {
     return;
   }
   publicPortfolioRuntime = portfolioData;
-  const querySection = new URLSearchParams(window.location.search).get('section');
-  const requestedId = querySection || container.getAttribute('data-page') || 'featured-work';
+  const requestedId = getGallerySectionFromLocation(
+    container.getAttribute('data-page') || 'featured-work'
+  );
   const gallery = resolvePublishedGallery(galleries, requestedId);
   renderGalleryNavigation(galleries, gallery.id);
   navigatePortfolioSection(gallery.id, { history: 'none', scroll: false });
@@ -252,7 +250,7 @@ async function initPortfolioSystem() {
   if (!window.__portfolioPopstateBound) {
     window.__portfolioPopstateBound = true;
     window.addEventListener('popstate', () => {
-      const nextSection = new URLSearchParams(window.location.search).get('section') || 'featured-work';
+      const nextSection = getGallerySectionFromLocation('featured-work');
       navigatePortfolioSection(nextSection, { history: 'none', scroll: true });
     });
   }

@@ -996,7 +996,7 @@
   // ─── Preview ─────────────────────────────────────────────────
 
   function previewGallery() {
-    window.open(`gallery.html?section=${encodeURIComponent(managedSection)}`, '_blank');
+    window.open(getGalleryHref(managedSection), '_blank');
   }
 
   // ─── Export ──────────────────────────────────────────────────
@@ -1236,9 +1236,9 @@
       });
     });
     document.getElementById('btn-save-site-settings').addEventListener('click', saveSiteSettings);
-    document.getElementById('btn-preview-landing').addEventListener('click', () => window.open('index.html', '_blank'));
-    document.getElementById('btn-preview-contact').addEventListener('click', () => window.open('contact.html', '_blank'));
-    document.getElementById('btn-preview-footer').addEventListener('click', () => window.open('gallery.html?section=featured-work#site-footer', '_blank'));
+    document.getElementById('btn-preview-landing').addEventListener('click', () => window.open('/', '_blank'));
+    document.getElementById('btn-preview-contact').addEventListener('click', () => window.open('/contact', '_blank'));
+    document.getElementById('btn-preview-footer').addEventListener('click', () => window.open(`${getGalleryHref('featured-work')}#site-footer`, '_blank'));
     bindSiteVideoUpload('landing', 'landingBackgroundVideo');
     bindSiteVideoUpload('gallery', 'galleryBackgroundVideo');
   }

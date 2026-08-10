@@ -133,7 +133,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Mechanical Shutter Click & Page Navigation Handling for ENTER
     enterBtn.addEventListener('click', (e) => {
       e.preventDefault();
-      const targetUrl = enterBtn.getAttribute('href') || 'gallery.html?section=featured-work';
+      const targetUrl = getGalleryHref('featured-work');
 
       document.body.classList.add('shutter-click-active');
 
@@ -218,7 +218,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const currentUrl = new URL(window.location.href);
       const targetUrl = new URL(link.href, window.location.href);
       const targetSection = link.getAttribute('data-section') || targetUrl.searchParams.get('section');
-      const isGalleryPage = currentUrl.pathname.endsWith('/gallery.html');
+      const isGalleryPage = Boolean(document.getElementById('project-gallery'));
 
       if (isGalleryPage && targetSection && typeof navigatePortfolioSection === 'function') {
         event.preventDefault();
@@ -235,12 +235,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (!link.classList.contains('active')) return;
       runNavInteractionFlicker(link);
 
-      const currentGallerySection = currentUrl.searchParams.get('section') ||
-        document.getElementById('project-gallery')?.getAttribute('data-page') ||
-        'featured-work';
-      const isCurrentGalleryFilter = currentUrl.pathname.endsWith('/gallery.html') &&
-        targetUrl.pathname === currentUrl.pathname &&
-        targetUrl.searchParams.get('section') === currentGallerySection;
+      const currentGallerySection = getGallerySectionFromLocation(
+        document.getElementById('project-gallery')?.getAttribute('data-page') || 'featured-work'
+      );
+      const isCurrentGalleryFilter = isGalleryPage && targetSection === currentGallerySection;
       const isCurrentExactPage = targetUrl.pathname === currentUrl.pathname &&
         targetUrl.search === currentUrl.search;
 
@@ -265,7 +263,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     navBrand.addEventListener('click', event => {
       event.preventDefault();
       runNavInteractionFlicker(navBrand);
-      const href = navBrand.getAttribute('href') || 'index.html';
+      const href = navBrand.getAttribute('href') || '/';
       window.setTimeout(() => {
         window.location.href = href;
       }, reducedMotion ? 0 : 112);

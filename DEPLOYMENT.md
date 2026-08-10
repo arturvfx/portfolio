@@ -36,9 +36,11 @@ After the final domain is known:
 
 ## Production smoke test
 
-- Landing `ENTER` opens the gallery.
+- Landing `ENTER` opens `/featured-work`.
 - Every mobile menu item changes the filter without reloading the fixed header.
-- Gallery cards open their project and browser back returns to the same filter.
+- Gallery cards open `/project/project-slug` and browser back returns to the same filter.
+- `/contact` and `/admin` load without exposing their underlying `.html` files.
+- Older `.html` entry points redirect to their current clean URL.
 - YouTube modal opens and closes with its visible close control and `Escape`.
 - Contact form saves a row, sends one email and exposes no destination address.
 - Admin login, project ordering, Site Settings and media uploads still work.

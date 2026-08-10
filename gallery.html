@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <base href="/">
   <title>ARTUR ARAUJO | Portfolio</title>
   <meta name="description" content="Selected VFX, compositing, motion, editing and 3D work by Artur Araujo.">
   <meta name="robots" content="index, follow">
@@ -11,9 +12,9 @@
   <meta property="og:site_name" content="ARTUR ARAUJO">
   <meta property="og:title" content="ARTUR ARAUJO | Portfolio">
   <meta property="og:description" content="Selected VFX, compositing, motion, editing and 3D work by Artur Araujo.">
-  <meta property="og:url" content="https://arturaraujo.com/gallery.html">
+  <meta property="og:url" content="https://arturaraujo.com/featured-work">
   <meta name="twitter:card" content="summary">
-  <link rel="canonical" href="https://arturaraujo.com/gallery.html">
+  <link rel="canonical" href="https://arturaraujo.com/featured-work">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@600;700;800;900&family=Inter:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
@@ -35,7 +36,7 @@
   <div class="cursor-shadow" id="cursor-shadow"></div>
 
   <header class="nav-header">
-    <a href="index.html" class="nav-brand" data-text="ARTUR ARAUJO" aria-label="ARTUR ARAUJO — home">ARTUR ARAUJO</a>
+    <a href="/" class="nav-brand" data-text="ARTUR ARAUJO" aria-label="ARTUR ARAUJO — home">ARTUR ARAUJO</a>
     <button class="nav-toggle" id="nav-toggle" aria-label="Open menu" aria-controls="nav-menu" aria-expanded="false">
       <span></span><span></span><span></span>
     </button>
@@ -53,7 +54,7 @@
   <footer class="site-footer" id="site-footer">
     <h2 class="site-footer-title" data-site-setting="footer-title">LET'S WORK TOGETHER</h2>
     <div class="site-footer-actions">
-      <a class="site-footer-link" href="contact.html" data-site-setting="footer-contact-label">CONTACT</a>
+      <a class="site-footer-link" href="/contact" data-site-setting="footer-contact-label">CONTACT</a>
       <a class="site-footer-link" href="https://instagram.com" target="_blank" rel="noopener noreferrer" data-site-setting="footer-instagram-url"><span data-site-setting="footer-instagram-label">INSTAGRAM</span></a>
     </div>
     <p class="site-footer-copyright" data-site-setting="footer-copyright">© 2026 ARTUR ARAUJO</p>
@@ -61,16 +62,17 @@
 
   <script src="data/projects-data.js?v=20260804-cover-preview"></script>
   <script src="config/page-configs.js?v=20260804-sections-2"></script>
+  <script src="components/routes.js?v=20260810-clean-routes"></script>
   <script src="components/project-preview.js?v=20260805-loading-order"></script>
   <script src="components/project-frame.js?v=20260805-loading-order"></script>
   <script src="components/project-gallery.js?v=20260805-loading-order"></script>
   <script src="admin/admin-storage.js?v=20260804-sections-2"></script>
-  <script src="portfolio.js?v=20260805-publication-readiness"></script>
+  <script src="portfolio.js?v=20260810-clean-routes"></script>
   <script>renderInitialGalleryNavigation();</script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="config/supabase-config.js?v=20260804-public-db"></script>
   <script>siteSettings.hydrate();</script>
   <script src="data/supabase-service.js?v=20260804-youtube"></script>
-  <script src="script.js?v=20260805-mobile-readiness"></script>
+  <script src="script.js?v=20260810-clean-routes"></script>
 </body>
 </html>

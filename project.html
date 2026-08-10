@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <base href="/">
   <title>ARTUR ARAUJO | Project</title>
   <meta name="description" content="VFX project by Artur Araujo.">
   <meta name="robots" content="index, follow">
@@ -11,9 +12,9 @@
   <meta property="og:site_name" content="ARTUR ARAUJO">
   <meta property="og:title" content="ARTUR ARAUJO | Project">
   <meta property="og:description" content="VFX project by Artur Araujo.">
-  <meta property="og:url" content="https://arturaraujo.com/project.html">
+  <meta property="og:url" content="https://arturaraujo.com/project">
   <meta name="twitter:card" content="summary_large_image">
-  <link rel="canonical" href="https://arturaraujo.com/project.html">
+  <link rel="canonical" href="https://arturaraujo.com/project">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@600;700;800;900&family=Inter:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
@@ -24,7 +25,7 @@
   <div class="cursor-shadow" id="cursor-shadow"></div>
 
   <header class="nav-header">
-    <a href="index.html" class="nav-brand" data-text="ARTUR ARAUJO" aria-label="ARTUR ARAUJO — home">ARTUR ARAUJO</a>
+    <a href="/" class="nav-brand" data-text="ARTUR ARAUJO" aria-label="ARTUR ARAUJO — home">ARTUR ARAUJO</a>
     <button class="nav-toggle" id="nav-toggle" aria-label="Open menu" aria-controls="nav-menu" aria-expanded="false">
       <span></span><span></span><span></span>
     </button>
@@ -35,7 +36,7 @@
     <section id="project-detail-content">
       <div class="project-detail-hero">
         <div id="project-detail-media" class="project-detail-media detail-ratio-16-9"></div>
-        <a id="project-back-link" class="project-back-link" href="gallery.html?section=featured-work">← FEATURED WORK</a>
+        <a id="project-back-link" class="project-back-link" href="/featured-work">← FEATURED WORK</a>
         <header class="project-detail-hero-copy">
           <p id="project-detail-category" class="project-detail-category"></p>
           <h1 id="project-detail-title" class="section-title project-detail-title" data-text=""></h1>
@@ -97,14 +98,14 @@
     <section id="project-detail-error" class="project-detail-error" hidden>
       <h1>PROJECT NOT FOUND</h1>
       <p>This project does not exist or is not published.</p>
-      <a class="project-back-link" href="gallery.html?section=featured-work">← BACK TO GALLERY</a>
+      <a class="project-back-link" href="/featured-work">← BACK TO GALLERY</a>
     </section>
   </main>
 
   <footer class="site-footer" id="site-footer">
     <h2 class="site-footer-title" data-site-setting="footer-title">LET'S WORK TOGETHER</h2>
     <div class="site-footer-actions">
-      <a class="site-footer-link" href="contact.html" data-site-setting="footer-contact-label">CONTACT</a>
+      <a class="site-footer-link" href="/contact" data-site-setting="footer-contact-label">CONTACT</a>
       <a class="site-footer-link" href="https://instagram.com" target="_blank" rel="noopener noreferrer" data-site-setting="footer-instagram-url"><span data-site-setting="footer-instagram-label">INSTAGRAM</span></a>
     </div>
     <p class="site-footer-copyright" data-site-setting="footer-copyright">© 2026 ARTUR ARAUJO</p>
@@ -112,17 +113,18 @@
 
   <script src="data/projects-data.js?v=20260804-cover-preview"></script>
   <script src="config/page-configs.js?v=20260804-sections-2"></script>
+  <script src="components/routes.js?v=20260810-clean-routes"></script>
   <script src="components/project-preview.js?v=20260805-loading-order"></script>
   <script>hydrateStoredProjectPreview();</script>
   <script src="admin/admin-storage.js?v=20260806-project-stills"></script>
   <script src="components/youtube-player.js?v=20260804-youtube-modal"></script>
-  <script src="portfolio.js?v=20260805-publication-readiness"></script>
+  <script src="portfolio.js?v=20260810-clean-routes"></script>
   <script>renderInitialGalleryNavigation();</script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="config/supabase-config.js?v=20260804-public-db"></script>
   <script>siteSettings.hydrate();</script>
   <script src="data/supabase-service.js?v=20260806-project-stills"></script>
-  <script src="project-detail.js?v=20260806-project-stills-lightbox"></script>
-  <script src="script.js?v=20260805-mobile-readiness"></script>
+  <script src="project-detail.js?v=20260810-clean-routes"></script>
+  <script src="script.js?v=20260810-clean-routes"></script>
 </body>
 </html>

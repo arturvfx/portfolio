@@ -54,7 +54,7 @@ function renderProjectFrame(project, options = {}) {
   ].filter(Boolean).join(' ');
 
   frame.innerHTML = `
-    <a href="project.html?slug=${encodeURIComponent(project.slug)}" class="frame-link project-link" aria-label="${escapeHtml(project.title)}">
+    <a href="${getProjectHref(project.slug)}" class="frame-link project-link" aria-label="${escapeHtml(project.title)}">
       <div class="${thumbClasses}">
         ${coverImage
           ? `<img class="frame-cover" src="${escapeHtml(coverImage)}" alt="${escapeHtml(project.title)}" loading="lazy" />`

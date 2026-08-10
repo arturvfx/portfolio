@@ -41,7 +41,7 @@ function readProjectPreview(slug) {
 }
 
 function hydrateStoredProjectPreview() {
-  const slug = new URLSearchParams(window.location.search).get('slug');
+  const slug = getProjectSlugFromLocation();
   const preview = readProjectPreview(slug);
   if (!preview || !preview.title) return false;
 
@@ -62,7 +62,7 @@ function hydrateStoredProjectPreview() {
     : null;
   const backLink = document.getElementById('project-back-link');
   if (backLink) {
-    backLink.href = `gallery.html?section=${encodeURIComponent(preview.section)}`;
+    backLink.href = getGalleryHref(preview.section);
     backLink.textContent = `← ${preview.galleryTitle || (gallery ? gallery.title : 'BACK TO GALLERY')}`;
   }
 

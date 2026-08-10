@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <base href="/">
   <title>ARTUR ARAUJO | Contact</title>
   <meta name="description" content="Contact Artur Araujo for VFX, editing and 3D direction projects">
   <meta name="robots" content="index, follow">
@@ -11,9 +12,9 @@
   <meta property="og:site_name" content="ARTUR ARAUJO">
   <meta property="og:title" content="ARTUR ARAUJO | Contact">
   <meta property="og:description" content="Contact Artur Araujo for VFX, editing and 3D direction projects.">
-  <meta property="og:url" content="https://arturaraujo.com/contact.html">
+  <meta property="og:url" content="https://arturaraujo.com/contact">
   <meta name="twitter:card" content="summary">
-  <link rel="canonical" href="https://arturaraujo.com/contact.html">
+  <link rel="canonical" href="https://arturaraujo.com/contact">
   
   <!-- Google Fonts: Inter + Inter Tight -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -28,7 +29,7 @@
 
   <!-- Navigation Header -->
   <header class="nav-header">
-    <a href="index.html" class="nav-brand" data-text="ARTUR ARAUJO" aria-label="ARTUR ARAUJO — home">ARTUR ARAUJO</a>
+    <a href="/" class="nav-brand" data-text="ARTUR ARAUJO" aria-label="ARTUR ARAUJO — home">ARTUR ARAUJO</a>
     <button class="nav-toggle" id="nav-toggle" aria-label="Open menu" aria-controls="nav-menu" aria-expanded="false">
       <span></span>
       <span></span>
@@ -105,14 +106,15 @@
   </main>
 
   <script src="config/page-configs.js?v=20260804-sections-2"></script>
+  <script src="components/routes.js?v=20260810-clean-routes"></script>
   <script src="admin/admin-storage.js?v=20260804-sections-2"></script>
-  <script src="portfolio.js?v=20260805-publication-readiness"></script>
+  <script src="portfolio.js?v=20260810-clean-routes"></script>
   <script>renderInitialGalleryNavigation();</script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="config/supabase-config.js"></script>
   <script>siteSettings.hydrate();</script>
   <script src="data/supabase-service.js?v=20260804-youtube"></script>
   <script src="components/contact-form.js?v=20260805-contact-english"></script>
-  <script src="script.js?v=20260805-mobile-readiness"></script>
+  <script src="script.js?v=20260810-clean-routes"></script>
 </body>
 </html>
