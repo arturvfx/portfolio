@@ -10,6 +10,7 @@
     landingTitle: 'ARTUR ARAUJO',
     landingSubtitle: 'VFX GENERALIST',
     landingEnterLabel: 'ENTER',
+    landingWatchReelLabel: 'WATCH REEL',
     landingBackgroundVideo: 'assets/videos/bg-cinema.mp4',
     galleryBackgroundVideo: 'assets/videos/bg-cinema.mp4',
     contactTitle: "LET'S WORK TOGETHER",
@@ -82,6 +83,7 @@
     setText('[data-site-setting="landing-title"]', current.landingTitle, true);
     setText('[data-site-setting="landing-subtitle"]', current.landingSubtitle, true);
     setText('[data-site-setting="landing-enter-label"]', current.landingEnterLabel, true);
+    setText('[data-site-setting="landing-watch-reel-label"]', current.landingWatchReelLabel, true);
     setText('[data-site-setting="contact-title"]', current.contactTitle, false);
     setText('[data-site-setting="contact-intro"]', current.contactIntro, false);
     setText('[data-site-setting="contact-availability"]', current.contactAvailability, false);

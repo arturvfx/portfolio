@@ -5,6 +5,33 @@ document.addEventListener('DOMContentLoaded', async () => {
     video.playbackRate = 0.45;
   }
 
+  const watchReelBtn = document.getElementById('watch-reel-button');
+  const reelCloseBtn = document.getElementById('landing-reel-close');
+  if (video && watchReelBtn && reelCloseBtn) {
+    const closeReel = () => {
+      if (!document.body.classList.contains('landing-reel-mode')) return;
+      document.body.classList.remove('landing-reel-mode');
+      watchReelBtn.setAttribute('aria-pressed', 'false');
+      reelCloseBtn.setAttribute('aria-hidden', 'true');
+      video.playbackRate = 0.45;
+      watchReelBtn.focus();
+    };
+
+    watchReelBtn.addEventListener('click', () => {
+      document.body.classList.add('landing-reel-mode');
+      watchReelBtn.setAttribute('aria-pressed', 'true');
+      reelCloseBtn.setAttribute('aria-hidden', 'false');
+      video.playbackRate = 1;
+      video.play().catch(() => undefined);
+      reelCloseBtn.focus();
+    });
+
+    reelCloseBtn.addEventListener('click', closeReel);
+    document.addEventListener('keydown', event => {
+      if (event.key === 'Escape') closeReel();
+    });
+  }
+
   // Cursor Shadow physics-based tracking
   const shadowEl = document.getElementById('cursor-shadow');
   let mouse = { x: window.innerWidth / 2, y: window.innerHeight / 2 };

@@ -20,8 +20,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@600;700;800;900&family=Inter:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
   
-  <link rel="stylesheet" href="styles.css?v=20260806-fullscreen-mobile-menu-v2">
-  <script src="config/site-settings.js?v=20260805-separate-backgrounds"></script>
+  <link rel="stylesheet" href="styles.css?v=20260810-watch-reel">
+  <script src="config/site-settings.js?v=20260810-watch-reel"></script>
 </head>
 <body class="landing-page site-settings-loading">
   <!-- Fullscreen Cinema Looping Video & Overlays -->
@@ -49,6 +49,9 @@
         <a href="/featured-work" class="enter-btn" id="enter-button" aria-label="Enter portfolio">
           <span class="btn-text" data-text="ENTER" data-site-setting="landing-enter-label">ENTER</span>
         </a>
+        <button class="enter-btn watch-reel-btn" id="watch-reel-button" type="button" aria-label="Watch reel" aria-pressed="false">
+          <span class="btn-text" data-text="WATCH REEL" data-site-setting="landing-watch-reel-label">WATCH REEL</span>
+        </button>
       </div>
     </div>
   </main>
@@ -56,10 +59,13 @@
   <!-- Film texture sits above the complete projection, including typography. -->
   <div class="film-grain-overlay" aria-hidden="true"></div>
   <div class="film-scratches-overlay" aria-hidden="true"></div>
+  <button class="project-video-modal-close landing-reel-close" id="landing-reel-close" type="button" aria-label="Close reel" aria-hidden="true">
+    <span aria-hidden="true"></span>
+  </button>
 
   <script src="config/supabase-config.js?v=20260804-public-db"></script>
   <script>siteSettings.hydrate();</script>
   <script src="components/routes.js?v=20260810-clean-routes"></script>
-  <script src="script.js?v=20260810-clean-routes"></script>
+  <script src="script.js?v=20260810-watch-reel"></script>
 </body>
 </html>

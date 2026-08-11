@@ -102,6 +102,7 @@ html, body {
   object-fit: cover;
   filter: contrast(1.1) brightness(0.35) saturate(0.7);
   transform: scale(1.05);
+  transition: filter 0.55s ease, transform 0.55s ease;
 }
 
 /* Subtle Black Overlay Covering Homepage Background Video */
@@ -397,6 +398,10 @@ html, body {
 
 /* Enter Button Wrapper & Styles */
 .action-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(1.5rem, 4vw, 3.5rem);
   margin-top: 0;
 }
 
@@ -420,6 +425,7 @@ html, body {
   border: none;
   backdrop-filter: none;
   box-shadow: none;
+  cursor: pointer;
 
   /* Dynamic CSS Custom Properties for Organic Drift & Projector Flicker */
   --btn-base-opacity: 0.32;
@@ -489,6 +495,57 @@ html, body {
 
 .enter-btn:active {
   opacity: 0.85;
+}
+
+/* Landing reel mode: fade the projected interface and reveal the clean loop. */
+.landing-page .hero-container,
+.landing-page .video-overlay,
+.landing-page .projection-beam,
+.landing-page .soft-vignette,
+.landing-page .film-grain-overlay,
+.landing-page .film-scratches-overlay {
+  transition: opacity 0.45s ease, visibility 0s linear 0s;
+}
+
+.landing-page.landing-reel-mode .hero-container,
+.landing-page.landing-reel-mode .video-overlay,
+.landing-page.landing-reel-mode .projection-beam,
+.landing-page.landing-reel-mode .soft-vignette,
+.landing-page.landing-reel-mode .film-grain-overlay,
+.landing-page.landing-reel-mode .film-scratches-overlay {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.45s ease, visibility 0s linear 0.45s;
+}
+
+.landing-page.landing-reel-mode .video-background-wrapper {
+  animation: none;
+  transform: none;
+}
+
+.landing-page.landing-reel-mode #bg-video {
+  filter: none;
+  transform: scale(1);
+}
+
+.landing-page.landing-reel-mode .cursor-shadow {
+  opacity: 0 !important;
+}
+
+.landing-page .landing-reel-close {
+  z-index: 1010;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.2s ease, visibility 0s linear 0.45s, background 0.16s ease, color 0.16s ease;
+}
+
+.landing-page.landing-reel-mode .landing-reel-close {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transition: opacity 0.2s ease 0.38s, visibility 0s linear 0.38s, background 0.16s ease, color 0.16s ease;
 }
 
 /* Mechanical Projector Shutter Click Effect (Brightness Dip & Mechanical Latch) */
@@ -633,6 +690,18 @@ body.shutter-click-active .brand-title::after {
   body.shutter-click-active .brand-title::before,
   body.shutter-click-active .brand-title::after {
     animation: none;
+  }
+
+  .landing-page .hero-container,
+  .landing-page #bg-video,
+  .landing-page .video-overlay,
+  .landing-page .projection-beam,
+  .landing-page .soft-vignette,
+  .landing-page .film-grain-overlay,
+  .landing-page .film-scratches-overlay,
+  .landing-page .landing-reel-close,
+  .landing-page.landing-reel-mode .landing-reel-close {
+    transition: none;
   }
 }
 

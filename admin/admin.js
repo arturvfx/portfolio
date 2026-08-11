@@ -1190,6 +1190,10 @@
           <label for="setting-landingEnterLabel">Enter Button Label</label>
           <input id="setting-landingEnterLabel" type="text" value="${escAdm(settings.landingEnterLabel)}" data-site-field="landingEnterLabel" />
         </div>
+        <div class="form-group">
+          <label for="setting-landingWatchReelLabel">Watch Reel Button Label</label>
+          <input id="setting-landingWatchReelLabel" type="text" value="${escAdm(settings.landingWatchReelLabel)}" data-site-field="landingWatchReelLabel" />
+        </div>
         <div class="form-group span-2">
           <label for="setting-landingBackgroundVideo">Landing Background Video Path / URL</label>
           <div class="media-input-row">
@@ -1343,7 +1347,7 @@
       updated[input.getAttribute('data-site-field')] = input.value.trim();
     });
     const required = [
-      'landingTitle', 'landingSubtitle', 'landingEnterLabel', 'landingBackgroundVideo', 'galleryBackgroundVideo',
+      'landingTitle', 'landingSubtitle', 'landingEnterLabel', 'landingWatchReelLabel', 'landingBackgroundVideo', 'galleryBackgroundVideo',
       'contactTitle', 'contactIntro', 'contactAvailability', 'contactLocation', 'contactSubmitLabel',
       'contactCategoryVfx', 'contactCategoryEditing', 'contactCategoryAlchemy', 'contactCategoryFull',
       'contactCategoryOther',
