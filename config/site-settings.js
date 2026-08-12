@@ -33,8 +33,13 @@
   function normalize(value) {
     const source = value && typeof value === 'object' ? value : {};
     return Object.keys(DEFAULTS).reduce((settings, key) => {
-      const candidate = typeof source[key] === 'string' ? source[key].trim() : '';
-      settings[key] = candidate || DEFAULTS[key];
+      const hasStringValue = typeof source[key] === 'string';
+      const candidate = hasStringValue ? source[key].trim() : '';
+      // The landing subtitle is intentionally optional; an explicit empty
+      // string must survive local and remote normalization.
+      settings[key] = key === 'landingSubtitle' && hasStringValue
+        ? candidate
+        : candidate || DEFAULTS[key];
       return settings;
     }, {});
   }
@@ -82,6 +87,11 @@
     const current = normalize(settings);
     setText('[data-site-setting="landing-title"]', current.landingTitle, true);
     setText('[data-site-setting="landing-subtitle"]', current.landingSubtitle, true);
+    document.querySelectorAll('.brand-subtitle').forEach(element => {
+      element.hidden = !current.landingSubtitle;
+    });
+    document.body.classList.toggle('landing-with-subtitle', Boolean(current.landingSubtitle));
+    document.body.classList.toggle('landing-without-subtitle', !current.landingSubtitle);
     setText('[data-site-setting="landing-enter-label"]', current.landingEnterLabel, true);
     setText('[data-site-setting="landing-watch-reel-label"]', current.landingWatchReelLabel, true);
     setText('[data-site-setting="contact-title"]', current.contactTitle, false);

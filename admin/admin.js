@@ -1183,8 +1183,9 @@
           <input id="setting-landingTitle" type="text" value="${escAdm(settings.landingTitle)}" data-site-field="landingTitle" />
         </div>
         <div class="form-group">
-          <label for="setting-landingSubtitle">Subtitle</label>
+          <label for="setting-landingSubtitle">Subtitle — Optional</label>
           <input id="setting-landingSubtitle" type="text" value="${escAdm(settings.landingSubtitle)}" data-site-field="landingSubtitle" />
+          <span class="media-upload-note">Leave empty to hide the subtitle and move the buttons closer to the title.</span>
         </div>
         <div class="form-group">
           <label for="setting-landingEnterLabel">Enter Button Label</label>
@@ -1347,14 +1348,14 @@
       updated[input.getAttribute('data-site-field')] = input.value.trim();
     });
     const required = [
-      'landingTitle', 'landingSubtitle', 'landingEnterLabel', 'landingWatchReelLabel', 'landingBackgroundVideo', 'galleryBackgroundVideo',
+      'landingTitle', 'landingEnterLabel', 'landingWatchReelLabel', 'landingBackgroundVideo', 'galleryBackgroundVideo',
       'contactTitle', 'contactIntro', 'contactAvailability', 'contactLocation', 'contactSubmitLabel',
       'contactCategoryVfx', 'contactCategoryEditing', 'contactCategoryAlchemy', 'contactCategoryFull',
       'contactCategoryOther',
       'footerTitle', 'footerContactLabel', 'footerInstagramLabel', 'footerInstagramUrl', 'footerCopyright'
     ];
     if (required.some(field => !updated[field])) {
-      showStatus('ERROR: All site settings fields are required.', 'error');
+      showStatus('ERROR: Complete all required site settings fields.', 'error');
       return;
     }
     try {

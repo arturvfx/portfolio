@@ -264,9 +264,9 @@ html, body {
   height: 100vh;
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start;
   text-align: center;
-  padding: 20px;
+  padding: clamp(7rem, 18vh, 9rem) 20px 20px;
 }
 
 .content-box {
@@ -361,6 +361,10 @@ html, body {
     0 3px 15px rgba(0, 0, 0, 0.95);
 }
 
+.brand-subtitle[hidden] {
+  display: none;
+}
+
 .subtitle-text {
   position: relative;
   z-index: 2;
@@ -403,6 +407,10 @@ html, body {
   justify-content: center;
   gap: clamp(1.5rem, 4vw, 3.5rem);
   margin-top: 0;
+}
+
+.landing-without-subtitle .action-wrapper {
+  margin-top: clamp(2rem, 4vh, 3rem);
 }
 
 /* Projected Typography ENTER Element (Part of the projected film image) */
