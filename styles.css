@@ -264,9 +264,9 @@ html, body {
   height: 100vh;
   display: flex;
   justify-content: center;
-  align-items: flex-start;
+  align-items: center;
   text-align: center;
-  padding: clamp(7rem, 18vh, 9rem) 20px 20px;
+  padding: 20px;
 }
 
 .content-box {
