@@ -32,35 +32,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  // Cursor Shadow physics-based tracking
-  const shadowEl = document.getElementById('cursor-shadow');
-  let mouse = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
-  let shadow = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
-  let shadowActive = false;
-
-  window.addEventListener('mousemove', (e) => {
-    mouse.x = e.clientX;
-    mouse.y = e.clientY;
-
-    if (!shadowActive && shadowEl) {
-      shadowActive = true;
-      shadowEl.style.opacity = '1';
-    }
-  });
-
-  function updateShadow() {
-    if (mouse.x !== null && mouse.y !== null && shadowEl) {
-      const targetX = mouse.x + (mouse.x - window.innerWidth / 2) * 0.05;
-      const targetY = mouse.y + (mouse.y - window.innerHeight / 2) * 0.05;
-
-      shadow.x += (targetX - shadow.x) * 0.07;
-      shadow.y += (targetY - shadow.y) * 0.07;
-
-      shadowEl.style.transform = `translate3d(${shadow.x}px, ${shadow.y}px, 0)`;
-    }
-    requestAnimationFrame(updateShadow);
-  }
-
   // Mechanical Projector Shutter Click & Organic Projector Flicker Handling
   const enterBtn = document.getElementById('enter-button');
   if (enterBtn) {
@@ -377,6 +348,4 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
     });
   }
-
-  updateShadow();
 });

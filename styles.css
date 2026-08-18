@@ -230,32 +230,6 @@ html, body {
   opacity: 0.4;
 }
 
-/* Projector Beam Cursor Shadow (Physical shadow blocking projection beam) */
-.cursor-shadow {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 440px;
-  height: 440px;
-  margin-top: -220px;
-  margin-left: -220px;
-  border-radius: 50%;
-  z-index: 5;
-  pointer-events: none;
-  background: radial-gradient(
-    circle at center,
-    rgba(0, 0, 0, 0.24) 0%,
-    rgba(0, 0, 0, 0.12) 40%,
-    rgba(0, 0, 0, 0.04) 65%,
-    transparent 85%
-  );
-  mix-blend-mode: multiply;
-  filter: blur(14px);
-  will-change: transform;
-  transition: opacity 0.5s ease;
-  opacity: 0;
-}
-
 /* Centered Hero Section */
 .hero-container {
   position: relative;
@@ -537,10 +511,6 @@ html, body {
   transform: scale(1);
 }
 
-.landing-page.landing-reel-mode .cursor-shadow {
-  opacity: 0 !important;
-}
-
 .landing-page .landing-reel-close {
   z-index: 1010;
   opacity: 0;
@@ -786,10 +756,6 @@ body.gallery-loading .page-container {
 body.portfolio-ready .page-container {
   visibility: visible;
   animation: none;
-}
-
-body.project-page .cursor-shadow {
-  display: none;
 }
 
 /* Top Cinema Navigation Header */
@@ -2122,10 +2088,6 @@ body.project-video-open {
 /* Contact Page — solid editorial treatment shared with project pages */
 body.contact-page {
   background: #070709;
-}
-
-body.contact-page .cursor-shadow {
-  display: none;
 }
 
 .page-container.contact-page-container {
