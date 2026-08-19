@@ -37,12 +37,18 @@
   }
 
   function galleryFromRow(row) {
+    const backgroundSource = ['default', 'homepage', 'custom'].includes(row.background_source)
+      ? row.background_source
+      : 'default';
     return {
       id: row.id,
       title: row.title,
       description: row.description || '',
       published: row.published,
-      order: row.display_order
+      order: row.display_order,
+      backgroundEnabled: row.background_enabled !== false,
+      backgroundSource,
+      backgroundVideo: row.background_video || ''
     };
   }
 
@@ -52,7 +58,12 @@
       title: gallery.title,
       description: gallery.description || '',
       published: gallery.published !== false,
-      display_order: Number(gallery.order)
+      display_order: Number(gallery.order),
+      background_enabled: gallery.backgroundEnabled !== false,
+      background_source: ['default', 'homepage', 'custom'].includes(gallery.backgroundSource)
+        ? gallery.backgroundSource
+        : 'default',
+      background_video: gallery.backgroundVideo || ''
     };
   }
 

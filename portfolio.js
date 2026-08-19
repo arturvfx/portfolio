@@ -67,6 +67,45 @@ function renderPortfolioPage(pageConfig, projects) {
 }
 
 let publicPortfolioRuntime = null;
+let activePortfolioGallery = null;
+
+function resolveGalleryBackgroundUrl(gallery, settings) {
+  if (gallery.backgroundSource === 'homepage') return settings.landingBackgroundVideo;
+  if (gallery.backgroundSource === 'custom' && gallery.backgroundVideo) return gallery.backgroundVideo;
+  return settings.galleryBackgroundVideo;
+}
+
+function applyGalleryBackground(gallery, settingsOverride) {
+  const wrapper = document.querySelector('.video-background-wrapper');
+  const video = document.getElementById('bg-video');
+  const source = video?.querySelector('[data-site-setting="gallery-background-video"]');
+  if (!wrapper || !video || !source || !gallery) return;
+
+  activePortfolioGallery = gallery;
+  document.body.classList.add('gallery-background-managed');
+  const enabled = gallery.backgroundEnabled !== false;
+  document.body.classList.toggle('gallery-solid-background', !enabled);
+  wrapper.setAttribute('aria-hidden', 'true');
+
+  if (!enabled) {
+    video.pause();
+    return;
+  }
+
+  const settings = settingsOverride ||
+    (window.siteSettings?.getCurrent ? siteSettings.getCurrent() : siteSettings?.loadLocal?.()) || {};
+  const nextUrl = resolveGalleryBackgroundUrl(gallery, settings);
+  if (!nextUrl) return;
+  if (source.getAttribute('src') !== nextUrl) {
+    source.setAttribute('src', nextUrl);
+    source.setAttribute('type', nextUrl.toLowerCase().split('?')[0].endsWith('.webm')
+      ? 'video/webm'
+      : 'video/mp4');
+    video.load();
+  }
+  const playback = video.play();
+  if (playback?.catch) playback.catch(() => {});
+}
 
 function resolvePublishedGallery(galleries, requestedId) {
   return galleries.find(item => item.id === requestedId && item.published !== false) ||
@@ -108,6 +147,7 @@ function navigatePortfolioSection(sectionId, options = {}) {
     : { ...gallery, projectSection: gallery.id, activeNav: gallery.id, containerId: 'project-gallery' };
 
   container.setAttribute('data-page', gallery.id);
+  applyGalleryBackground(gallery);
   updateGalleryMetadata(gallery);
   renderPortfolioPage(pageConfig, publicPortfolioRuntime.projects);
 
@@ -121,6 +161,10 @@ function navigatePortfolioSection(sectionId, options = {}) {
   if (options.scroll !== false) window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
   return true;
 }
+
+window.addEventListener('portfolio-site-settings-applied', event => {
+  if (activePortfolioGallery) applyGalleryBackground(activePortfolioGallery, event.detail);
+});
 
 function getLocalPortfolioData() {
   const projectSource = typeof PROJECTS_DATA !== 'undefined' ? PROJECTS_DATA : [];

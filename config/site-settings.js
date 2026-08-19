@@ -29,6 +29,7 @@
     footerInstagramUrl: 'https://instagram.com',
     footerCopyright: '© 2026 ARTUR ARAUJO'
   });
+  let currentSettings = null;
 
   function normalize(value) {
     const source = value && typeof value === 'object' ? value : {};
@@ -85,6 +86,7 @@
 
   function apply(settings) {
     const current = normalize(settings);
+    currentSettings = current;
     setText('[data-site-setting="landing-title"]', current.landingTitle, true);
     setText('[data-site-setting="landing-subtitle"]', current.landingSubtitle, true);
     document.querySelectorAll('.brand-subtitle').forEach(element => {
@@ -114,12 +116,17 @@
     });
 
     applyVideoSource('landing-background-video', current.landingBackgroundVideo);
-    applyVideoSource('gallery-background-video', current.galleryBackgroundVideo);
+    if (!document.body.classList.contains('gallery-background-managed')) {
+      applyVideoSource('gallery-background-video', current.galleryBackgroundVideo);
+    }
 
     if (document.querySelector('[data-site-setting="landing-title"]')) {
       document.title = `${current.landingTitle} | Portfolio`;
     }
 
+    window.dispatchEvent(new CustomEvent('portfolio-site-settings-applied', {
+      detail: { ...current }
+    }));
     return current;
   }
 
@@ -170,6 +177,7 @@
     STORAGE_KEY,
     normalize,
     loadLocal,
+    getCurrent: () => currentSettings ? { ...currentSettings } : loadLocal(),
     saveLocal,
     clearLocal,
     apply,

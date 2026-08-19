@@ -96,6 +96,14 @@ html, body {
   animation: gateWeave 8s ease-in-out infinite alternate;
 }
 
+body.gallery-solid-background {
+  background: #070709;
+}
+
+body.gallery-solid-background .video-background-wrapper {
+  display: none;
+}
+
 #bg-video {
   width: 100%;
   height: 100%;

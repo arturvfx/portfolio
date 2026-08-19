@@ -6,6 +6,9 @@
  * - title: string
  * - description: string
  * - published: boolean
+ * - backgroundEnabled: boolean
+ * - backgroundSource: 'default' | 'homepage' | 'custom'
+ * - backgroundVideo: string
  * - order: number
  *
  * Local admin overrides are merged at runtime. New sections do not need
@@ -13,9 +16,9 @@
  */
 
 const GALLERIES_DATA = [
-  { id: 'featured-work', title: 'FEATURED WORK', description: '', published: true, order: 1 },
-  { id: 'content-editing', title: 'CONTENT EDITING', description: '', published: true, order: 2 },
-  { id: 'digital-alchemy', title: 'DIGITAL ALCHEMY', description: '', published: true, order: 3 }
+  { id: 'featured-work', title: 'FEATURED WORK', description: '', published: true, order: 1, backgroundEnabled: true, backgroundSource: 'default', backgroundVideo: '' },
+  { id: 'content-editing', title: 'CONTENT EDITING', description: '', published: true, order: 2, backgroundEnabled: true, backgroundSource: 'default', backgroundVideo: '' },
+  { id: 'digital-alchemy', title: 'DIGITAL ALCHEMY', description: '', published: true, order: 3, backgroundEnabled: true, backgroundSource: 'default', backgroundVideo: '' }
 ];
 
 function galleryToPageConfig(gallery) {

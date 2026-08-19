@@ -1207,13 +1207,13 @@
 
         <h3 class="form-section-heading">Project Selection Page</h3>
         <div class="form-group span-2">
-          <label for="setting-galleryBackgroundVideo">Gallery Background Video Path / URL</label>
+          <label for="setting-galleryBackgroundVideo">Default Gallery Background Video Path / URL</label>
           <div class="media-input-row">
             <input id="setting-galleryBackgroundVideo" type="text" value="${escAdm(settings.galleryBackgroundVideo)}" data-site-field="galleryBackgroundVideo" />
             <button id="btn-upload-gallery-video" class="btn btn-secondary" type="button">Upload Video</button>
           </div>
           <input id="file-gallery-video" class="media-file-input" type="file" accept="video/mp4,video/webm" />
-          <span class="media-upload-note">Used behind every project filter. It stays mounted while the visitor changes sections.</span>
+          <span class="media-upload-note">Used by sections set to “Project Selection default”. Individual sections can instead use solid black, the homepage video or a custom/reused video.</span>
         </div>
 
         <h3 class="form-section-heading">Contact Page</h3>
@@ -1342,6 +1342,41 @@
     });
   }
 
+  function bindGalleryVideoUpload(galleryId) {
+    const button = document.getElementById('btn-upload-gallery-background');
+    const fileInput = document.getElementById('file-gallery-background');
+    const urlInput = document.getElementById('gallery-background-video');
+    if (!button || !fileInput || !urlInput) return;
+    button.addEventListener('click', () => {
+      if (!remoteEnabled) return showStatus('ERROR: Sign in to Supabase before uploading media.', 'error');
+      fileInput.click();
+    });
+    fileInput.addEventListener('change', async () => {
+      const file = fileInput.files && fileInput.files[0];
+      if (!file) return;
+      if (!['video/mp4', 'video/webm'].includes(file.type)) {
+        showStatus('ERROR: The section background must be an MP4 or WebM video.', 'error');
+        fileInput.value = '';
+        return;
+      }
+      const originalLabel = button.textContent;
+      button.disabled = true;
+      button.textContent = 'Uploading…';
+      try {
+        const safeGalleryId = String(galleryId).replace(/[^a-z0-9_-]+/gi, '-');
+        urlInput.value = await portfolioBackend.uploadMedia(file, `sections/${safeGalleryId}/background`);
+        urlInput.dispatchEvent(new Event('input', { bubbles: true }));
+        showStatus('Upload complete. Click Save Section to publish it.', 'success');
+      } catch (error) {
+        showStatus(`UPLOAD ERROR: ${error.message || error}`, 'error');
+      } finally {
+        button.disabled = false;
+        button.textContent = originalLabel;
+        fileInput.value = '';
+      }
+    });
+  }
+
   async function saveSiteSettings() {
     const updated = { ...workingSettings };
     dom.form.querySelectorAll('[data-site-field]').forEach(input => {
@@ -1410,7 +1445,10 @@
       title: 'UNTITLED SECTION',
       description: '',
       published: false,
-      order: workingGalleries.length + 1
+      order: workingGalleries.length + 1,
+      backgroundEnabled: true,
+      backgroundSource: 'default',
+      backgroundVideo: ''
     };
     workingGalleries.push(gallery);
     adminStorage.saveGalleries(workingGalleries);
@@ -1432,6 +1470,25 @@
     if (gallery) renderGalleryForm(gallery);
   }
 
+  function getReusableBackgroundVideos(currentGalleryId) {
+    const videos = [];
+    const seen = new Set();
+    const add = (label, url) => {
+      const normalized = typeof url === 'string' ? url.trim() : '';
+      if (!normalized || seen.has(normalized)) return;
+      seen.add(normalized);
+      videos.push({ label, url: normalized });
+    };
+    add('Site Settings — Project Selection', workingSettings.galleryBackgroundVideo);
+    add('Site Settings — Homepage', workingSettings.landingBackgroundVideo);
+    workingGalleries.forEach(item => {
+      if (item.id !== currentGalleryId && item.backgroundVideo) {
+        add(`Section — ${item.title}`, item.backgroundVideo);
+      }
+    });
+    return videos;
+  }
+
   function renderGalleryForm(gallery) {
     selectedId = null;
     formDirty = false;
@@ -1441,6 +1498,14 @@
     dom.emptyState.style.display = 'none';
     const projectCount = workingProjects.filter(project => project.section === gallery.id).length;
     const idIsEditable = !GALLERIES_DATA.some(source => source.id === gallery.id) && projectCount === 0;
+    const backgroundEnabled = gallery.backgroundEnabled !== false;
+    const backgroundSource = ['default', 'homepage', 'custom'].includes(gallery.backgroundSource)
+      ? gallery.backgroundSource
+      : 'default';
+    const reusableVideos = getReusableBackgroundVideos(gallery.id);
+    const reuseOptions = reusableVideos.map(item =>
+      `<option value="${escAdm(item.url)}">${escAdm(item.label)}</option>`
+    ).join('');
     dom.form.innerHTML = `
       <div class="form-header"><h2 class="form-title">Editing section: <span>${escAdm(gallery.title)}</span></h2></div>
       <div class="form-grid">
@@ -1467,6 +1532,38 @@
             <option value="false" ${gallery.published === false ? 'selected' : ''}>Hidden — admin only</option>
           </select>
         </div>
+        <h3 class="form-section-heading">Section Background</h3>
+        <div class="form-group span-2">
+          <label for="gallery-background-enabled">Background Style</label>
+          <select id="gallery-background-enabled" data-gallery-field="backgroundEnabled">
+            <option value="true" ${backgroundEnabled ? 'selected' : ''}>Video enabled — show video and film effects</option>
+            <option value="false" ${!backgroundEnabled ? 'selected' : ''}>Video disabled — solid black</option>
+          </select>
+          <span class="media-upload-note">Solid black uses the same background as individual project pages and does not load or play the section video.</span>
+        </div>
+        <div id="gallery-background-options" class="form-group span-2" ${backgroundEnabled ? '' : 'hidden'}>
+          <label for="gallery-background-source">Video Source</label>
+          <select id="gallery-background-source" data-gallery-field="backgroundSource">
+            <option value="default" ${backgroundSource === 'default' ? 'selected' : ''}>Project Selection default — from Site Settings</option>
+            <option value="homepage" ${backgroundSource === 'homepage' ? 'selected' : ''}>Homepage video — follows Site Settings automatically</option>
+            <option value="custom" ${backgroundSource === 'custom' ? 'selected' : ''}>Custom or reused video</option>
+          </select>
+        </div>
+        <div id="gallery-custom-background-options" class="form-group span-2" ${backgroundEnabled && backgroundSource === 'custom' ? '' : 'hidden'}>
+          <label for="gallery-background-reuse">Reuse Existing Video</label>
+          <select id="gallery-background-reuse">
+            <option value="">Choose a video already used by the site…</option>
+            ${reuseOptions}
+          </select>
+          <span class="media-upload-note">This copies only the existing public URL. No file is uploaded or duplicated.</span>
+          <label for="gallery-background-video">Custom Video URL</label>
+          <div class="media-input-row">
+            <input id="gallery-background-video" type="text" value="${escAdm(gallery.backgroundVideo || '')}" data-gallery-field="backgroundVideo" placeholder="https://…/background.mp4" />
+            <button id="btn-upload-gallery-background" class="btn btn-secondary" type="button">Upload Video</button>
+            <input id="file-gallery-background" class="media-file-input" type="file" accept="video/mp4,video/webm,.mp4,.webm" />
+          </div>
+          <span class="media-upload-note">MP4 or WebM. Uploading creates one shared URL that other sections can reuse.</span>
+        </div>
       </div>
       <div class="form-actions">
         <button id="btn-save-gallery" class="btn btn-primary" type="button">Save Section</button>
@@ -1481,6 +1578,24 @@
     });
     document.getElementById('btn-save-gallery').addEventListener('click', () => saveGallery(gallery.id));
     document.getElementById('btn-preview').addEventListener('click', previewGallery);
+    const enabledSelect = document.getElementById('gallery-background-enabled');
+    const sourceSelect = document.getElementById('gallery-background-source');
+    const options = document.getElementById('gallery-background-options');
+    const customOptions = document.getElementById('gallery-custom-background-options');
+    const syncBackgroundControls = () => {
+      const enabled = enabledSelect.value === 'true';
+      options.hidden = !enabled;
+      customOptions.hidden = !enabled || sourceSelect.value !== 'custom';
+    };
+    enabledSelect.addEventListener('change', syncBackgroundControls);
+    sourceSelect.addEventListener('change', syncBackgroundControls);
+    document.getElementById('gallery-background-reuse').addEventListener('change', event => {
+      if (!event.target.value) return;
+      const input = document.getElementById('gallery-background-video');
+      input.value = event.target.value;
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+    bindGalleryVideoUpload(gallery.id);
   }
 
   async function saveGallery(id) {
@@ -1489,7 +1604,7 @@
     const updated = { ...workingGalleries[index] };
     dom.form.querySelectorAll('[data-gallery-field]').forEach(input => {
       const field = input.getAttribute('data-gallery-field');
-      if (field === 'published') updated[field] = input.value === 'true';
+      if (field === 'published' || field === 'backgroundEnabled') updated[field] = input.value === 'true';
       else if (field === 'order') updated[field] = Number.parseInt(input.value, 10);
       else updated[field] = input.value.trim();
     });
@@ -1506,6 +1621,9 @@
     }
     if (!Number.isInteger(updated.order) || updated.order < 1) {
       return showStatus('ERROR: Menu Order must be a whole number greater than 0.', 'error');
+    }
+    if (updated.backgroundEnabled && updated.backgroundSource === 'custom' && !updated.backgroundVideo) {
+      return showStatus('ERROR: Add or reuse a video URL for this section.', 'error');
     }
     workingGalleries[index] = updated;
     managedSection = updated.id;
