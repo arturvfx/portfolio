@@ -761,6 +761,17 @@ body.gallery-loading .page-container {
   animation: none;
 }
 
+/* Keep the neutral project-page black visible until Supabase has resolved the
+   active section. This prevents the default video from flashing for sections
+   configured with a solid background. */
+body.gallery-loading {
+  background: #070709;
+}
+
+body.gallery-loading .video-background-wrapper {
+  visibility: hidden;
+}
+
 body.portfolio-ready .page-container {
   visibility: visible;
   animation: none;
