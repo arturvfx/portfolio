@@ -1419,9 +1419,9 @@ body.mobile-menu-open {
   color: var(--text-primary);
   position: relative;
   display: inline-block;
-  filter: blur(0.5px);
+  filter: blur(0.35px);
   text-shadow:
-    0 0 20px rgba(243, 241, 236, 0.25),
+    0 0 10px rgba(243, 241, 236, 0.125),
     0 4px 20px rgba(0, 0, 0, 0.9);
 }
 
