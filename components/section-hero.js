@@ -96,16 +96,16 @@ function renderSectionHero(projects, container, options = {}) {
     const link = document.createElement('a');
     link.className = 'section-hero-project-link';
     link.href = getProjectHref(project.slug);
-    link.setAttribute('aria-label', project.year ? `${project.title}, ${project.year}` : project.title);
+    link.setAttribute('aria-label', project.category ? `${project.title}, ${project.category}` : project.title);
     const title = document.createElement('span');
     title.className = 'section-hero-project-title';
     title.textContent = project.title;
     link.appendChild(title);
-    if (project.year) {
-      const year = document.createElement('span');
-      year.className = 'section-hero-project-year';
-      year.textContent = project.year;
-      link.appendChild(year);
+    if (project.category) {
+      const category = document.createElement('span');
+      category.className = 'section-hero-project-category';
+      category.textContent = project.category;
+      link.appendChild(category);
     }
     link.addEventListener('click', () => {
       if (typeof storeProjectPreview === 'function') {
@@ -125,9 +125,9 @@ function renderSectionHero(projects, container, options = {}) {
   mobileLink.className = 'section-hero-mobile-link';
   const mobileTitle = document.createElement('span');
   mobileTitle.className = 'section-hero-mobile-title';
-  const mobileYear = document.createElement('span');
-  mobileYear.className = 'section-hero-mobile-year';
-  mobileLink.append(mobileTitle, mobileYear);
+  const mobileCategory = document.createElement('span');
+  mobileCategory.className = 'section-hero-mobile-category';
+  mobileLink.append(mobileTitle, mobileCategory);
   const counter = document.createElement('div');
   counter.className = 'section-hero-counter';
   const counterCurrent = document.createElement('span');
@@ -156,10 +156,10 @@ function renderSectionHero(projects, container, options = {}) {
     desktopLinks.forEach((item, index) => item.listItem.classList.toggle('is-active', index === activeIndex));
     const project = projects[activeIndex];
     mobileTitle.textContent = project.title;
-    mobileYear.textContent = project.year || '';
-    mobileYear.hidden = !project.year;
+    mobileCategory.textContent = project.category || '';
+    mobileCategory.hidden = !project.category;
     mobileLink.href = getProjectHref(project.slug);
-    mobileLink.setAttribute('aria-label', project.year ? `${project.title}, ${project.year}` : project.title);
+    mobileLink.setAttribute('aria-label', project.category ? `${project.title}, ${project.category}` : project.title);
     counterCurrent.textContent = String(activeIndex + 1);
   }
 
