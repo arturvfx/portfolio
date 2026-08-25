@@ -25,6 +25,10 @@ function renderSectionHero(projects, container, options = {}) {
     container._backgroundObserver.disconnect();
     container._backgroundObserver = null;
   }
+  if (container._titleResizeObserver) {
+    container._titleResizeObserver.disconnect();
+    container._titleResizeObserver = null;
+  }
   container.replaceChildren();
 
   if (!Array.isArray(projects) || !projects.length) {
@@ -150,17 +154,49 @@ function renderSectionHero(projects, container, options = {}) {
   });
 
   let activeIndex = 0;
+  let titleFitFrame = 0;
+  function renderMobileTitle(titleText) {
+    const words = String(titleText || '').trim().split(/\s+/).filter(Boolean);
+    const fragments = [];
+    words.forEach((word, index) => {
+      if (index) fragments.push(document.createTextNode(' '));
+      const wordElement = document.createElement('span');
+      wordElement.className = 'section-hero-mobile-word';
+      wordElement.textContent = word;
+      fragments.push(wordElement);
+    });
+    mobileTitle.replaceChildren(...fragments);
+  }
+
+  function fitMobileTitle() {
+    mobileTitle.style.removeProperty('font-size');
+    if (!window.matchMedia('(max-width: 900px)').matches || !mobileTitle.clientWidth) return;
+    const words = [...mobileTitle.querySelectorAll('.section-hero-mobile-word')];
+    const widestWord = words.reduce((width, word) => Math.max(width, word.getBoundingClientRect().width), 0);
+    const availableWidth = mobileTitle.clientWidth;
+    if (widestWord <= availableWidth) return;
+    const baseFontSize = Number.parseFloat(window.getComputedStyle(mobileTitle).fontSize);
+    const fittedFontSize = baseFontSize * ((availableWidth - 2) / widestWord);
+    mobileTitle.style.fontSize = `${fittedFontSize}px`;
+  }
+
+  function scheduleMobileTitleFit() {
+    window.cancelAnimationFrame(titleFitFrame);
+    titleFitFrame = window.requestAnimationFrame(fitMobileTitle);
+  }
+
   function setActiveProject(nextIndex) {
     activeIndex = Math.max(0, Math.min(projects.length - 1, nextIndex));
     mediaItems.forEach((item, index) => item.classList.toggle('is-active', index === activeIndex));
     desktopLinks.forEach((item, index) => item.listItem.classList.toggle('is-active', index === activeIndex));
     const project = projects[activeIndex];
-    mobileTitle.textContent = project.title;
+    renderMobileTitle(project.title);
     mobileCategory.textContent = project.category || '';
     mobileCategory.hidden = !project.category;
     mobileLink.href = getProjectHref(project.slug);
     mobileLink.setAttribute('aria-label', project.category ? `${project.title}, ${project.category}` : project.title);
     counterCurrent.textContent = String(activeIndex + 1);
+    scheduleMobileTitleFit();
   }
 
   desktopLinks.forEach((item, index) => {
@@ -248,6 +284,16 @@ function renderSectionHero(projects, container, options = {}) {
   if (options.hasRemainingProjects !== false) root.appendChild(downButton);
   container.appendChild(root);
   setActiveProject(0);
+
+  if ('ResizeObserver' in window) {
+    container._titleResizeObserver = new ResizeObserver(scheduleMobileTitleFit);
+    container._titleResizeObserver.observe(mobileTitle);
+  }
+  if (document.fonts?.ready) {
+    document.fonts.ready.then(() => {
+      if (root.isConnected) scheduleMobileTitleFit();
+    });
+  }
 
   if ('IntersectionObserver' in window) {
     container._backgroundObserver = new IntersectionObserver(entries => {

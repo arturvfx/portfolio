@@ -2635,9 +2635,14 @@ body.contact-page {
     font-feature-settings: 'kern' 1, 'liga' 1;
     letter-spacing: -0.045em;
     line-height: 0.92;
-    overflow-wrap: break-word;
+    overflow-wrap: normal;
     text-wrap: balance;
     word-break: normal;
+  }
+
+  .section-hero-mobile-word {
+    display: inline-block;
+    white-space: nowrap;
   }
 
   .section-hero-mobile-category {
