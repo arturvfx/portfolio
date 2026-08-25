@@ -1507,6 +1507,16 @@
           <span class="media-upload-note">Used by sections set to “Project Selection default”. Individual sections can instead use solid black, the homepage video or a custom/reused video.</span>
         </div>
 
+        <h3 class="form-section-heading">Solid Content Theme</h3>
+        <div class="form-group span-2">
+          <label for="setting-contentTheme">Sections &amp; Project Pages</label>
+          <select id="setting-contentTheme" data-site-field="contentTheme">
+            <option value="dark" ${settings.contentTheme !== 'light' ? 'selected' : ''}>Dark — current black background</option>
+            <option value="light" ${settings.contentTheme === 'light' ? 'selected' : ''}>Light — warm gallery paper</option>
+          </select>
+          <span class="media-upload-note">Global setting. It affects solid sections and project information pages. Navigation, mobile menu, footer, Contact and video backgrounds remain black.</span>
+        </div>
+
         <h3 class="form-section-heading">Contact Page</h3>
         <div class="form-group span-2">
           <label for="setting-contactTitle">Contact Title</label>
@@ -1668,7 +1678,7 @@
       updated[input.getAttribute('data-site-field')] = input.value.trim();
     });
     const required = [
-      'landingTitle', 'landingEnterLabel', 'landingWatchReelLabel', 'landingBackgroundVideo', 'galleryBackgroundVideo',
+      'landingTitle', 'landingEnterLabel', 'landingWatchReelLabel', 'landingBackgroundVideo', 'galleryBackgroundVideo', 'contentTheme',
       'contactTitle', 'contactIntro', 'contactAvailability', 'contactLocation', 'contactSubmitLabel',
       'contactCategoryVfx', 'contactCategoryEditing', 'contactCategoryAlchemy', 'contactCategoryFull',
       'contactCategoryOther',

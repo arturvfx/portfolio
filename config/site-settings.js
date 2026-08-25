@@ -13,6 +13,7 @@
     landingWatchReelLabel: 'WATCH REEL',
     landingBackgroundVideo: 'assets/videos/bg-cinema.mp4',
     galleryBackgroundVideo: 'assets/videos/bg-cinema.mp4',
+    contentTheme: 'dark',
     contactTitle: "LET'S WORK TOGETHER",
     contactIntro: 'Available for film productions, VFX projects and creative consulting.',
     contactAvailability: 'AVAILABLE FOR NEW PROJECTS',
@@ -38,9 +39,13 @@
       const candidate = hasStringValue ? source[key].trim() : '';
       // The landing subtitle is intentionally optional; an explicit empty
       // string must survive local and remote normalization.
-      settings[key] = key === 'landingSubtitle' && hasStringValue
-        ? candidate
-        : candidate || DEFAULTS[key];
+      if (key === 'landingSubtitle' && hasStringValue) {
+        settings[key] = candidate;
+      } else if (key === 'contentTheme') {
+        settings[key] = candidate === 'light' ? 'light' : 'dark';
+      } else {
+        settings[key] = candidate || DEFAULTS[key];
+      }
       return settings;
     }, {});
   }
@@ -94,6 +99,8 @@
     });
     document.body.classList.toggle('landing-with-subtitle', Boolean(current.landingSubtitle));
     document.body.classList.toggle('landing-without-subtitle', !current.landingSubtitle);
+    document.body.classList.toggle('site-content-light', current.contentTheme === 'light');
+    document.body.classList.toggle('site-content-dark', current.contentTheme !== 'light');
     setText('[data-site-setting="landing-enter-label"]', current.landingEnterLabel, true);
     setText('[data-site-setting="landing-watch-reel-label"]', current.landingWatchReelLabel, true);
     setText('[data-site-setting="contact-title"]', current.contactTitle, false);

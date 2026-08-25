@@ -84,6 +84,11 @@ html, body {
   visibility: hidden;
 }
 
+body.site-settings-loading:is(.gallery-loading, .project-page) .page-container,
+body.site-settings-loading .section-featured-hero {
+  visibility: hidden;
+}
+
 /* Fullscreen Cinema Background Video & Overlays */
 .video-background-wrapper {
   position: fixed;
@@ -2310,6 +2315,106 @@ body.project-video-open {
 
 .project-detail-error .project-back-link {
   position: static;
+}
+
+/* Global light content theme — navigation, footer, Contact and media stay dark. */
+body.site-content-light {
+  --content-surface: #eeece6;
+  --content-text: #171716;
+  --content-secondary: #3e3c38;
+  --content-muted: #716e67;
+  --content-border: rgba(23, 23, 22, 0.28);
+}
+
+body.site-content-light.gallery-solid-background {
+  background: var(--content-surface);
+}
+
+body.site-content-light.gallery-solid-background .page-container {
+  background: var(--content-surface);
+  color: var(--content-text);
+}
+
+body.site-content-light.gallery-solid-background .section-title {
+  color: var(--content-text);
+  text-shadow: none;
+  filter: none;
+}
+
+body.site-content-light.gallery-solid-background .section-title::before,
+body.site-content-light.gallery-solid-background .section-title::after {
+  mix-blend-mode: multiply;
+  opacity: 0.34;
+}
+
+body.site-content-light.gallery-solid-background .section-title::before {
+  color: rgba(218, 30, 68, 0.62);
+}
+
+body.site-content-light.gallery-solid-background .section-title::after {
+  color: rgba(0, 150, 180, 0.56);
+}
+
+body.site-content-light.gallery-solid-background .section-subtitle,
+body.site-content-light.gallery-solid-background .frame-category {
+  color: var(--content-secondary);
+}
+
+body.site-content-light.gallery-solid-background .frame-title,
+body.site-content-light.gallery-solid-background .project-frame:is(:hover, :focus-within) .frame-title {
+  color: var(--content-text);
+}
+
+body.site-content-light.gallery-solid-background .frame-title {
+  opacity: 0.58;
+}
+
+body.site-content-light.gallery-solid-background .project-frame:is(:hover, :focus-within) .frame-title {
+  opacity: var(--frame-title-hover-opacity);
+}
+
+body.site-content-light.gallery-solid-background .project-frame:is(:hover, :focus-within) .frame-category {
+  color: var(--content-secondary);
+}
+
+body.site-content-light.project-page,
+body.site-content-light.project-page .page-container.project-detail-page,
+body.site-content-light.project-page .project-detail-information,
+body.site-content-light.project-page .project-detail-error {
+  background: var(--content-surface);
+  color: var(--content-text);
+}
+
+body.site-content-light.project-page .project-detail-meta dt,
+body.site-content-light.project-page .project-detail-services-block h2,
+body.site-content-light.project-page .project-detail-editorial h2,
+body.site-content-light.project-page .project-detail-credits dt {
+  color: var(--content-muted);
+}
+
+body.site-content-light.project-page .project-detail-meta dd,
+body.site-content-light.project-page .project-detail-services li,
+body.site-content-light.project-page .project-detail-editorial p,
+body.site-content-light.project-page .project-detail-credits dd,
+body.site-content-light.project-page .project-detail-error h1 {
+  color: var(--content-text);
+}
+
+body.site-content-light.project-page .project-detail-services li:not(:last-child)::after,
+body.site-content-light.project-page .project-detail-error p {
+  color: var(--content-muted);
+}
+
+body.site-content-light.project-page .project-watch-now {
+  border-color: var(--content-border);
+  color: var(--content-text);
+}
+
+body.site-content-light.project-page .project-watch-now:hover,
+body.site-content-light.project-page .project-watch-now:focus-visible {
+  border-color: var(--content-text);
+  background: var(--content-text);
+  color: var(--content-surface);
 }
 
 /* Contact Page — solid editorial treatment shared with project pages */
