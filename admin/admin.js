@@ -504,6 +504,12 @@
       return `
         <div class="project-still-slot">
           <label for="field-projectStillUrl-${index}">Image ${slot}</label>
+          <div class="project-still-preview" id="project-still-preview-${index}" aria-live="polite">
+            ${still.url
+              ? `<img src="${escAdm(still.url)}" alt="Preview of image ${slot}" loading="lazy" decoding="async" fetchpriority="low" />`
+              : '<span class="project-still-preview-empty">No image selected</span>'
+            }
+          </div>
           <input id="field-projectStillUrl-${index}" type="text" value="${escAdm(still.url)}" data-still-url="${index}" placeholder="Image path / URL" />
           <div class="project-still-actions">
             <select id="field-projectStillSize-${index}" data-still-size="${index}" aria-label="Image ${slot} aspect ratio">
@@ -930,7 +936,38 @@
     const fileInput = document.getElementById(`file-projectStill-${index}`);
     const urlInput = document.getElementById(`field-projectStillUrl-${index}`);
     const sizeInput = document.getElementById(`field-projectStillSize-${index}`);
-    if (!uploadButton || !clearButton || !fileInput || !urlInput || !sizeInput) return;
+    const preview = document.getElementById(`project-still-preview-${index}`);
+    if (!uploadButton || !clearButton || !fileInput || !urlInput || !sizeInput || !preview) return;
+
+    let previewTimer = null;
+    const showPreviewMessage = message => {
+      const empty = document.createElement('span');
+      empty.className = 'project-still-preview-empty';
+      empty.textContent = message;
+      preview.replaceChildren(empty);
+    };
+    const updatePreview = () => {
+      clearTimeout(previewTimer);
+      const url = urlInput.value.trim();
+      if (!url) {
+        showPreviewMessage('No image selected');
+        return;
+      }
+      const image = document.createElement('img');
+      image.src = url;
+      image.alt = `Preview of image ${index + 1}`;
+      image.loading = 'lazy';
+      image.decoding = 'async';
+      image.fetchPriority = 'low';
+      image.addEventListener('error', () => showPreviewMessage('Preview unavailable'));
+      preview.replaceChildren(image);
+    };
+    const schedulePreview = () => {
+      clearTimeout(previewTimer);
+      previewTimer = setTimeout(updatePreview, 300);
+    };
+    urlInput.addEventListener('input', schedulePreview);
+    updatePreview();
 
     uploadButton.addEventListener('click', () => {
       if (!remoteEnabled) {
@@ -958,7 +995,7 @@
           file,
           `projects/${safeProjectId}/stills/slot-${index + 1}`
         );
-        markProjectFormDirty();
+        urlInput.dispatchEvent(new Event('input', { bubbles: true }));
         showStatus('Upload complete. Click Save Changes to publish the project still.', 'success');
       } catch (error) {
         showStatus(`UPLOAD ERROR: ${error.message || error}`, 'error');
@@ -972,7 +1009,7 @@
     clearButton.addEventListener('click', () => {
       urlInput.value = '';
       sizeInput.value = '16-9';
-      markProjectFormDirty();
+      urlInput.dispatchEvent(new Event('input', { bubbles: true }));
     });
   }
 
