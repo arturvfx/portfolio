@@ -2368,20 +2368,17 @@ body.site-content-light.gallery-solid-background .frame-category {
   color: var(--content-secondary);
 }
 
-body.site-content-light.gallery-solid-background .frame-title,
-body.site-content-light.gallery-solid-background .project-frame:is(:hover, :focus-within) .frame-title {
-  color: var(--content-text);
-}
-
 body.site-content-light.gallery-solid-background .frame-title {
-  opacity: 0.58;
+  color: var(--content-text);
+  opacity: 1;
 }
 
-body.site-content-light.gallery-solid-background .project-frame:is(:hover, :focus-within) .frame-title {
-  opacity: var(--frame-title-hover-opacity);
+body.site-content-light.gallery-solid-background .project-frame:is(:hover, :focus-within, :active) .frame-title {
+  color: var(--content-secondary);
+  opacity: 1;
 }
 
-body.site-content-light.gallery-solid-background .project-frame:is(:hover, :focus-within) .frame-category {
+body.site-content-light.gallery-solid-background .project-frame:is(:hover, :focus-within, :active) .frame-category {
   color: var(--content-secondary);
 }
 
