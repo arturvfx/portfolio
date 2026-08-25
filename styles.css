@@ -2607,6 +2607,8 @@ body.contact-page {
   .section-hero-media-item img,
   .section-hero-media-item video {
     object-position: var(--mobile-focus-x, 50%) var(--mobile-focus-y, 50%);
+    transform: scale(var(--mobile-cover-scale, 1));
+    transform-origin: var(--mobile-focus-x, 50%) var(--mobile-focus-y, 50%);
     filter: brightness(0.72) contrast(1.05) saturate(0.9);
   }
 
@@ -2919,6 +2921,8 @@ body.contact-page {
   .project-detail-hero .project-detail-media img,
   .project-detail-hero .project-detail-media video {
     object-position: var(--mobile-focus-x, 50%) var(--mobile-focus-y, 50%);
+    transform: scale(var(--mobile-cover-scale, 1));
+    transform-origin: var(--mobile-focus-x, 50%) var(--mobile-focus-y, 50%);
   }
 
   .project-detail-information {

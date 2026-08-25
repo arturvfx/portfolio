@@ -9,6 +9,11 @@
     return Number.isFinite(number) ? Math.max(0, Math.min(100, number)) : 50;
   }
 
+  function normalizeMobileCoverScale(value) {
+    const number = Number(value);
+    return Number.isFinite(number) ? Math.max(100, Math.min(200, number)) : 100;
+  }
+
   function normalizeProjectStills(value) {
     if (!Array.isArray(value)) return [];
     return value.slice(0, 3).map(item => {
@@ -92,6 +97,7 @@
       coverImage: row.cover_image || '',
       mobileFocusX: normalizeMobileFocus(row.mobile_focus_x),
       mobileFocusY: normalizeMobileFocus(row.mobile_focus_y),
+      mobileCoverScale: normalizeMobileCoverScale(row.mobile_cover_scale),
       previewVideo: row.preview_video || '',
       youtubeUrl: row.youtube_url || '',
       projectStills: normalizeProjectStills(row.project_stills),
@@ -120,6 +126,7 @@
       cover_image: project.coverImage || '',
       mobile_focus_x: normalizeMobileFocus(project.mobileFocusX),
       mobile_focus_y: normalizeMobileFocus(project.mobileFocusY),
+      mobile_cover_scale: normalizeMobileCoverScale(project.mobileCoverScale),
       preview_video: project.previewVideo || '',
       youtube_url: project.youtubeUrl || '',
       project_stills: normalizeProjectStills(project.projectStills),

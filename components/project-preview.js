@@ -20,6 +20,7 @@ function storeProjectPreview(project, options = {}) {
     coverImage: project.coverImage || '',
     mobileFocusX: Number.isFinite(Number(project.mobileFocusX)) ? Number(project.mobileFocusX) : 50,
     mobileFocusY: Number.isFinite(Number(project.mobileFocusY)) ? Number(project.mobileFocusY) : 50,
+    mobileCoverScale: Number.isFinite(Number(project.mobileCoverScale)) ? Number(project.mobileCoverScale) : 100,
     savedAt: Date.now()
   };
 
@@ -77,8 +78,12 @@ function hydrateStoredProjectPreview() {
     const mobileFocusY = Number.isFinite(Number(preview.mobileFocusY))
       ? Math.max(0, Math.min(100, Number(preview.mobileFocusY)))
       : 50;
+    const mobileCoverScale = Number.isFinite(Number(preview.mobileCoverScale))
+      ? Math.max(100, Math.min(200, Number(preview.mobileCoverScale)))
+      : 100;
     media.style.setProperty('--mobile-focus-x', `${mobileFocusX}%`);
     media.style.setProperty('--mobile-focus-y', `${mobileFocusY}%`);
+    media.style.setProperty('--mobile-cover-scale', String(mobileCoverScale / 100));
     if (preview.coverImage) {
       const image = document.createElement('img');
       image.src = preview.coverImage;

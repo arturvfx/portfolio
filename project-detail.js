@@ -93,8 +93,12 @@ function renderProjectDetailMedia(project) {
   const mobileFocusY = Number.isFinite(Number(project.mobileFocusY))
     ? Math.max(0, Math.min(100, Number(project.mobileFocusY)))
     : 50;
+  const mobileCoverScale = Number.isFinite(Number(project.mobileCoverScale))
+    ? Math.max(100, Math.min(200, Number(project.mobileCoverScale)))
+    : 100;
   container.style.setProperty('--mobile-focus-x', `${mobileFocusX}%`);
   container.style.setProperty('--mobile-focus-y', `${mobileFocusY}%`);
+  container.style.setProperty('--mobile-cover-scale', String(mobileCoverScale / 100));
 
   const youtubeUrl = getYouTubeWatchUrl(project.youtubeUrl);
   if (youtubeUrl) {

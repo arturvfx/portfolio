@@ -557,19 +557,50 @@
       line-height: 1.4;
     }
 
-    .mobile-focus-editor {
+    .gallery-media-workspace {
+      grid-column: span 2;
       display: grid;
-      grid-template-columns: minmax(9rem, 13rem) minmax(0, 1fr);
-      align-items: center;
+      grid-template-columns: minmax(20rem, 0.8fr) minmax(34rem, 1.2fr);
+      align-items: start;
       gap: 1rem;
+    }
+
+    .gallery-media-fields {
+      display: grid;
+      gap: 1rem;
+    }
+
+    .mobile-focus-panel {
+      min-width: 0;
       padding: 0.85rem;
       border: 1px solid var(--border);
       background: var(--bg-surface);
     }
 
+    .mobile-focus-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .mobile-focus-reset {
+      padding: 0.3rem 0.65rem;
+      font-size: 10px;
+    }
+
+    .mobile-focus-editor {
+      display: grid;
+      grid-template-columns: minmax(8rem, 10rem) minmax(12rem, 18rem);
+      align-items: center;
+      justify-content: start;
+      gap: 1rem;
+    }
+
     .mobile-focus-preview {
       position: relative;
-      width: min(100%, 13rem);
+      width: min(100%, 10rem);
       aspect-ratio: 9 / 16;
       overflow: hidden;
       background: #08090c;
@@ -630,7 +661,9 @@
 
     .mobile-focus-controls {
       display: grid;
-      gap: 0.55rem;
+      width: 100%;
+      max-width: 18rem;
+      gap: 0.45rem;
     }
 
     .mobile-focus-controls label {
@@ -825,6 +858,10 @@
 
       .topbar-actions { margin-left: 0; }
       .topbar-workspace { flex: 1; }
+
+      .gallery-media-workspace {
+        grid-template-columns: 1fr;
+      }
     }
 
     @media (max-width: 760px) {
@@ -884,6 +921,7 @@
       .form-grid,
       .form-card-grid,
       .project-stills-editor,
+      .gallery-media-workspace,
       .mobile-focus-editor {
         grid-template-columns: 1fr;
       }
@@ -891,6 +929,7 @@
       .form-group.span-2,
       .span-2,
       .project-stills-editor,
+      .gallery-media-workspace,
       .form-section-heading { grid-column: span 1; }
 
       .form-card-header {
@@ -1022,10 +1061,10 @@
 <script src="../config/site-settings.js?v=20260818-section-backgrounds"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="../config/supabase-config.js?v=20260804-import"></script>
-<script src="../data/supabase-service.js?v=20260825-mobile-focus"></script>
-<script src="../admin/admin-storage.js?v=20260825-mobile-focus"></script>
+<script src="../data/supabase-service.js?v=20260825-mobile-scale"></script>
+<script src="../admin/admin-storage.js?v=20260825-mobile-scale"></script>
 <script src="../components/youtube-player.js?v=20260804-youtube-cover"></script>
-<script src="../admin/admin.js?v=20260825-still-previews"></script>
+<script src="../admin/admin.js?v=20260825-mobile-scale"></script>
 
 </body>
 </html>

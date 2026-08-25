@@ -588,27 +588,41 @@
     return Number.isFinite(number) ? Math.max(0, Math.min(100, number)) : 50;
   }
 
+  function normalizeMobileCoverScale(value) {
+    const number = Number(value);
+    return Number.isFinite(number) ? Math.max(100, Math.min(200, number)) : 100;
+  }
+
   function bindMobileFocusControls() {
     const preview = document.getElementById('mobile-focus-preview');
     const mediaHost = document.getElementById('mobile-focus-media');
     const marker = document.getElementById('mobile-focus-marker');
     const xInput = document.getElementById('field-mobileFocusX');
     const yInput = document.getElementById('field-mobileFocusY');
+    const scaleInput = document.getElementById('field-mobileCoverScale');
     const xOutput = document.getElementById('mobile-focus-x-value');
     const yOutput = document.getElementById('mobile-focus-y-value');
+    const scaleOutput = document.getElementById('mobile-cover-scale-value');
+    const resetButton = document.getElementById('btn-reset-mobile-focus');
     const coverInput = document.getElementById('field-coverImage');
     const videoInput = document.getElementById('field-previewVideo');
-    if (!preview || !mediaHost || !marker || !xInput || !yInput) return;
+    if (!preview || !mediaHost || !marker || !xInput || !yInput || !scaleInput) return;
 
     const updatePosition = () => {
       const x = normalizeMobileFocus(xInput.value);
       const y = normalizeMobileFocus(yInput.value);
+      const scale = normalizeMobileCoverScale(scaleInput.value);
       const media = mediaHost.querySelector('img, video');
-      if (media) media.style.objectPosition = `${x}% ${y}%`;
+      if (media) {
+        media.style.objectPosition = `${x}% ${y}%`;
+        media.style.transform = `scale(${scale / 100})`;
+        media.style.transformOrigin = `${x}% ${y}%`;
+      }
       marker.style.left = `${x}%`;
       marker.style.top = `${y}%`;
       if (xOutput) xOutput.value = `${Math.round(x)}%`;
       if (yOutput) yOutput.value = `${Math.round(y)}%`;
+      if (scaleOutput) scaleOutput.value = `${Math.round(scale)}%`;
     };
 
     const renderMedia = () => {
@@ -647,6 +661,16 @@
 
     xInput.addEventListener('input', updatePosition);
     yInput.addEventListener('input', updatePosition);
+    scaleInput.addEventListener('input', updatePosition);
+    if (resetButton) {
+      resetButton.addEventListener('click', () => {
+        xInput.value = '50';
+        yInput.value = '50';
+        scaleInput.value = '100';
+        updatePosition();
+        markProjectFormDirty();
+      });
+    }
     if (coverInput) coverInput.addEventListener('input', renderMedia);
     if (videoInput) videoInput.addEventListener('input', renderMedia);
     preview.addEventListener('pointerdown', event => {
@@ -673,6 +697,7 @@
 
     const mobileFocusX = normalizeMobileFocus(project.mobileFocusX);
     const mobileFocusY = normalizeMobileFocus(project.mobileFocusY);
+    const mobileCoverScale = normalizeMobileCoverScale(project.mobileCoverScale);
 
     form.innerHTML = `
       <div class="form-header">
@@ -783,41 +808,50 @@
           <span class="media-upload-note">Drag projects in the sidebar for faster ordering. Display Order remains available for precise placement.</span>
         </div>
 
-        <div class="form-group span-2">
-          <label for="field-coverImage">Cover Image Path / URL</label>
-          <div class="media-input-row">
-            <input id="field-coverImage" type="text" value="${escAdm(project.coverImage || '')}" data-field="coverImage" />
-            <button id="btn-upload-coverImage" class="btn btn-secondary" type="button">Upload Cover</button>
-          </div>
-          <input id="file-coverImage" class="media-file-input" type="file" accept="image/*" />
-          <span class="media-upload-note">The still image shown before the visitor hovers over the project.</span>
-        </div>
-
-        <div class="form-group span-2">
-          <label>Mobile Cover Focus</label>
-          <div class="mobile-focus-editor">
-            <div id="mobile-focus-preview" class="mobile-focus-preview" aria-label="Drag to choose the mobile cover focal point">
-              <div id="mobile-focus-media" class="mobile-focus-media"></div>
-              <span id="mobile-focus-marker" class="mobile-focus-marker" aria-hidden="true"></span>
+        <div class="gallery-media-workspace">
+          <div class="gallery-media-fields">
+            <div class="form-group">
+              <label for="field-coverImage">Cover Image Path / URL</label>
+              <div class="media-input-row">
+                <input id="field-coverImage" type="text" value="${escAdm(project.coverImage || '')}" data-field="coverImage" />
+                <button id="btn-upload-coverImage" class="btn btn-secondary" type="button">Upload Cover</button>
+              </div>
+              <input id="file-coverImage" class="media-file-input" type="file" accept="image/*" />
+              <span class="media-upload-note">The still image shown before the visitor hovers over the project.</span>
             </div>
-            <div class="mobile-focus-controls">
-              <label for="field-mobileFocusX">Horizontal <output id="mobile-focus-x-value">${Math.round(mobileFocusX)}%</output></label>
-              <input id="field-mobileFocusX" type="range" min="0" max="100" step="1" value="${mobileFocusX}" data-field="mobileFocusX" />
-              <label for="field-mobileFocusY">Vertical <output id="mobile-focus-y-value">${Math.round(mobileFocusY)}%</output></label>
-              <input id="field-mobileFocusY" type="range" min="0" max="100" step="1" value="${mobileFocusY}" data-field="mobileFocusY" />
-              <span class="media-upload-note">Drag the marker or use the sliders. This framing is used in the mobile opening highlight and project page.</span>
+
+            <div class="form-group">
+              <label for="field-previewVideo">Hover Video Path / URL</label>
+              <div class="media-input-row">
+                <input id="field-previewVideo" type="text" value="${escAdm(project.previewVideo || '')}" data-field="previewVideo" />
+                <button id="btn-upload-previewVideo" class="btn btn-secondary" type="button">Upload Hover Video</button>
+              </div>
+              <input id="file-previewVideo" class="media-file-input" type="file" accept="video/mp4,video/webm" />
+              <span class="media-upload-note">Optional. Plays only while the visitor hovers; without a cover, its first frame is used.</span>
             </div>
           </div>
-        </div>
 
-        <div class="form-group span-2">
-          <label for="field-previewVideo">Hover Video Path / URL</label>
-          <div class="media-input-row">
-            <input id="field-previewVideo" type="text" value="${escAdm(project.previewVideo || '')}" data-field="previewVideo" />
-            <button id="btn-upload-previewVideo" class="btn btn-secondary" type="button">Upload Hover Video</button>
+          <div class="mobile-focus-panel">
+            <div class="mobile-focus-header">
+              <span class="form-subsection-heading">Mobile Cover Framing</span>
+              <button id="btn-reset-mobile-focus" class="btn btn-secondary mobile-focus-reset" type="button">Reset</button>
+            </div>
+            <div class="mobile-focus-editor">
+              <div id="mobile-focus-preview" class="mobile-focus-preview" aria-label="Drag to choose the mobile cover focal point">
+                <div id="mobile-focus-media" class="mobile-focus-media"></div>
+                <span id="mobile-focus-marker" class="mobile-focus-marker" aria-hidden="true"></span>
+              </div>
+              <div class="mobile-focus-controls">
+                <label for="field-mobileFocusX">Horizontal <output id="mobile-focus-x-value">${Math.round(mobileFocusX)}%</output></label>
+                <input id="field-mobileFocusX" type="range" min="0" max="100" step="1" value="${mobileFocusX}" data-field="mobileFocusX" />
+                <label for="field-mobileFocusY">Vertical <output id="mobile-focus-y-value">${Math.round(mobileFocusY)}%</output></label>
+                <input id="field-mobileFocusY" type="range" min="0" max="100" step="1" value="${mobileFocusY}" data-field="mobileFocusY" />
+                <label for="field-mobileCoverScale">Scale <output id="mobile-cover-scale-value">${Math.round(mobileCoverScale)}%</output></label>
+                <input id="field-mobileCoverScale" type="range" min="100" max="200" step="1" value="${mobileCoverScale}" data-field="mobileCoverScale" />
+                <span class="media-upload-note">Drag the marker or use the compact controls. Applied to the mobile opening highlight and project page.</span>
+              </div>
+            </div>
           </div>
-          <input id="file-previewVideo" class="media-file-input" type="file" accept="video/mp4,video/webm" />
-          <span class="media-upload-note">Optional. Plays only while the visitor hovers; without a cover, its first frame is used.</span>
         </div>
 
           </div>
@@ -1062,6 +1096,7 @@
       coverImage: '',
       mobileFocusX: 50,
       mobileFocusY: 50,
+      mobileCoverScale: 100,
       previewVideo: '',
       youtubeUrl: '',
       projectStills: [],
@@ -1167,6 +1202,8 @@
         updated[field] = parseInt(raw, 10) || updated[field];
       } else if (field === 'mobileFocusX' || field === 'mobileFocusY') {
         updated[field] = Math.max(0, Math.min(100, Number(raw) || 0));
+      } else if (field === 'mobileCoverScale') {
+        updated[field] = normalizeMobileCoverScale(raw);
       } else if (field === 'published' || field === 'watchNowEnabled') {
         updated[field] = raw === 'true';
       } else if (field === 'services') {

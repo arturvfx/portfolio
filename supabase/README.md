@@ -54,6 +54,10 @@ To configure the mobile focal point of each project's cover image, run:
 
 `supabase/migrations/012_mobile_cover_focus.sql`
 
+To add the mobile cover scale/zoom control, run:
+
+`supabase/migrations/013_mobile_cover_scale.sql`
+
 Then configure and deploy the Edge Function. The destination address remains
 server-side and is never included in the public site:
 

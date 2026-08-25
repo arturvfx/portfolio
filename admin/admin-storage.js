@@ -34,6 +34,11 @@
     return Number.isFinite(number) ? Math.max(0, Math.min(100, number)) : 50;
   }
 
+  function normalizeMobileCoverScale(value) {
+    const number = Number(value);
+    return Number.isFinite(number) ? Math.max(100, Math.min(200, number)) : 100;
+  }
+
   function normalizeProjectStills(value) {
     if (!Array.isArray(value)) return [];
     return value.slice(0, 3).map(item => {
@@ -51,6 +56,7 @@
     clean.projectStills = normalizeProjectStills(clean.projectStills);
     clean.mobileFocusX = normalizeMobileFocus(clean.mobileFocusX);
     clean.mobileFocusY = normalizeMobileFocus(clean.mobileFocusY);
+    clean.mobileCoverScale = normalizeMobileCoverScale(clean.mobileCoverScale);
     return clean;
   }
 
@@ -355,6 +361,14 @@
           errors.push(`${ref}: "${field}" must be a number from 0 to 100.`);
         }
       });
+      if (p.mobileCoverScale != null && (
+        typeof p.mobileCoverScale !== 'number' ||
+        !Number.isFinite(p.mobileCoverScale) ||
+        p.mobileCoverScale < 100 ||
+        p.mobileCoverScale > 200
+      )) {
+        errors.push(`${ref}: "mobileCoverScale" must be a number from 100 to 200.`);
+      }
       if (p.previewVideo != null && typeof p.previewVideo !== 'string') {
         errors.push(`${ref}: "previewVideo" must be a string.`);
       }
