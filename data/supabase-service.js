@@ -48,7 +48,8 @@
       order: row.display_order,
       backgroundEnabled: row.background_enabled !== false,
       backgroundSource,
-      backgroundVideo: row.background_video || ''
+      backgroundVideo: row.background_video || '',
+      heroEnabled: row.hero_enabled === true
     };
   }
 
@@ -63,7 +64,8 @@
       background_source: ['default', 'homepage', 'custom'].includes(gallery.backgroundSource)
         ? gallery.backgroundSource
         : 'default',
-      background_video: gallery.backgroundVideo || ''
+      background_video: gallery.backgroundVideo || '',
+      hero_enabled: gallery.heroEnabled === true
     };
   }
 

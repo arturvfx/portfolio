@@ -56,13 +56,31 @@ function renderPortfolioPage(pageConfig, projects) {
     });
   }
 
-  // 4. Mount Project Gallery
+  // 4. Mount the optional editorial hero and exclude those projects below.
+  const heroContainer = document.getElementById('section-featured-hero');
+  const heroProjects = typeof selectSectionHeroProjects === 'function'
+    ? selectSectionHeroProjects(projects, pageConfig)
+    : [];
+  const publishedSectionProjectCount = projects.filter(project =>
+    project.section === pageConfig.projectSection && project.published !== false
+  ).length;
+  if (typeof renderSectionHero === 'function') {
+    renderSectionHero(heroProjects, heroContainer, {
+      galleryTitle: pageConfig.title || '',
+      hasRemainingProjects: publishedSectionProjectCount > heroProjects.length
+    });
+  }
+
+  // 5. Mount Project Gallery
   const containerId = pageConfig.containerId || 'project-gallery';
   const container = document.getElementById(containerId) ||
     document.querySelector('.portfolio-grid[data-page]');
 
   if (container) {
-    renderProjectGallery(projects, container, pageConfig);
+    renderProjectGallery(projects, container, {
+      ...pageConfig,
+      excludeProjectIds: heroProjects.map(project => project.id || project.slug)
+    });
   }
 }
 
@@ -102,6 +120,15 @@ function applyGalleryBackground(gallery, settingsOverride) {
       ? 'video/webm'
       : 'video/mp4');
     video.load();
+  }
+  const hero = document.getElementById('section-featured-hero');
+  const heroRect = hero && !hero.hidden ? hero.getBoundingClientRect() : null;
+  const heroCoversViewport = heroRect &&
+    heroRect.top < window.innerHeight * 0.5 &&
+    heroRect.bottom > window.innerHeight * 0.5;
+  if (heroCoversViewport) {
+    video.pause();
+    return;
   }
   const playback = video.play();
   if (playback?.catch) playback.catch(() => {});
@@ -147,9 +174,9 @@ function navigatePortfolioSection(sectionId, options = {}) {
     : { ...gallery, projectSection: gallery.id, activeNav: gallery.id, containerId: 'project-gallery' };
 
   container.setAttribute('data-page', gallery.id);
-  applyGalleryBackground(gallery);
   updateGalleryMetadata(gallery);
   renderPortfolioPage(pageConfig, publicPortfolioRuntime.projects);
+  applyGalleryBackground(gallery);
 
   if (options.history === 'push' || options.history === 'replace') {
     const method = options.history === 'replace' ? 'replaceState' : 'pushState';

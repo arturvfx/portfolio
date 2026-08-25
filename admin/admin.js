@@ -1448,7 +1448,8 @@
       order: workingGalleries.length + 1,
       backgroundEnabled: true,
       backgroundSource: 'default',
-      backgroundVideo: ''
+      backgroundVideo: '',
+      heroEnabled: false
     };
     workingGalleries.push(gallery);
     adminStorage.saveGalleries(workingGalleries);
@@ -1532,6 +1533,15 @@
             <option value="false" ${gallery.published === false ? 'selected' : ''}>Hidden — admin only</option>
           </select>
         </div>
+        <h3 class="form-section-heading">Featured Hero</h3>
+        <div class="form-group span-2">
+          <label for="gallery-hero-enabled">Opening Highlight</label>
+          <select id="gallery-hero-enabled" data-gallery-field="heroEnabled">
+            <option value="true" ${gallery.heroEnabled === true ? 'selected' : ''}>Enabled — highlight the first three published projects</option>
+            <option value="false" ${gallery.heroEnabled !== true ? 'selected' : ''}>Disabled — start directly with the project grid</option>
+          </select>
+          <span class="media-upload-note">The hero follows the project order in this section. Highlighted projects are removed from the grid below, so they never appear twice.</span>
+        </div>
         <h3 class="form-section-heading">Section Background</h3>
         <div class="form-group span-2">
           <label for="gallery-background-enabled">Background Style</label>
@@ -1604,7 +1614,9 @@
     const updated = { ...workingGalleries[index] };
     dom.form.querySelectorAll('[data-gallery-field]').forEach(input => {
       const field = input.getAttribute('data-gallery-field');
-      if (field === 'published' || field === 'backgroundEnabled') updated[field] = input.value === 'true';
+      if (field === 'published' || field === 'backgroundEnabled' || field === 'heroEnabled') {
+        updated[field] = input.value === 'true';
+      }
       else if (field === 'order') updated[field] = Number.parseInt(input.value, 10);
       else updated[field] = input.value.trim();
     });

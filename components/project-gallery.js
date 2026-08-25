@@ -25,10 +25,18 @@ function renderProjectGallery(projects, container, galleryConfig) {
     : (galleryConfig && (galleryConfig.projectSection || galleryConfig.id)) || 'featured-work';
 
   const sourceProjects = projects || (typeof PROJECTS_DATA !== 'undefined' ? PROJECTS_DATA : []);
+  const excludedProjectIds = new Set(
+    galleryConfig && typeof galleryConfig === 'object' && Array.isArray(galleryConfig.excludeProjectIds)
+      ? galleryConfig.excludeProjectIds
+      : []
+  );
 
   const filtered = sourceProjects
     .filter(project => {
-      return project.section === targetSection && project.published !== false;
+      const projectId = project.id || project.slug;
+      return project.section === targetSection &&
+        project.published !== false &&
+        !excludedProjectIds.has(projectId);
     })
     .sort((a, b) => (a.order || 99) - (b.order || 99));
 
