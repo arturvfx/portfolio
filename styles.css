@@ -545,6 +545,7 @@ body.shutter-click-active .video-background-wrapper {
 
 body.shutter-click-active .brand-title {
   animation: brandProjectionVoltage 0.26s steps(1, end) forwards;
+  transform-origin: center;
 }
 
 body.shutter-click-active .brand-title::before {
@@ -558,40 +559,44 @@ body.shutter-click-active .brand-title::after {
 @keyframes brandProjectionVoltage {
   0% {
     filter: blur(0.7px) brightness(1);
+    transform: scaleX(1) skewX(0);
     text-shadow:
       0 0 22px rgba(243, 241, 236, 0.3),
       0 0 45px rgba(243, 241, 236, 0.1),
       0 4px 25px rgba(0, 0, 0, 0.95);
   }
   16% {
-    filter: blur(0.45px) brightness(1.55);
+    filter: blur(0.25px) brightness(1.14) contrast(1.28);
+    transform: scaleX(1.012) skewX(-0.7deg);
     text-shadow:
-      0 0 34px rgba(243, 241, 236, 0.62),
-      0 0 70px rgba(243, 241, 236, 0.24),
+      0 0 12px rgba(243, 241, 236, 0.28),
+      0 0 24px rgba(243, 241, 236, 0.08),
       0 4px 25px rgba(0, 0, 0, 0.9);
   }
   34% {
-    filter: blur(1.1px) brightness(0.74);
+    filter: blur(0.8px) brightness(0.7) contrast(1.42);
+    transform: scaleX(0.982) skewX(1.35deg);
     text-shadow:
-      0 0 14px rgba(243, 241, 236, 0.2),
-      0 0 38px rgba(243, 241, 236, 0.08),
+      0 0 7px rgba(243, 241, 236, 0.16),
       0 4px 25px rgba(0, 0, 0, 0.98);
   }
   54% {
-    filter: blur(0.55px) brightness(1.32);
+    filter: blur(0.2px) brightness(1.18) contrast(1.58);
+    transform: scaleX(1.026) skewX(-1.7deg);
     text-shadow:
-      0 0 30px rgba(243, 241, 236, 0.5),
-      0 0 58px rgba(243, 241, 236, 0.18),
+      0 0 14px rgba(243, 241, 236, 0.3),
+      0 0 26px rgba(243, 241, 236, 0.08),
       0 4px 25px rgba(0, 0, 0, 0.92);
   }
   76% {
-    filter: blur(0.82px) brightness(0.92);
+    filter: blur(0.5px) brightness(0.86) contrast(1.34);
+    transform: scaleX(0.992) skewX(0.55deg);
   }
   100% {
     filter: blur(1.15px) brightness(0.38);
+    transform: scaleX(1.006) skewX(-0.2deg);
     text-shadow:
-      0 0 12px rgba(243, 241, 236, 0.16),
-      0 0 30px rgba(243, 241, 236, 0.06),
+      0 0 7px rgba(243, 241, 236, 0.12),
       0 4px 25px rgba(0, 0, 0, 0.98);
   }
 }
@@ -601,37 +606,43 @@ body.shutter-click-active .brand-title::after {
     opacity: 0.6;
     filter: blur(0px);
     transform: translate(-1.8px, 0);
+    clip-path: inset(0);
   }
   16% {
-    opacity: 0.9;
-    filter: blur(0.65px);
-    transform: translate(-5.5px, -0.6px);
+    opacity: 1;
+    filter: blur(0.35px) contrast(1.45) saturate(1.6);
+    transform: translate(-10px, -1px) scaleX(1.018) skewX(-1.4deg);
+    clip-path: inset(0 0 48% 0);
     text-shadow:
-      -2px 0 8px rgba(255, 35, 75, 0.72),
-      0 0 24px rgba(255, 35, 75, 0.42);
+      -5px 0 1px rgba(255, 35, 75, 0.82),
+      -11px 0 4px rgba(255, 35, 75, 0.46);
   }
   34% {
-    opacity: 0.56;
-    filter: blur(0.9px);
-    transform: translate(-3.4px, 0.25px);
+    opacity: 0.82;
+    filter: blur(0.65px) contrast(1.65) saturate(1.8);
+    transform: translate(-6px, 1.2px) scaleX(0.988) skewX(1.8deg);
+    clip-path: inset(52% 0 8% 0);
   }
   54% {
-    opacity: 0.86;
-    filter: blur(0.75px);
-    transform: translate(-6.2px, -0.4px);
+    opacity: 1;
+    filter: blur(0.3px) contrast(1.55) saturate(1.8);
+    transform: translate(-15px, -0.7px) scaleX(1.035) skewX(-2.2deg);
+    clip-path: inset(12% 0 18% 0);
     text-shadow:
-      -2px 0 10px rgba(255, 35, 75, 0.68),
-      0 0 28px rgba(255, 35, 75, 0.38);
+      -6px 0 1px rgba(255, 35, 75, 0.9),
+      -14px 0 5px rgba(255, 35, 75, 0.5);
   }
   76% {
-    opacity: 0.58;
-    filter: blur(0.5px);
-    transform: translate(-2.8px, 0);
+    opacity: 0.68;
+    filter: blur(0.48px) contrast(1.4);
+    transform: translate(-7px, 0.4px) scaleX(0.995) skewX(0.8deg);
+    clip-path: inset(38% 0 34% 0);
   }
   100% {
-    opacity: 0.24;
-    filter: blur(0.85px);
-    transform: translate(-1.8px, 0);
+    opacity: 0.2;
+    filter: blur(0.65px);
+    transform: translate(-2px, 0);
+    clip-path: inset(0);
   }
 }
 
@@ -640,37 +651,43 @@ body.shutter-click-active .brand-title::after {
     opacity: 0.6;
     filter: blur(0px);
     transform: translate(1.8px, 0);
+    clip-path: inset(0);
   }
   16% {
-    opacity: 0.9;
-    filter: blur(0.65px);
-    transform: translate(4.8px, 0.6px);
+    opacity: 1;
+    filter: blur(0.35px) contrast(1.45) saturate(1.6);
+    transform: translate(9px, 1.1px) scaleX(0.99) skewX(1.25deg);
+    clip-path: inset(42% 0 4% 0);
     text-shadow:
-      2px 0 8px rgba(0, 225, 255, 0.72),
-      0 0 24px rgba(0, 225, 255, 0.42);
+      5px 0 1px rgba(0, 225, 255, 0.82),
+      11px 0 4px rgba(0, 225, 255, 0.46);
   }
   34% {
-    opacity: 0.56;
-    filter: blur(0.9px);
-    transform: translate(3.1px, -0.25px);
+    opacity: 0.82;
+    filter: blur(0.65px) contrast(1.65) saturate(1.8);
+    transform: translate(7px, -1.1px) scaleX(1.016) skewX(-1.7deg);
+    clip-path: inset(6% 0 58% 0);
   }
   54% {
-    opacity: 0.86;
-    filter: blur(0.75px);
-    transform: translate(5.7px, 0.45px);
+    opacity: 1;
+    filter: blur(0.3px) contrast(1.55) saturate(1.8);
+    transform: translate(13px, 0.8px) scaleX(0.974) skewX(2deg);
+    clip-path: inset(24% 0 8% 0);
     text-shadow:
-      2px 0 10px rgba(0, 225, 255, 0.68),
-      0 0 28px rgba(0, 225, 255, 0.38);
+      6px 0 1px rgba(0, 225, 255, 0.9),
+      14px 0 5px rgba(0, 225, 255, 0.5);
   }
   76% {
-    opacity: 0.58;
-    filter: blur(0.5px);
-    transform: translate(2.6px, 0);
+    opacity: 0.68;
+    filter: blur(0.48px) contrast(1.4);
+    transform: translate(6px, -0.35px) scaleX(1.008) skewX(-0.7deg);
+    clip-path: inset(62% 0 10% 0);
   }
   100% {
-    opacity: 0.24;
-    filter: blur(0.85px);
-    transform: translate(1.8px, 0);
+    opacity: 0.2;
+    filter: blur(0.65px);
+    transform: translate(2px, 0);
+    clip-path: inset(0);
   }
 }
 
