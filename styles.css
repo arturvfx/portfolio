@@ -763,6 +763,10 @@ body.gallery-loading .section-featured-hero {
   visibility: hidden;
 }
 
+body.gallery-loading.section-entry-preview-ready .section-featured-hero {
+  visibility: visible;
+}
+
 body.portfolio-ready .page-container {
   visibility: visible;
   animation: none;

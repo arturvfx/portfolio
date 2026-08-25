@@ -36,8 +36,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   const enterBtn = document.getElementById('enter-button');
   if (enterBtn) {
     let isHovered = false;
+    let enterNavigationStarted = false;
     let interactionFlickerToken = 0;
     const enterReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const entryPreload = window.sectionEntryPreview?.preload('featured-work') || Promise.resolve(null);
 
     // Non-periodic projector flicker: light/focus only, never positional movement.
     function triggerFlicker() {
@@ -129,15 +131,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (!enterReducedMotion) setTimeout(scheduleNextFlicker, 2000);
 
     // Mechanical Shutter Click & Page Navigation Handling for ENTER
-    enterBtn.addEventListener('click', (e) => {
+    enterBtn.addEventListener('click', async (e) => {
       e.preventDefault();
+      if (enterNavigationStarted) return;
+      enterNavigationStarted = true;
       const targetUrl = getGalleryHref('featured-work');
 
       document.body.classList.add('shutter-click-active');
-
-      setTimeout(() => {
-        window.location.href = targetUrl;
-      }, 340);
+      const minimumEffectTime = new Promise(resolve => window.setTimeout(resolve, 340));
+      const boundedPreload = Promise.race([
+        entryPreload,
+        new Promise(resolve => window.setTimeout(() => resolve(null), 900))
+      ]);
+      await Promise.all([minimumEffectTime, boundedPreload]);
+      window.location.href = targetUrl;
     });
   }
 

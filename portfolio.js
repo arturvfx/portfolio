@@ -282,6 +282,16 @@ function renderInitialGalleryNavigation() {
     );
     activeGallery = resolvePublishedGallery(localPortfolio.galleries, activeId);
     activeId = activeGallery.id;
+
+    const entryPreview = window.sectionEntryPreview?.read(activeId);
+    if (entryPreview?.gallery && entryPreview.projects?.length) {
+      activeGallery = entryPreview.gallery;
+      const pageConfig = typeof galleryToPageConfig === 'function'
+        ? galleryToPageConfig(activeGallery)
+        : { ...activeGallery, projectSection: activeGallery.id, activeNav: activeGallery.id, containerId: 'project-gallery' };
+      renderPortfolioPage(pageConfig, entryPreview.projects);
+      document.body.classList.add('section-entry-preview-ready');
+    }
   } else if (currentPath.endsWith('/project.html') || currentPath.includes('/project/')) {
     const slug = getProjectSlugFromLocation();
     const storedPreview = typeof readProjectPreview === 'function'
@@ -319,6 +329,7 @@ async function initPortfolioSystem() {
   const gallery = resolvePublishedGallery(galleries, requestedId);
   renderGalleryNavigation(galleries, gallery.id);
   navigatePortfolioSection(gallery.id, { history: 'none', scroll: false });
+  document.body.classList.remove('section-entry-preview-ready');
   document.body.classList.remove('gallery-loading');
   document.body.classList.add('portfolio-ready');
 
