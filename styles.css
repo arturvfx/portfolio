@@ -702,11 +702,6 @@ body.shutter-click-active .brand-title::after {
   }
 }
 
-body.page-transition-out {
-  transition: opacity 0.5s ease-out;
-  opacity: 0;
-}
-
 /* Keyframe Animations */
 @keyframes fadeInUp {
   from {
@@ -2319,11 +2314,15 @@ body.project-video-open {
 
 /* Global light content theme — navigation, footer, Contact and media stay dark. */
 body.site-content-light {
-  --content-surface: #eeece6;
+  --content-surface: #f3f1ec;
   --content-text: #171716;
   --content-secondary: #3e3c38;
   --content-muted: #716e67;
   --content-border: rgba(23, 23, 22, 0.28);
+}
+
+html.site-content-light {
+  background: #f3f1ec;
 }
 
 body.site-content-light.gallery-solid-background {

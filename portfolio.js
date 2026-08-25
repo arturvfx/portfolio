@@ -273,12 +273,15 @@ function renderInitialGalleryNavigation() {
   const localPortfolio = getLocalPortfolioData();
   const currentPath = window.location.pathname;
   let activeId = null;
+  let activeGallery = null;
 
   if (document.getElementById('project-gallery')) {
     activeId = getGallerySectionFromLocation(
       document.getElementById('project-gallery')?.getAttribute('data-page') ||
       'featured-work'
     );
+    activeGallery = resolvePublishedGallery(localPortfolio.galleries, activeId);
+    activeId = activeGallery.id;
   } else if (currentPath.endsWith('/project.html') || currentPath.includes('/project/')) {
     const slug = getProjectSlugFromLocation();
     const storedPreview = typeof readProjectPreview === 'function'
@@ -289,6 +292,7 @@ function renderInitialGalleryNavigation() {
   }
 
   renderGalleryNavigation(localPortfolio.galleries, activeId);
+  if (activeGallery) applyGalleryBackground(activeGallery);
 }
 
 /**

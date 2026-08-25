@@ -73,6 +73,15 @@
     window.localStorage.removeItem(STORAGE_KEY);
   }
 
+  function applyThemeClasses(settings) {
+    const isLight = settings.contentTheme === 'light';
+    document.documentElement.classList.toggle('site-content-light', isLight);
+    document.documentElement.classList.toggle('site-content-dark', !isLight);
+    if (!document.body) return;
+    document.body.classList.toggle('site-content-light', isLight);
+    document.body.classList.toggle('site-content-dark', !isLight);
+  }
+
   function setText(selector, value, syncDataText) {
     document.querySelectorAll(selector).forEach(element => {
       element.textContent = value;
@@ -99,8 +108,7 @@
     });
     document.body.classList.toggle('landing-with-subtitle', Boolean(current.landingSubtitle));
     document.body.classList.toggle('landing-without-subtitle', !current.landingSubtitle);
-    document.body.classList.toggle('site-content-light', current.contentTheme === 'light');
-    document.body.classList.toggle('site-content-dark', current.contentTheme !== 'light');
+    applyThemeClasses(current);
     setText('[data-site-setting="landing-enter-label"]', current.landingEnterLabel, true);
     setText('[data-site-setting="landing-watch-reel-label"]', current.landingWatchReelLabel, true);
     setText('[data-site-setting="contact-title"]', current.contactTitle, false);
@@ -190,4 +198,8 @@
     apply,
     hydrate
   };
+
+  // The script runs in <head>. Apply the cached theme to the root before the
+  // first paint so navigation never exposes the default dark canvas first.
+  applyThemeClasses(loadLocal());
 }());

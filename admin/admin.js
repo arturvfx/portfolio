@@ -1504,7 +1504,7 @@
             <button id="btn-upload-gallery-video" class="btn btn-secondary" type="button">Upload Video</button>
           </div>
           <input id="file-gallery-video" class="media-file-input" type="file" accept="video/mp4,video/webm" />
-          <span class="media-upload-note">Used by sections set to “Project Selection default”. Individual sections can instead use solid black, the homepage video or a custom/reused video.</span>
+          <span class="media-upload-note">Used by sections set to “Project Selection default”. Individual sections can instead use the global solid theme, the homepage video or a custom/reused video.</span>
         </div>
 
         <h3 class="form-section-heading">Solid Content Theme</h3>
@@ -1847,9 +1847,9 @@
           <label for="gallery-background-enabled">Background Style</label>
           <select id="gallery-background-enabled" data-gallery-field="backgroundEnabled">
             <option value="true" ${backgroundEnabled ? 'selected' : ''}>Video enabled — show video and film effects</option>
-            <option value="false" ${!backgroundEnabled ? 'selected' : ''}>Video disabled — solid black</option>
+            <option value="false" ${!backgroundEnabled ? 'selected' : ''}>Video disabled — solid theme</option>
           </select>
-          <span class="media-upload-note">Solid black uses the same background as individual project pages and does not load or play the section video.</span>
+          <span class="media-upload-note">The solid background follows the global Solid Content Theme used by project pages and does not load or play the section video.</span>
         </div>
         <div id="gallery-background-options" class="form-group span-2" ${backgroundEnabled ? '' : 'hidden'}>
           <label for="gallery-background-source">Video Source</label>

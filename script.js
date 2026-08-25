@@ -136,10 +136,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       document.body.classList.add('shutter-click-active');
 
       setTimeout(() => {
-        document.body.classList.add('page-transition-out');
-        setTimeout(() => {
-          window.location.href = targetUrl;
-        }, 300);
+        window.location.href = targetUrl;
       }, 340);
     });
   }
