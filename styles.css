@@ -1417,6 +1417,19 @@ body.mobile-menu-open {
   margin-bottom: 3.5rem;
 }
 
+body.section-hero-active .page-container {
+  padding-top: clamp(2.75rem, 3vw, 3.75rem);
+}
+
+body.section-hero-active .section-header {
+  margin-bottom: clamp(2rem, 2.5vw, 3rem);
+}
+
+body.section-hero-active .section-title {
+  font-size: clamp(3rem, 5.5vw, 5.5rem);
+  line-height: 0.92;
+}
+
 .section-title {
   font-family: var(--font-title);
   font-size: clamp(2.2rem, 5vw, 4.5rem);
@@ -2708,6 +2721,18 @@ body.contact-page {
     height: 100vh;
     height: 100svh;
     min-height: 0;
+  }
+
+  body.section-hero-active .page-container {
+    padding-top: 3.5rem;
+  }
+
+  body.section-hero-active .section-header {
+    margin-bottom: 2.5rem;
+  }
+
+  body.section-hero-active .section-title {
+    font-size: clamp(2.75rem, 12vw, 4rem);
   }
 
   .section-hero-inner {
