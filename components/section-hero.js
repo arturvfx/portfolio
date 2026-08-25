@@ -141,12 +141,16 @@ function renderSectionHero(projects, container, options = {}) {
   mobileLink.append(mobileTitle, mobileCategory);
   const counter = document.createElement('div');
   counter.className = 'section-hero-counter';
+  counter.hidden = projects.length < 2;
   const counterCurrent = document.createElement('span');
   counterCurrent.className = 'section-hero-counter-current';
+  counterCurrent.setAttribute('aria-hidden', 'true');
   const counterLine = document.createElement('span');
   counterLine.className = 'section-hero-counter-line';
+  counterLine.setAttribute('aria-hidden', 'true');
   const counterTotal = document.createElement('span');
   counterTotal.className = 'section-hero-counter-total';
+  counterTotal.setAttribute('aria-hidden', 'true');
   counterTotal.textContent = String(projects.length);
   counter.append(counterCurrent, counterLine, counterTotal);
   mobileContent.append(mobileLink, counter);
@@ -203,6 +207,11 @@ function renderSectionHero(projects, container, options = {}) {
     mobileLink.href = getProjectHref(project.slug);
     mobileLink.setAttribute('aria-label', project.category ? `${project.title}, ${project.category}` : project.title);
     counterCurrent.textContent = String(activeIndex + 1);
+    const counterProgress = projects.length > 1 ? activeIndex / (projects.length - 1) : 1;
+    counter.style.setProperty('--section-hero-current-offset', `${counterProgress * 6.32}rem`);
+    counter.style.setProperty('--section-hero-line-scale', String(1 - counterProgress));
+    counter.classList.toggle('is-complete', activeIndex === projects.length - 1);
+    counter.setAttribute('aria-label', `Project ${activeIndex + 1} of ${projects.length}`);
     scheduleMobileTitleFit();
   }
 
