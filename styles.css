@@ -2657,6 +2657,8 @@ body.contact-page {
   }
 
   .section-hero-mobile-category {
+    display: block;
+    width: 100%;
     margin-top: 0.65rem;
     color: var(--text-secondary);
     font-family: var(--font-body);
@@ -2715,19 +2717,20 @@ body.contact-page {
 
   .section-hero-counter-line {
     position: absolute;
-    top: 0.95rem;
-    bottom: 0.95rem;
+    top: var(--section-hero-line-top, 1.02rem);
     left: 50%;
     width: 1px;
+    height: var(--section-hero-line-height, 4.93rem);
     background: currentColor;
     opacity: 0.62;
-    transform: translateX(-50%) scaleY(var(--section-hero-line-scale, 1));
-    transform-origin: center bottom;
-    transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+    transform: translateX(-50%);
+    transition:
+      top 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+      height 0.28s cubic-bezier(0.22, 1, 0.36, 1);
   }
 
   .section-hero-down {
-    right: 1.15rem;
+    right: 0.875rem;
     bottom: 0.75rem;
   }
 

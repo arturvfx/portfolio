@@ -161,7 +161,11 @@ function renderSectionHero(projects, container, options = {}) {
   downButton.setAttribute('aria-label', 'View the rest of the projects');
   downButton.textContent = '↓';
   downButton.addEventListener('click', () => {
-    document.querySelector('.page-container')?.scrollIntoView({ behavior: 'auto', block: 'start' });
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    document.querySelector('.page-container')?.scrollIntoView({
+      behavior: reducedMotion ? 'auto' : 'smooth',
+      block: 'start'
+    });
   });
 
   let activeIndex = 0;
@@ -208,8 +212,12 @@ function renderSectionHero(projects, container, options = {}) {
     mobileLink.setAttribute('aria-label', project.category ? `${project.title}, ${project.category}` : project.title);
     counterCurrent.textContent = String(activeIndex + 1);
     const counterProgress = projects.length > 1 ? activeIndex / (projects.length - 1) : 1;
-    counter.style.setProperty('--section-hero-current-offset', `${counterProgress * 6.32}rem`);
-    counter.style.setProperty('--section-hero-line-scale', String(1 - counterProgress));
+    const currentOffset = counterProgress * 6.32;
+    const lineEnd = 5.95;
+    const lineTop = Math.min(lineEnd, currentOffset + 1.02);
+    counter.style.setProperty('--section-hero-current-offset', `${currentOffset}rem`);
+    counter.style.setProperty('--section-hero-line-top', `${lineTop}rem`);
+    counter.style.setProperty('--section-hero-line-height', `${Math.max(0, lineEnd - lineTop)}rem`);
     counter.classList.toggle('is-complete', activeIndex === projects.length - 1);
     counter.setAttribute('aria-label', `Project ${activeIndex + 1} of ${projects.length}`);
     scheduleMobileTitleFit();
