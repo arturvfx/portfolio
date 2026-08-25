@@ -84,7 +84,8 @@ html, body {
   visibility: hidden;
 }
 
-body.site-settings-loading:is(.gallery-loading, .project-page) .page-container,
+body.site-settings-loading.gallery-loading .page-container,
+body.site-settings-loading.project-page:not(.project-preview-ready) .page-container,
 body.site-settings-loading .section-featured-hero {
   visibility: hidden;
 }
@@ -733,6 +734,10 @@ body.page-scrollable {
 
 body.project-page {
   background: #070709;
+}
+
+html.site-content-light body.project-page {
+  background: #f3f1ec;
 }
 
 body.project-loading #project-detail-content {

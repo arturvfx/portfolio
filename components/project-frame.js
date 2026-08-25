@@ -80,6 +80,14 @@ function renderProjectFrame(project, options = {}) {
     projectLink.addEventListener('click', () => storeProjectPreview(project, options));
   }
 
+  if (typeof preloadProjectPreview === 'function') {
+    frame.addEventListener('pointerenter', () => preloadProjectPreview(project), { passive: true });
+    projectLink?.addEventListener('focus', () => preloadProjectPreview(project));
+  }
+  if (typeof observeMobileProjectPreview === 'function') {
+    observeMobileProjectPreview(frame, project);
+  }
+
   const video = frame.querySelector('.frame-preview');
   const hoverCapable = !window.matchMedia ||
     window.matchMedia('(hover: hover) and (pointer: fine)').matches;
