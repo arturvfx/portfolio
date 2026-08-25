@@ -518,6 +518,82 @@
     if (hint) hint.style.display = 'inline';
   }
 
+  function normalizeMobileFocus(value) {
+    const number = Number(value);
+    return Number.isFinite(number) ? Math.max(0, Math.min(100, number)) : 50;
+  }
+
+  function bindMobileFocusControls() {
+    const preview = document.getElementById('mobile-focus-preview');
+    const mediaHost = document.getElementById('mobile-focus-media');
+    const marker = document.getElementById('mobile-focus-marker');
+    const xInput = document.getElementById('field-mobileFocusX');
+    const yInput = document.getElementById('field-mobileFocusY');
+    const xOutput = document.getElementById('mobile-focus-x-value');
+    const yOutput = document.getElementById('mobile-focus-y-value');
+    const coverInput = document.getElementById('field-coverImage');
+    const videoInput = document.getElementById('field-previewVideo');
+    if (!preview || !mediaHost || !marker || !xInput || !yInput) return;
+
+    const updatePosition = () => {
+      const x = normalizeMobileFocus(xInput.value);
+      const y = normalizeMobileFocus(yInput.value);
+      const media = mediaHost.querySelector('img, video');
+      if (media) media.style.objectPosition = `${x}% ${y}%`;
+      marker.style.left = `${x}%`;
+      marker.style.top = `${y}%`;
+      if (xOutput) xOutput.value = `${Math.round(x)}%`;
+      if (yOutput) yOutput.value = `${Math.round(y)}%`;
+    };
+
+    const renderMedia = () => {
+      const coverUrl = coverInput ? coverInput.value.trim() : '';
+      const videoUrl = videoInput ? videoInput.value.trim() : '';
+      if (coverUrl) {
+        const image = document.createElement('img');
+        image.src = coverUrl;
+        image.alt = '';
+        mediaHost.replaceChildren(image);
+      } else if (videoUrl) {
+        const video = document.createElement('video');
+        video.src = videoUrl;
+        video.muted = true;
+        video.playsInline = true;
+        video.preload = 'metadata';
+        mediaHost.replaceChildren(video);
+      } else {
+        const empty = document.createElement('span');
+        empty.className = 'mobile-focus-empty';
+        empty.textContent = 'Add cover media to preview';
+        mediaHost.replaceChildren(empty);
+      }
+      updatePosition();
+    };
+
+    const setFromPointer = event => {
+      const rect = preview.getBoundingClientRect();
+      const x = Math.max(0, Math.min(100, ((event.clientX - rect.left) / rect.width) * 100));
+      const y = Math.max(0, Math.min(100, ((event.clientY - rect.top) / rect.height) * 100));
+      xInput.value = String(Math.round(x));
+      yInput.value = String(Math.round(y));
+      updatePosition();
+      markProjectFormDirty();
+    };
+
+    xInput.addEventListener('input', updatePosition);
+    yInput.addEventListener('input', updatePosition);
+    if (coverInput) coverInput.addEventListener('input', renderMedia);
+    if (videoInput) videoInput.addEventListener('input', renderMedia);
+    preview.addEventListener('pointerdown', event => {
+      preview.setPointerCapture(event.pointerId);
+      setFromPointer(event);
+    });
+    preview.addEventListener('pointermove', event => {
+      if (preview.hasPointerCapture(event.pointerId)) setFromPointer(event);
+    });
+    renderMedia();
+  }
+
   function renderEditForm(project) {
     const wrap = dom.formWrap;
     const empty = dom.emptyState;
@@ -528,6 +604,9 @@
 
     const form = dom.form;
     if (!form) return;
+
+    const mobileFocusX = normalizeMobileFocus(project.mobileFocusX);
+    const mobileFocusY = normalizeMobileFocus(project.mobileFocusY);
 
     form.innerHTML = `
       <div class="form-header">
@@ -599,6 +678,23 @@
           </div>
           <input id="file-coverImage" class="media-file-input" type="file" accept="image/*" />
           <span class="media-upload-note">The still image shown before the visitor hovers over the project.</span>
+        </div>
+
+        <div class="form-group span-2">
+          <label>Mobile Cover Focus</label>
+          <div class="mobile-focus-editor">
+            <div id="mobile-focus-preview" class="mobile-focus-preview" aria-label="Drag to choose the mobile cover focal point">
+              <div id="mobile-focus-media" class="mobile-focus-media"></div>
+              <span id="mobile-focus-marker" class="mobile-focus-marker" aria-hidden="true"></span>
+            </div>
+            <div class="mobile-focus-controls">
+              <label for="field-mobileFocusX">Horizontal <output id="mobile-focus-x-value">${Math.round(mobileFocusX)}%</output></label>
+              <input id="field-mobileFocusX" type="range" min="0" max="100" step="1" value="${mobileFocusX}" data-field="mobileFocusX" />
+              <label for="field-mobileFocusY">Vertical <output id="mobile-focus-y-value">${Math.round(mobileFocusY)}%</output></label>
+              <input id="field-mobileFocusY" type="range" min="0" max="100" step="1" value="${mobileFocusY}" data-field="mobileFocusY" />
+              <span class="media-upload-note">Drag the marker or use the sliders. This framing is used in the mobile opening highlight and project page.</span>
+            </div>
+          </div>
         </div>
 
         <div class="form-group span-2">
@@ -697,6 +793,7 @@
 
     bindMediaUpload(project.id, 'coverImage');
     bindMediaUpload(project.id, 'previewVideo');
+    bindMobileFocusControls();
     [0, 1, 2].forEach(index => bindProjectStillControls(project.id, index));
   }
 
@@ -800,6 +897,7 @@
       const fieldInput = document.getElementById(`field-${field}`);
       if (!fieldInput) throw new Error('The media URL field is no longer available.');
       fieldInput.value = publicUrl;
+      fieldInput.dispatchEvent(new Event('input', { bubbles: true }));
       formDirty = true;
       const hint = document.getElementById('dirty-hint');
       if (hint) hint.style.display = 'inline';
@@ -824,6 +922,8 @@
       category: '',
       year: String(new Date().getFullYear()),
       coverImage: '',
+      mobileFocusX: 50,
+      mobileFocusY: 50,
       previewVideo: '',
       youtubeUrl: '',
       projectStills: [],
@@ -927,6 +1027,8 @@
 
       if (field === 'order') {
         updated[field] = parseInt(raw, 10) || updated[field];
+      } else if (field === 'mobileFocusX' || field === 'mobileFocusY') {
+        updated[field] = Math.max(0, Math.min(100, Number(raw) || 0));
       } else if (field === 'published' || field === 'watchNowEnabled') {
         updated[field] = raw === 'true';
       } else if (field === 'services') {

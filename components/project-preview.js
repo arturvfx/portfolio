@@ -18,6 +18,8 @@ function storeProjectPreview(project, options = {}) {
     galleryTitle: options.galleryTitle || '',
     size: project.size || '16-9',
     coverImage: project.coverImage || '',
+    mobileFocusX: Number.isFinite(Number(project.mobileFocusX)) ? Number(project.mobileFocusX) : 50,
+    mobileFocusY: Number.isFinite(Number(project.mobileFocusY)) ? Number(project.mobileFocusY) : 50,
     savedAt: Date.now()
   };
 
@@ -69,6 +71,14 @@ function hydrateStoredProjectPreview() {
   const media = document.getElementById('project-detail-media');
   if (media) {
     media.className = `project-detail-media detail-ratio-${preview.size}`;
+    const mobileFocusX = Number.isFinite(Number(preview.mobileFocusX))
+      ? Math.max(0, Math.min(100, Number(preview.mobileFocusX)))
+      : 50;
+    const mobileFocusY = Number.isFinite(Number(preview.mobileFocusY))
+      ? Math.max(0, Math.min(100, Number(preview.mobileFocusY)))
+      : 50;
+    media.style.setProperty('--mobile-focus-x', `${mobileFocusX}%`);
+    media.style.setProperty('--mobile-focus-y', `${mobileFocusY}%`);
     if (preview.coverImage) {
       const image = document.createElement('img');
       image.src = preview.coverImage;

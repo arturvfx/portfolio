@@ -4,6 +4,11 @@
   let client = null;
   const PROJECT_STILL_SIZES = ['16-9', '9-16', '4-3'];
 
+  function normalizeMobileFocus(value) {
+    const number = Number(value);
+    return Number.isFinite(number) ? Math.max(0, Math.min(100, number)) : 50;
+  }
+
   function normalizeProjectStills(value) {
     if (!Array.isArray(value)) return [];
     return value.slice(0, 3).map(item => {
@@ -85,6 +90,8 @@
       watchNowEnabled: row.watch_now_enabled === true,
       watchNowUrl: row.watch_now_url || '',
       coverImage: row.cover_image || '',
+      mobileFocusX: normalizeMobileFocus(row.mobile_focus_x),
+      mobileFocusY: normalizeMobileFocus(row.mobile_focus_y),
       previewVideo: row.preview_video || '',
       youtubeUrl: row.youtube_url || '',
       projectStills: normalizeProjectStills(row.project_stills),
@@ -111,6 +118,8 @@
       watch_now_enabled: project.watchNowEnabled === true,
       watch_now_url: project.watchNowUrl || '',
       cover_image: project.coverImage || '',
+      mobile_focus_x: normalizeMobileFocus(project.mobileFocusX),
+      mobile_focus_y: normalizeMobileFocus(project.mobileFocusY),
       preview_video: project.previewVideo || '',
       youtube_url: project.youtubeUrl || '',
       project_stills: normalizeProjectStills(project.projectStills),

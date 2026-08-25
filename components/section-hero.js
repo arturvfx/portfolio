@@ -19,6 +19,11 @@ function getSectionHeroImage(project) {
   return firstStill && firstStill.url ? firstStill.url : '';
 }
 
+function getMobileFocus(value) {
+  const number = Number(value);
+  return Number.isFinite(number) ? Math.max(0, Math.min(100, number)) : 50;
+}
+
 function renderSectionHero(projects, container, options = {}) {
   if (!container) return;
   if (container._backgroundObserver) {
@@ -51,6 +56,8 @@ function renderSectionHero(projects, container, options = {}) {
   const mediaItems = projects.map((project, index) => {
     const item = document.createElement('div');
     item.className = `section-hero-media-item${index === 0 ? ' is-active' : ''}`;
+    item.style.setProperty('--mobile-focus-x', `${getMobileFocus(project.mobileFocusX)}%`);
+    item.style.setProperty('--mobile-focus-y', `${getMobileFocus(project.mobileFocusY)}%`);
     const imageUrl = getSectionHeroImage(project);
     if (imageUrl) {
       const image = document.createElement('img');

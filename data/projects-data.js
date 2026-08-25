@@ -17,6 +17,8 @@
  * - watchNowEnabled: boolean (optional external availability link)
  * - watchNowUrl: string (optional external streaming/player URL)
  * - coverImage: string (optional when previewVideo exists)
+ * - mobileFocusX: number (optional mobile cover focal point, 0–100; defaults to 50)
+ * - mobileFocusY: number (optional mobile cover focal point, 0–100; defaults to 50)
  * - previewVideo: string (optional)
  * - youtubeUrl: string (optional full video for the project page)
  * - projectStills: { url: string, size: '16-9' | '9-16' | '4-3' }[] (max 3)

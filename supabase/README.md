@@ -50,6 +50,10 @@ To add up to three configurable still images to each project page, run:
 
 `supabase/migrations/009_project_stills.sql`
 
+To configure the mobile focal point of each project's cover image, run:
+
+`supabase/migrations/012_mobile_cover_focus.sql`
+
 Then configure and deploy the Edge Function. The destination address remains
 server-side and is never included in the public site:
 

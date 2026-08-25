@@ -444,6 +444,98 @@
       line-height: 1.4;
     }
 
+    .mobile-focus-editor {
+      display: grid;
+      grid-template-columns: minmax(9rem, 13rem) minmax(0, 1fr);
+      align-items: center;
+      gap: 1rem;
+      padding: 0.85rem;
+      border: 1px solid var(--border);
+      background: var(--bg-surface);
+    }
+
+    .mobile-focus-preview {
+      position: relative;
+      width: min(100%, 13rem);
+      aspect-ratio: 9 / 16;
+      overflow: hidden;
+      background: #08090c;
+      cursor: crosshair;
+      touch-action: none;
+      user-select: none;
+    }
+
+    .mobile-focus-media,
+    .mobile-focus-media img,
+    .mobile-focus-media video {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    .mobile-focus-media img,
+    .mobile-focus-media video {
+      object-fit: cover;
+      pointer-events: none;
+    }
+
+    .mobile-focus-empty {
+      display: grid;
+      width: 100%;
+      height: 100%;
+      place-items: center;
+      padding: 1rem;
+      color: var(--text-muted);
+      font-size: 10px;
+      text-align: center;
+      text-transform: uppercase;
+    }
+
+    .mobile-focus-marker {
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      border: 1px solid #fff;
+      border-radius: 50%;
+      box-shadow: 0 0 0 1px rgba(0,0,0,0.75);
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+    }
+
+    .mobile-focus-marker::before,
+    .mobile-focus-marker::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      background: #fff;
+      transform: translate(-50%, -50%);
+    }
+
+    .mobile-focus-marker::before { width: 24px; height: 1px; }
+    .mobile-focus-marker::after { width: 1px; height: 24px; }
+
+    .mobile-focus-controls {
+      display: grid;
+      gap: 0.55rem;
+    }
+
+    .mobile-focus-controls label {
+      display: flex;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+
+    .mobile-focus-controls output {
+      color: var(--text-secondary);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .mobile-focus-controls input[type="range"] {
+      width: 100%;
+      accent-color: var(--accent);
+    }
+
     .project-stills-editor {
       grid-column: span 2;
       display: grid;
@@ -663,16 +755,16 @@
 </div>
 
 <!-- Load order: data → gallery config → storage → admin UI -->
-<script src="../data/projects-data.js"></script>
+<script src="../data/projects-data.js?v=20260825-mobile-focus"></script>
 <script src="../config/page-configs.js?v=20260825-section-hero"></script>
 <script src="../components/routes.js?v=20260810-clean-routes"></script>
 <script src="../config/site-settings.js?v=20260818-section-backgrounds"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="../config/supabase-config.js?v=20260804-import"></script>
-<script src="../data/supabase-service.js?v=20260825-section-hero"></script>
-<script src="../admin/admin-storage.js?v=20260806-project-stills"></script>
+<script src="../data/supabase-service.js?v=20260825-mobile-focus"></script>
+<script src="../admin/admin-storage.js?v=20260825-mobile-focus"></script>
 <script src="../components/youtube-player.js?v=20260804-youtube-cover"></script>
-<script src="../admin/admin.js?v=20260825-section-hero"></script>
+<script src="../admin/admin.js?v=20260825-mobile-focus"></script>
 
 </body>
 </html>

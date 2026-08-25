@@ -7,6 +7,9 @@
   --accent-bright: #F3F1EC;
   --font-title: 'Inter Tight', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --featured-hero-title-size: clamp(2.4rem, 4.2vw, 4.4rem);
+  --featured-hero-title-leading: 1.02;
+  --featured-hero-title-tracking: -0.035em;
 
   /* ── Layout & Spacing Settings ────────────────────────────── */
   --featured-gallery-max-width: 100%;
@@ -1230,12 +1233,12 @@ body.mobile-menu-open {
   gap: 0.65rem;
   color: var(--text-primary);
   font-family: var(--font-title);
-  font-size: clamp(2.4rem, 4.2vw, 4.4rem);
+  font-size: var(--featured-hero-title-size);
   font-weight: 800;
   font-kerning: normal;
   font-feature-settings: 'kern' 1, 'liga' 1;
-  letter-spacing: -0.035em;
-  line-height: 1.02;
+  letter-spacing: var(--featured-hero-title-tracking);
+  line-height: var(--featured-hero-title-leading);
   text-decoration: none;
   text-transform: uppercase;
   opacity: 0.46;
@@ -1771,8 +1774,10 @@ body.mobile-menu-open {
   display: block;
   width: 100%;
   max-width: 1200px;
-  font-size: clamp(2.5rem, 6vw, 6.75rem);
-  line-height: 0.95;
+  font-size: var(--featured-hero-title-size);
+  font-weight: 800;
+  letter-spacing: var(--featured-hero-title-tracking);
+  line-height: var(--featured-hero-title-leading);
   overflow-wrap: anywhere;
 }
 
@@ -2561,6 +2566,12 @@ body.contact-page {
 
 /* Mobile Adjustments */
 @media (max-width: 900px) {
+  :root {
+    --featured-hero-title-size: clamp(2.2rem, 10.5vw, 3.5rem);
+    --featured-hero-title-leading: 0.92;
+    --featured-hero-title-tracking: -0.045em;
+  }
+
   .nav-header {
     height: 4.25rem;
     padding: 0 1.5rem;
@@ -2590,7 +2601,7 @@ body.contact-page {
 
   .section-hero-media-item img,
   .section-hero-media-item video {
-    object-position: center;
+    object-position: var(--mobile-focus-x, 50%) var(--mobile-focus-y, 50%);
     filter: brightness(0.72) contrast(1.05) saturate(0.9);
   }
 
@@ -2629,12 +2640,12 @@ body.contact-page {
     display: block;
     width: 100%;
     max-width: 100%;
-    font-size: clamp(2.2rem, 10.5vw, 3.5rem);
+    font-size: var(--featured-hero-title-size);
     font-weight: 800;
     font-kerning: normal;
     font-feature-settings: 'kern' 1, 'liga' 1;
-    letter-spacing: -0.045em;
-    line-height: 0.92;
+    letter-spacing: var(--featured-hero-title-tracking);
+    line-height: var(--featured-hero-title-leading);
     overflow-wrap: normal;
     text-wrap: balance;
     word-break: normal;
@@ -2856,12 +2867,17 @@ body.contact-page {
     aspect-ratio: auto;
   }
 
+  .project-detail-hero .project-detail-media img,
+  .project-detail-hero .project-detail-media video {
+    object-position: var(--mobile-focus-x, 50%) var(--mobile-focus-y, 50%);
+  }
+
   .project-detail-information {
     padding-top: 3.5rem;
   }
 
   .project-detail-title {
-    font-size: clamp(2.2rem, 12vw, 4.5rem);
+    font-size: var(--featured-hero-title-size);
   }
 
   .project-detail-editorial {

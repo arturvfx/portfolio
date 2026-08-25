@@ -87,6 +87,14 @@ function renderProjectDetailMedia(project) {
   if (!container) return;
   container.innerHTML = '';
   container.className = `project-detail-media detail-ratio-${project.size || '16-9'}`;
+  const mobileFocusX = Number.isFinite(Number(project.mobileFocusX))
+    ? Math.max(0, Math.min(100, Number(project.mobileFocusX)))
+    : 50;
+  const mobileFocusY = Number.isFinite(Number(project.mobileFocusY))
+    ? Math.max(0, Math.min(100, Number(project.mobileFocusY)))
+    : 50;
+  container.style.setProperty('--mobile-focus-x', `${mobileFocusX}%`);
+  container.style.setProperty('--mobile-focus-y', `${mobileFocusY}%`);
 
   const youtubeUrl = getYouTubeWatchUrl(project.youtubeUrl);
   if (youtubeUrl) {

@@ -31,6 +31,8 @@ create table if not exists public.portfolio_projects (
   watch_now_enabled boolean not null default false,
   watch_now_url text not null default '',
   cover_image text not null default '',
+  mobile_focus_x numeric not null default 50 check (mobile_focus_x between 0 and 100),
+  mobile_focus_y numeric not null default 50 check (mobile_focus_y between 0 and 100),
   preview_video text not null default '',
   youtube_url text not null default '',
   project_stills jsonb not null default '[]'::jsonb
