@@ -140,7 +140,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         setTimeout(() => {
           window.location.href = targetUrl;
         }, 300);
-      }, 260);
+      }, 340);
     });
   }
 
