@@ -233,23 +233,29 @@ function renderSectionHero(projects, container, options = {}) {
     item.listItem.addEventListener('pointerenter', () => setActiveProject(index));
     item.link.addEventListener('focus', () => setActiveProject(index));
   });
-  mobileLink.addEventListener('click', () => {
+
+  function storeActiveProjectPreview() {
     if (typeof storeProjectPreview === 'function') {
       storeProjectPreview(projects[activeIndex], { galleryTitle });
     }
-  });
+  }
+
+  mobileLink.addEventListener('click', storeActiveProjectPreview);
 
   let touchStart = null;
   let suppressClick = false;
+  let suppressClickUntil = 0;
   const isMobileHero = () => window.matchMedia('(max-width: 900px)').matches;
   const canStepVertically = direction => direction > 0
     ? activeIndex < projects.length - 1
     : activeIndex > 0;
   const stepVertically = direction => {
     suppressClick = true;
+    suppressClickUntil = Date.now() + 420;
     setActiveProject(activeIndex + direction);
-    window.setTimeout(() => { suppressClick = false; }, 0);
+    window.setTimeout(() => { suppressClick = false; }, 420);
   };
+  const clickIsSuppressed = () => suppressClick || Date.now() < suppressClickUntil;
 
   root.addEventListener('touchstart', event => {
     if (!isMobileHero() || event.touches.length !== 1) return;
@@ -296,8 +302,18 @@ function renderSectionHero(projects, container, options = {}) {
   }, { passive: false });
 
   mobileLink.addEventListener('click', event => {
-    if (suppressClick) event.preventDefault();
+    if (clickIsSuppressed()) event.preventDefault();
   }, true);
+  root.addEventListener('click', event => {
+    const interactiveTarget = event.target instanceof Element && event.target.closest('a, button');
+    if (!isMobileHero() || interactiveTarget) return;
+    if (clickIsSuppressed()) {
+      event.preventDefault();
+      return;
+    }
+    storeActiveProjectPreview();
+    window.location.href = mobileLink.href;
+  });
   root.addEventListener('keydown', event => {
     if (!isMobileHero()) return;
     if (event.key === 'ArrowDown' && canStepVertically(1)) {
