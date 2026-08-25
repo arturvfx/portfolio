@@ -164,7 +164,7 @@ function renderSectionHero(projects, container, options = {}) {
   }
 
   desktopLinks.forEach((item, index) => {
-    item.link.addEventListener('pointerenter', () => setActiveProject(index));
+    item.listItem.addEventListener('pointerenter', () => setActiveProject(index));
     item.link.addEventListener('focus', () => setActiveProject(index));
   });
   mobileLink.addEventListener('click', () => {
