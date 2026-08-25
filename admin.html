@@ -115,13 +115,16 @@
     /* ── Top Bar ──────────────────────────────────────────── */
     .topbar {
       grid-area: topbar;
+      position: sticky;
+      top: 0;
+      z-index: 100;
       background: var(--bg-surface);
       border-bottom: 1px solid var(--border);
       display: flex;
       align-items: center;
-      gap: 1.5rem;
-      padding: 0 1.25rem;
-      height: 52px;
+      gap: 1rem;
+      padding: 0.65rem 1rem;
+      min-height: 58px;
     }
 
     .topbar-brand {
@@ -159,8 +162,8 @@
     }
 
     .topbar-section-select {
-      width: auto;
-      min-width: 180px;
+      width: min(240px, 25vw);
+      min-width: 170px;
       padding: 0.4rem 2rem 0.4rem 0.65rem;
       font-size: 11px;
       font-weight: 600;
@@ -175,13 +178,82 @@
       align-items: center;
     }
 
+    .topbar-workspace {
+      display: flex;
+      min-width: 0;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .topbar-section-tools {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .btn-icon {
+      width: 34px;
+      padding-inline: 0;
+      text-align: center;
+    }
+
+    .admin-menu {
+      position: relative;
+    }
+
+    .admin-menu summary {
+      list-style: none;
+      user-select: none;
+    }
+
+    .admin-menu summary::-webkit-details-marker { display: none; }
+
+    .admin-menu[open] summary {
+      color: var(--text-primary);
+      background: var(--bg-hover);
+    }
+
+    .admin-menu-panel {
+      position: absolute;
+      top: calc(100% + 0.5rem);
+      right: 0;
+      z-index: 200;
+      display: grid;
+      width: 220px;
+      gap: 0.45rem;
+      padding: 0.65rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--bg-surface);
+      box-shadow: 0 18px 45px rgba(0,0,0,0.42);
+    }
+
+    .admin-menu-panel .btn {
+      width: 100%;
+      text-align: left;
+    }
+
+    .admin-menu-label {
+      padding: 0.2rem 0.35rem;
+      color: var(--text-muted);
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
     #admin-status {
       display: none;
+      position: fixed;
+      top: 70px;
+      right: 1rem;
+      z-index: 300;
       font-size: 12px;
-      padding: 0.3rem 0.75rem;
+      padding: 0.65rem 0.85rem;
       border-radius: var(--radius-sm);
-      max-width: 420px;
+      max-width: min(440px, calc(100vw - 2rem));
       white-space: pre-wrap;
+      box-shadow: 0 12px 32px rgba(0,0,0,0.35);
     }
 
     .status-success { background: var(--success-dim); color: var(--success); }
@@ -406,6 +478,47 @@
     .form-group[hidden] { display: none; }
 
     .form-group.span-2 { grid-column: span 2; }
+    .span-2 { grid-column: span 2; }
+
+    .form-card {
+      grid-column: 1 / -1;
+      padding: 1rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--bg-surface);
+    }
+
+    .form-card + .form-card { margin-top: 0.25rem; }
+
+    .form-card-header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      padding-bottom: 0.65rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .form-card-title {
+      color: var(--text-primary);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .form-card-description {
+      color: var(--text-muted);
+      font-size: 10px;
+      text-align: right;
+    }
+
+    .form-card-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
 
     .form-section-heading {
       grid-column: span 2;
@@ -609,11 +722,17 @@
 
     /* ── Form Actions ─────────────────────────────────────── */
     .form-actions {
+      position: sticky;
+      bottom: 0;
+      z-index: 50;
       display: flex;
       align-items: center;
       gap: 0.75rem;
-      padding-top: 1rem;
+      margin: 0 -1.5rem -1.5rem;
+      padding: 0.85rem 1.5rem;
       border-top: 1px solid var(--border);
+      background: rgba(15,16,20,0.97);
+      box-shadow: 0 -12px 28px rgba(0,0,0,0.22);
     }
 
     .form-dirty-hint {
@@ -621,6 +740,11 @@
       color: var(--warning);
       margin-left: auto;
     }
+
+    .form-dirty-hint.is-saved { color: var(--success); }
+    .form-dirty-hint.is-error { color: var(--error); }
+
+    .form-action-spacer { flex: 1; }
 
     /* ── Buttons ──────────────────────────────────────────── */
     .btn {
@@ -641,6 +765,7 @@
       border-color: var(--accent);
     }
     .btn-primary:hover { background: #7aa5ff; }
+    .btn:disabled { cursor: wait; opacity: 0.62; }
 
     .btn-secondary {
       background: var(--bg-raised);
@@ -661,6 +786,109 @@
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
     ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.15); }
+
+    @media (max-width: 1050px) {
+      .admin-layout {
+        grid-template-columns: 280px minmax(0, 1fr);
+      }
+
+      .topbar {
+        flex-wrap: wrap;
+      }
+
+      .topbar-actions { margin-left: 0; }
+      .topbar-workspace { flex: 1; }
+    }
+
+    @media (max-width: 760px) {
+      .admin-layout {
+        grid-template-columns: 1fr;
+        grid-template-areas:
+          "topbar"
+          "notice"
+          "sidebar"
+          "main";
+      }
+
+      .topbar {
+        position: relative;
+        align-items: stretch;
+      }
+
+      .topbar-brand {
+        width: 100%;
+        padding-bottom: 0.55rem;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .topbar-sep,
+      .topbar-section-label { display: none; }
+
+      .topbar-workspace,
+      .topbar-actions {
+        width: 100%;
+      }
+
+      .topbar-section-select {
+        width: 100%;
+        min-width: 0;
+        flex: 1;
+      }
+
+      .topbar-actions { justify-content: flex-end; }
+
+      #admin-status {
+        top: 1rem;
+        left: 1rem;
+        right: 1rem;
+      }
+
+      .sidebar {
+        max-height: 38vh;
+        overflow: auto;
+        border-right: 0;
+        border-bottom: 1px solid var(--border);
+      }
+
+      #admin-project-list { overflow: visible; }
+
+      #admin-form-wrap { padding: 1rem; }
+
+      .form-grid,
+      .form-card-grid,
+      .project-stills-editor,
+      .mobile-focus-editor {
+        grid-template-columns: 1fr;
+      }
+
+      .form-group.span-2,
+      .span-2,
+      .project-stills-editor,
+      .form-section-heading { grid-column: span 1; }
+
+      .form-card-header {
+        display: block;
+      }
+
+      .form-card-description {
+        margin-top: 0.25rem;
+        text-align: left;
+      }
+
+      .form-actions {
+        margin: 0 -1rem -1rem;
+        padding: 0.75rem 1rem;
+        flex-wrap: wrap;
+      }
+
+      .form-dirty-hint {
+        width: 100%;
+        margin-left: 0;
+        order: -1;
+      }
+
+      .form-action-spacer { display: none; }
+    }
   </style>
 </head>
 <body>
@@ -696,32 +924,38 @@
     </div>
 
     <div class="topbar-sep"></div>
-    <label class="topbar-section-label" for="section-select">Section</label>
-    <select id="section-select" class="topbar-section-select" aria-label="Portfolio section">
-      <option value="featured-work">Featured Work</option>
-    </select>
-
-    <button id="btn-new-section" class="btn btn-secondary" type="button">＋ Section</button>
-    <button id="btn-edit-section" class="btn btn-secondary" type="button">Edit Section</button>
-    <button id="btn-section-up" class="btn btn-secondary" type="button" title="Move section up">↑</button>
-    <button id="btn-section-down" class="btn btn-secondary" type="button" title="Move section down">↓</button>
-    <button id="btn-delete-section" class="btn btn-danger" type="button">Delete Section</button>
-    <button id="btn-site-settings" class="btn btn-secondary" type="button">Site Settings</button>
+    <div class="topbar-workspace">
+      <label class="topbar-section-label" for="section-select">Section</label>
+      <select id="section-select" class="topbar-section-select" aria-label="Portfolio section">
+        <option value="featured-work">Featured Work</option>
+      </select>
+      <div class="topbar-section-tools" aria-label="Section controls">
+        <button id="btn-edit-section" class="btn btn-secondary" type="button">Edit</button>
+        <button id="btn-section-up" class="btn btn-secondary btn-icon" type="button" title="Move section up" aria-label="Move section up">↑</button>
+        <button id="btn-section-down" class="btn btn-secondary btn-icon" type="button" title="Move section down" aria-label="Move section down">↓</button>
+      </div>
+    </div>
 
     <div class="topbar-actions">
       <div id="admin-status" class="status-bar" role="status" aria-live="polite"></div>
-      <span id="auth-user"></span>
-      <button id="btn-migrate-supabase" class="btn btn-primary" type="button" style="display:none">Sync All to Supabase</button>
-      <button id="btn-logout" class="btn btn-secondary" type="button" style="display:none">Sign Out</button>
-
       <button id="btn-new-project" class="btn btn-primary" type="button">＋ New Project</button>
-
-      <button id="btn-export" class="btn btn-secondary" type="button">↓ Export JSON</button>
-
-      <button id="btn-import" class="btn btn-secondary" type="button">↑ Import JSON</button>
+      <button id="btn-site-settings" class="btn btn-secondary" type="button">Site Settings</button>
+      <details class="admin-menu">
+        <summary class="btn btn-secondary">More</summary>
+        <div class="admin-menu-panel">
+          <span class="admin-menu-label">Sections</span>
+          <button id="btn-new-section" class="btn btn-secondary" type="button">＋ New Section</button>
+          <button id="btn-delete-section" class="btn btn-danger" type="button">Delete Current Section</button>
+          <span class="admin-menu-label">Data &amp; account</span>
+          <span id="auth-user"></span>
+          <button id="btn-migrate-supabase" class="btn btn-primary" type="button" style="display:none">Sync All to Supabase</button>
+          <button id="btn-export" class="btn btn-secondary" type="button">↓ Export JSON</button>
+          <button id="btn-import" class="btn btn-secondary" type="button">↑ Import JSON</button>
+          <button id="btn-reset" class="btn btn-danger" type="button">↺ Reset Local Backup</button>
+          <button id="btn-logout" class="btn btn-secondary" type="button" style="display:none">Sign Out</button>
+        </div>
+      </details>
       <input id="import-file-input" type="file" accept=".json,application/json" style="display:none" aria-label="Import JSON file">
-
-      <button id="btn-reset" class="btn btn-danger" type="button">↺ Reset</button>
     </div>
   </header>
 
@@ -764,7 +998,7 @@
 <script src="../data/supabase-service.js?v=20260825-mobile-focus"></script>
 <script src="../admin/admin-storage.js?v=20260825-mobile-focus"></script>
 <script src="../components/youtube-player.js?v=20260804-youtube-cover"></script>
-<script src="../admin/admin.js?v=20260825-mobile-focus"></script>
+<script src="../admin/admin.js?v=20260825-workflow-refresh"></script>
 
 </body>
 </html>

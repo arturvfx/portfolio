@@ -28,6 +28,8 @@
 
   /** Whether there are unsaved changes to the selected form */
   let formDirty = false;
+  let formRevision = 0;
+  let saveFeedbackTimer = null;
   let adminStarted = false;
   let remoteEnabled = false;
   let remoteWriteQueue = Promise.resolve();
@@ -133,6 +135,7 @@
     }
     renderSectionSelect();
     renderProjectList();
+    updateOverrideNotice();
     bindActions();
     return loadedFromSupabase;
   }
@@ -314,8 +317,12 @@
           .filter(Boolean)
           .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))[0];
         const date = new Date(latest.updatedAt).toLocaleString();
-        dom.overrideNotice.textContent = `Local overrides active — last saved ${date}`;
-        dom.overrideNotice.className = 'override-notice override-active';
+        dom.overrideNotice.textContent = remoteEnabled
+          ? `Supabase connected · local backup updated ${date}`
+          : `Local overrides active — last saved ${date}`;
+        dom.overrideNotice.className = remoteEnabled
+          ? 'override-notice override-source'
+          : 'override-notice override-active';
       } else {
         dom.overrideNotice.textContent = 'Showing source data — no local overrides saved yet';
         dom.overrideNotice.className = 'override-notice override-source';
@@ -513,9 +520,61 @@
   }
 
   function markProjectFormDirty() {
-    formDirty = true;
+    markFormDirty();
+  }
+
+  function getActiveSaveButton() {
+    return dom.form
+      ? dom.form.querySelector('#btn-save, #btn-save-gallery, #btn-save-site-settings')
+      : null;
+  }
+
+  function updateInlineSaveStatus(message, state) {
     const hint = document.getElementById('dirty-hint');
-    if (hint) hint.style.display = 'inline';
+    if (!hint) return;
+    clearTimeout(saveFeedbackTimer);
+    hint.textContent = message;
+    hint.className = 'form-dirty-hint' + (state ? ` is-${state}` : '');
+    hint.style.display = 'inline';
+  }
+
+  function markFormDirty() {
+    formDirty = true;
+    formRevision += 1;
+    updateInlineSaveStatus('Unsaved changes', 'dirty');
+  }
+
+  function beginFormSave(button) {
+    if (!button) return;
+    button.dataset.defaultLabel = button.dataset.defaultLabel || button.textContent;
+    button.disabled = true;
+    button.textContent = 'Saving…';
+    updateInlineSaveStatus(remoteEnabled ? 'Saving to Supabase…' : 'Saving locally…', 'saving');
+  }
+
+  function finishFormSave(button, savedRevision, remoteSynced, successMessage) {
+    const sameForm = Boolean(button && document.body.contains(button));
+    if (sameForm) {
+      button.disabled = false;
+      button.textContent = button.dataset.defaultLabel || 'Save Changes';
+    }
+    if (savedRevision !== formRevision) {
+      if (!sameForm) return;
+      formDirty = true;
+      updateInlineSaveStatus('Newer changes are still unsaved', 'dirty');
+      return;
+    }
+    formDirty = false;
+    updateInlineSaveStatus(
+      remoteSynced ? successMessage : 'Saved locally · Supabase sync failed',
+      remoteSynced ? 'saved' : 'error'
+    );
+    if (remoteSynced) {
+      saveFeedbackTimer = setTimeout(() => {
+        const hint = document.getElementById('dirty-hint');
+        if (hint && !formDirty) hint.style.display = 'none';
+      }, 3500);
+    }
   }
 
   function normalizeMobileFocus(value) {
@@ -604,6 +663,7 @@
 
     const form = dom.form;
     if (!form) return;
+    formRevision += 1;
 
     const mobileFocusX = normalizeMobileFocus(project.mobileFocusX);
     const mobileFocusY = normalizeMobileFocus(project.mobileFocusY);
@@ -614,6 +674,12 @@
       </div>
 
       <div class="form-grid">
+        <section class="form-card" aria-labelledby="project-info-heading">
+          <div class="form-card-header">
+            <h3 class="form-card-title" id="project-info-heading">Project Information</h3>
+            <p class="form-card-description">Credits and written content shown on the project page.</p>
+          </div>
+          <div class="form-card-grid">
         <div class="form-group">
           <label for="field-title">Title</label>
           <input id="field-title" type="text" value="${escAdm(project.title)}" data-field="title" />
@@ -660,6 +726,16 @@
           <input id="field-productionCompany" type="text" value="${escAdm(project.productionCompany || '')}" data-field="productionCompany" />
         </div>
 
+          </div>
+        </section>
+
+        <section class="form-card" aria-labelledby="gallery-appearance-heading">
+          <div class="form-card-header">
+            <h3 class="form-card-title" id="gallery-appearance-heading">Gallery Appearance</h3>
+            <p class="form-card-description">Placement, visibility and media used in the project selection pages.</p>
+          </div>
+          <div class="form-card-grid">
+
         <div class="form-group">
           <label for="field-slug">Slug</label>
           <input id="field-slug" type="text" value="${escAdm(project.slug || '')}" data-field="slug" />
@@ -668,6 +744,37 @@
         <div class="form-group">
           <label for="field-order">Display Order</label>
           <input id="field-order" type="number" min="1" value="${project.order}" data-field="order" />
+        </div>
+
+        <div class="form-group">
+          <label for="field-section">Section</label>
+          <select id="field-section" data-field="section">
+            ${workingGalleries.map(gallery =>
+              `<option value="${escAdm(gallery.id)}" ${project.section === gallery.id ? 'selected' : ''}>${escAdm(gallery.title)}</option>`
+            ).join('')}
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="field-published">Visibility</label>
+          <select id="field-published" data-field="published">
+            <option value="true" ${project.published ? 'selected' : ''}>Published — visible in gallery</option>
+            <option value="false" ${!project.published ? 'selected' : ''}>Hidden — excluded from gallery</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="field-size">Aspect Ratio / Size</label>
+          <select id="field-size" data-field="size">
+            ${SUPPORTED_SIZES.map(s =>
+              `<option value="${s}" ${project.size === s ? 'selected' : ''}>${s} ${s === '16-9' ? '— Widescreen' : s === '9-16' ? '— Portrait' : '— Classic 4:3'}</option>`
+            ).join('')}
+          </select>
+        </div>
+
+        <div class="form-group">
+          <span class="form-subsection-heading">Ordering</span>
+          <span class="media-upload-note">Drag projects in the sidebar for faster ordering. Display Order remains available for precise placement.</span>
         </div>
 
         <div class="form-group span-2">
@@ -707,13 +814,23 @@
           <span class="media-upload-note">Optional. Plays only while the visitor hovers; without a cover, its first frame is used.</span>
         </div>
 
+          </div>
+        </section>
+
+        <section class="form-card" aria-labelledby="project-page-heading">
+          <div class="form-card-header">
+            <h3 class="form-card-title" id="project-page-heading">Project Page Media &amp; Links</h3>
+            <p class="form-card-description">Player, additional stills and optional external viewing link.</p>
+          </div>
+          <div class="form-card-grid">
+
         <div class="form-group span-2">
           <label for="field-youtubeUrl">YouTube Video URL</label>
           <input id="field-youtubeUrl" type="text" value="${escAdm(project.youtubeUrl || '')}" data-field="youtubeUrl" placeholder="https://www.youtube.com/watch?v=..." />
           <span class="media-upload-note">Optional full video for the individual project page. Public, unlisted, Shorts and youtu.be links are accepted.</span>
         </div>
 
-        <h3 class="form-section-heading">Project Page Stills</h3>
+        <h4 class="form-subsection-heading span-2">Project Page Stills</h4>
         <div class="project-stills-editor">
           ${renderProjectStillSlots(project)}
         </div>
@@ -731,42 +848,20 @@
 
         <div class="form-group">
           <label for="field-watchNowUrl">Watch Now External URL</label>
-          <input id="field-watchNowUrl" type="text" value="${escAdm(project.watchNowUrl || '')}" data-field="watchNowUrl" placeholder="https://streaming-service.com/project" />
+          <input id="field-watchNowUrl" type="text" value="${escAdm(project.watchNowUrl || '')}" data-field="watchNowUrl" placeholder="https://streaming-service.com/project" ${project.watchNowEnabled ? '' : 'disabled'} />
           <span class="media-upload-note">The URL is preserved when Watch Now is disabled.</span>
         </div>
-
-        <div class="form-group">
-          <label for="field-size">Aspect Ratio / Size</label>
-          <select id="field-size" data-field="size">
-            ${SUPPORTED_SIZES.map(s =>
-              `<option value="${s}" ${project.size === s ? 'selected' : ''}>${s} ${s === '16-9' ? '— Widescreen' : s === '9-16' ? '— Portrait' : '— Classic 4:3'}</option>`
-            ).join('')}
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label for="field-published">Visibility</label>
-          <select id="field-published" data-field="published">
-            <option value="true" ${project.published ? 'selected' : ''}>Published — visible in gallery</option>
-            <option value="false" ${!project.published ? 'selected' : ''}>Hidden — excluded from gallery</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label for="field-section">Section</label>
-          <select id="field-section" data-field="section">
-            ${workingGalleries.map(gallery =>
-              `<option value="${escAdm(gallery.id)}" ${project.section === gallery.id ? 'selected' : ''}>${escAdm(gallery.title)}</option>`
-            ).join('')}
-          </select>
-        </div>
+          </div>
+        </section>
       </div>
 
       <div class="form-actions">
         <button id="btn-save" class="btn btn-primary" type="button" data-id="${escAdm(project.id)}">Save Changes</button>
-        <button id="btn-duplicate" class="btn btn-secondary" type="button">Duplicate</button>
         <button id="btn-preview" class="btn btn-secondary" type="button">Preview in Gallery</button>
+        <span class="form-dirty-hint" id="dirty-hint" style="display:none" role="status"></span>
+        <span class="form-action-spacer"></span>
+        <button id="btn-duplicate" class="btn btn-secondary" type="button">Duplicate</button>
         <button id="btn-delete" class="btn btn-danger" type="button">Delete Project</button>
-        <span class="form-dirty-hint" id="dirty-hint" style="display:none">Unsaved changes</span>
       </div>
     `;
 
@@ -777,6 +872,15 @@
     form.querySelectorAll('[data-still-url], [data-still-size]').forEach(el => {
       el.addEventListener('input', markProjectFormDirty);
     });
+
+    const watchNowEnabled = document.getElementById('field-watchNowEnabled');
+    const watchNowUrl = document.getElementById('field-watchNowUrl');
+    if (watchNowEnabled && watchNowUrl) {
+      watchNowEnabled.addEventListener('change', () => {
+        watchNowUrl.disabled = watchNowEnabled.value !== 'true';
+        if (!watchNowUrl.disabled) watchNowUrl.focus();
+      });
+    }
 
     // Re-bind save and preview
     const saveBtn = document.getElementById('btn-save');
@@ -898,9 +1002,6 @@
       if (!fieldInput) throw new Error('The media URL field is no longer available.');
       fieldInput.value = publicUrl;
       fieldInput.dispatchEvent(new Event('input', { bubbles: true }));
-      formDirty = true;
-      const hint = document.getElementById('dirty-hint');
-      if (hint) hint.style.display = 'inline';
       showStatus('Upload complete. Click Save Changes to publish the new media URL.', 'success');
     } catch (error) {
       showStatus(`UPLOAD ERROR: ${error.message || error}`, 'error');
@@ -1093,6 +1194,11 @@
       return;
     }
 
+    const saveButton = document.getElementById('btn-save');
+    const savedRevision = formRevision;
+    const targetSectionLabel = getSectionLabel(updated.section);
+    beginFormSave(saveButton);
+
     const requestedOrder = updated.order;
     workingProjects[idx] = updated;
     workingProjects = adminStorage.setOrder(
@@ -1108,17 +1214,25 @@
     adminStorage.save(workingProjects);
     formDirty = false;
 
-    const hint = document.getElementById('dirty-hint');
-    if (hint) hint.style.display = 'none';
-
     updateOverrideNotice();
     renderProjectList();
     if (updated.section !== managedSection) {
       selectedId = null;
       clearForm();
     }
-    await syncAndReport(
-      `Changes saved to Supabase. Reload ${getSectionLabel(managedSection)} to see updates.`
+    const remoteSynced = await syncAndReport(
+      previousSection !== updated.section
+        ? `Project moved to ${targetSectionLabel} and saved to Supabase.`
+        : 'Project changes saved to Supabase.',
+      previousSection !== updated.section
+        ? `Project moved to ${targetSectionLabel} and saved locally.`
+        : 'Project changes saved locally.'
+    );
+    finishFormSave(
+      saveButton,
+      savedRevision,
+      remoteSynced,
+      remoteEnabled ? 'Saved to Supabase' : 'Saved locally'
     );
   }
 
@@ -1272,6 +1386,7 @@
     if (!dom.form || !dom.formWrap || !dom.emptyState) return;
     dom.formWrap.style.display = 'block';
     dom.emptyState.style.display = 'none';
+    formRevision += 1;
     const settings = siteSettings.normalize(workingSettings);
 
     dom.form.innerHTML = `
@@ -1389,15 +1504,11 @@
         <button id="btn-preview-landing" class="btn btn-secondary" type="button">Preview Landing</button>
         <button id="btn-preview-contact" class="btn btn-secondary" type="button">Preview Contact</button>
         <button id="btn-preview-footer" class="btn btn-secondary" type="button">Preview Footer</button>
-        <span class="form-dirty-hint" id="dirty-hint" style="display:none">Unsaved changes</span>
+        <span class="form-dirty-hint" id="dirty-hint" style="display:none" role="status"></span>
       </div>`;
 
     dom.form.querySelectorAll('[data-site-field]').forEach(input => {
-      input.addEventListener('input', () => {
-        formDirty = true;
-        const hint = document.getElementById('dirty-hint');
-        if (hint) hint.style.display = 'inline';
-      });
+      input.addEventListener('input', markFormDirty);
     });
     document.getElementById('btn-save-site-settings').addEventListener('click', saveSiteSettings);
     document.getElementById('btn-preview-landing').addEventListener('click', () => window.open('/', '_blank'));
@@ -1430,9 +1541,7 @@
         const publicUrl = await portfolioBackend.uploadMedia(file, `site/${kind}`);
         const input = document.getElementById(`setting-${field}`);
         if (input) input.value = publicUrl;
-        formDirty = true;
-        const hint = document.getElementById('dirty-hint');
-        if (hint) hint.style.display = 'inline';
+        markFormDirty();
         showStatus('Upload complete. Click Save Site Settings to publish it.', 'success');
       } catch (error) {
         showStatus(`UPLOAD ERROR: ${error.message || error}`, 'error');
@@ -1504,20 +1613,24 @@
       return;
     }
 
+    const saveButton = document.getElementById('btn-save-site-settings');
+    const savedRevision = formRevision;
+    beginFormSave(saveButton);
     workingSettings = siteSettings.saveLocal(updated);
     formDirty = false;
-    const hint = document.getElementById('dirty-hint');
-    if (hint) hint.style.display = 'none';
     if (!remoteEnabled) {
       showStatus('Site settings saved locally.', 'success');
+      finishFormSave(saveButton, savedRevision, true, 'Saved locally');
       return;
     }
     showStatus('Saving site settings to Supabase…', 'info');
     try {
       await portfolioBackend.saveSiteSettings(workingSettings);
       showStatus('Site settings saved to Supabase.', 'success');
+      finishFormSave(saveButton, savedRevision, true, 'Saved to Supabase');
     } catch (error) {
       showStatus(`Saved locally, but Supabase failed: ${error.message || error}`, 'error');
+      finishFormSave(saveButton, savedRevision, false, '');
     }
   }
 
@@ -1599,6 +1712,7 @@
     if (!dom.form || !dom.formWrap || !dom.emptyState) return;
     dom.formWrap.style.display = 'block';
     dom.emptyState.style.display = 'none';
+    formRevision += 1;
     const projectCount = workingProjects.filter(project => project.section === gallery.id).length;
     const idIsEditable = !GALLERIES_DATA.some(source => source.id === gallery.id) && projectCount === 0;
     const backgroundEnabled = gallery.backgroundEnabled !== false;
@@ -1680,13 +1794,10 @@
       <div class="form-actions">
         <button id="btn-save-gallery" class="btn btn-primary" type="button">Save Section</button>
         <button id="btn-preview" class="btn btn-secondary" type="button">Preview Section</button>
-        <span class="form-dirty-hint" id="dirty-hint" style="display:none">Unsaved changes</span>
+        <span class="form-dirty-hint" id="dirty-hint" style="display:none" role="status"></span>
       </div>`;
     dom.form.querySelectorAll('[data-gallery-field]').forEach(input => {
-      input.addEventListener('input', () => {
-        formDirty = true;
-        document.getElementById('dirty-hint').style.display = 'inline';
-      });
+      input.addEventListener('input', markFormDirty);
     });
     document.getElementById('btn-save-gallery').addEventListener('click', () => saveGallery(gallery.id));
     document.getElementById('btn-preview').addEventListener('click', previewGallery);
@@ -1739,6 +1850,9 @@
     if (updated.backgroundEnabled && updated.backgroundSource === 'custom' && !updated.backgroundVideo) {
       return showStatus('ERROR: Add or reuse a video URL for this section.', 'error');
     }
+    const saveButton = document.getElementById('btn-save-gallery');
+    const savedRevision = formRevision;
+    beginFormSave(saveButton);
     workingGalleries[index] = updated;
     managedSection = updated.id;
     workingGalleries = adminStorage.setGalleryOrder(workingGalleries, updated.id, updated.order);
@@ -1746,19 +1860,23 @@
     formDirty = false;
     renderSectionSelect();
     renderProjectList();
-    renderGalleryForm(workingGalleries.find(gallery => gallery.id === updated.id));
     updateOverrideNotice();
+    const sectionIdChanged = updated.id !== id;
+    if (sectionIdChanged) renderGalleryForm(updated);
     if (!remoteEnabled) {
       showStatus('Section saved.', 'success');
+      finishFormSave(saveButton, savedRevision, true, 'Saved locally');
       return;
     }
     showStatus('Saving section to Supabase…', 'info');
     try {
-      if (updated.id !== id) await replaceRemoteGalleryAndSync(id);
+      if (sectionIdChanged) await replaceRemoteGalleryAndSync(id);
       else await syncPortfolioSnapshot();
       showStatus('Section saved to Supabase.', 'success');
+      finishFormSave(saveButton, savedRevision, true, 'Saved to Supabase');
     } catch (error) {
       showStatus(`Saved locally, but Supabase failed: ${error.message || error}`, 'error');
+      finishFormSave(saveButton, savedRevision, false, '');
     }
   }
 
@@ -1895,6 +2013,27 @@
       sectionSelect.value = managedSection;
       sectionSelect.addEventListener('change', () => changeSection(sectionSelect.value));
     }
+
+    document.addEventListener('keydown', event => {
+      if (!(event.metaKey || event.ctrlKey) || event.key.toLowerCase() !== 's') return;
+      const saveButton = getActiveSaveButton();
+      if (!saveButton) return;
+      event.preventDefault();
+      if (!saveButton.disabled && formDirty) saveButton.click();
+    });
+
+    window.addEventListener('beforeunload', event => {
+      if (!formDirty) return;
+      event.preventDefault();
+      event.returnValue = '';
+    });
+
+    document.querySelectorAll('.admin-menu-panel button').forEach(button => {
+      button.addEventListener('click', () => {
+        const menu = button.closest('details');
+        if (menu) menu.removeAttribute('open');
+      });
+    });
   }
 
   // ─── Start ───────────────────────────────────────────────────
