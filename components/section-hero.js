@@ -1,7 +1,7 @@
 /**
  * Editorial opening hero for a project section.
- * Desktop uses a title index with hover/focus image switching. Mobile keeps
- * vertical page scrolling free and changes projects only with a horizontal swipe.
+ * Desktop uses a title index with hover/focus image switching. On mobile,
+ * vertical gestures step through the highlights before releasing the page scroll.
  */
 
 function selectSectionHeroProjects(projects, galleryConfig) {
@@ -173,30 +173,75 @@ function renderSectionHero(projects, container, options = {}) {
     }
   });
 
-  let pointerStart = null;
+  let touchStart = null;
   let suppressClick = false;
-  root.addEventListener('pointerdown', event => {
-    if (!window.matchMedia('(max-width: 900px)').matches || !event.isPrimary) return;
-    pointerStart = { x: event.clientX, y: event.clientY };
-  });
-  root.addEventListener('pointerup', event => {
-    if (!pointerStart || !window.matchMedia('(max-width: 900px)').matches) return;
-    const deltaX = event.clientX - pointerStart.x;
-    const deltaY = event.clientY - pointerStart.y;
-    pointerStart = null;
-    if (Math.abs(deltaX) < 48 || Math.abs(deltaX) <= Math.abs(deltaY)) return;
+  const isMobileHero = () => window.matchMedia('(max-width: 900px)').matches;
+  const canStepVertically = direction => direction > 0
+    ? activeIndex < projects.length - 1
+    : activeIndex > 0;
+  const stepVertically = direction => {
     suppressClick = true;
-    setActiveProject(activeIndex + (deltaX < 0 ? 1 : -1));
+    setActiveProject(activeIndex + direction);
     window.setTimeout(() => { suppressClick = false; }, 0);
+  };
+
+  root.addEventListener('touchstart', event => {
+    if (!isMobileHero() || event.touches.length !== 1) return;
+    const touch = event.touches[0];
+    touchStart = { x: touch.clientX, y: touch.clientY };
+  }, { passive: true });
+  root.addEventListener('touchmove', event => {
+    if (!touchStart || !isMobileHero() || event.touches.length !== 1) return;
+    const touch = event.touches[0];
+    const deltaX = touch.clientX - touchStart.x;
+    const deltaY = touch.clientY - touchStart.y;
+    if (Math.abs(deltaY) <= Math.abs(deltaX)) return;
+    const direction = deltaY < 0 ? 1 : -1;
+    if (canStepVertically(direction)) event.preventDefault();
+  }, { passive: false });
+  root.addEventListener('touchend', event => {
+    if (!touchStart || !isMobileHero()) return;
+    const touch = event.changedTouches[0];
+    const deltaX = touch.clientX - touchStart.x;
+    const deltaY = touch.clientY - touchStart.y;
+    touchStart = null;
+    if (Math.abs(deltaY) < 48 || Math.abs(deltaY) <= Math.abs(deltaX)) return;
+    const direction = deltaY < 0 ? 1 : -1;
+    if (canStepVertically(direction)) stepVertically(direction);
   });
-  root.addEventListener('pointercancel', () => { pointerStart = null; });
+  root.addEventListener('touchcancel', () => { touchStart = null; });
+
+  let wheelGestureLocked = false;
+  let wheelReleaseTimer = null;
+  root.addEventListener('wheel', event => {
+    if (!isMobileHero() || Math.abs(event.deltaY) <= Math.abs(event.deltaX)) return;
+    if (wheelGestureLocked) {
+      event.preventDefault();
+      window.clearTimeout(wheelReleaseTimer);
+      wheelReleaseTimer = window.setTimeout(() => { wheelGestureLocked = false; }, 180);
+      return;
+    }
+    const direction = event.deltaY > 0 ? 1 : -1;
+    if (!canStepVertically(direction)) return;
+    event.preventDefault();
+    wheelGestureLocked = true;
+    stepVertically(direction);
+    wheelReleaseTimer = window.setTimeout(() => { wheelGestureLocked = false; }, 180);
+  }, { passive: false });
+
   mobileLink.addEventListener('click', event => {
     if (suppressClick) event.preventDefault();
   }, true);
   root.addEventListener('keydown', event => {
-    if (!window.matchMedia('(max-width: 900px)').matches) return;
-    if (event.key === 'ArrowLeft') setActiveProject(activeIndex - 1);
-    if (event.key === 'ArrowRight') setActiveProject(activeIndex + 1);
+    if (!isMobileHero()) return;
+    if (event.key === 'ArrowDown' && canStepVertically(1)) {
+      event.preventDefault();
+      setActiveProject(activeIndex + 1);
+    }
+    if (event.key === 'ArrowUp' && canStepVertically(-1)) {
+      event.preventDefault();
+      setActiveProject(activeIndex - 1);
+    }
   });
 
   root.append(media, shade, desktopNav, mobileContent);
