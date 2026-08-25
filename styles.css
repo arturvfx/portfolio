@@ -1226,7 +1226,7 @@ body.mobile-menu-open {
 
 .section-hero-project-link {
   display: inline-flex;
-  align-items: flex-start;
+  align-items: baseline;
   gap: 0.65rem;
   color: var(--text-primary);
   font-family: var(--font-title);
@@ -1262,7 +1262,6 @@ body.mobile-menu-open {
 .section-hero-project-category {
   flex: 0 0 auto;
   max-width: min(22rem, 28vw);
-  padding-top: 0.22em;
   color: var(--text-secondary);
   font-family: var(--font-body);
   font-size: clamp(0.58rem, 0.72vw, 0.72rem);
