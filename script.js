@@ -39,7 +39,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     let enterNavigationStarted = false;
     let interactionFlickerToken = 0;
     const enterReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const entryPreload = window.sectionEntryPreview?.preload('featured-work') || Promise.resolve(null);
+    const entryPreload = window.sectionEntryPreview?.preload('work') || Promise.resolve(null);
 
     // Non-periodic projector flicker: light/focus only, never positional movement.
     function triggerFlicker() {
@@ -135,7 +135,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       e.preventDefault();
       if (enterNavigationStarted) return;
       enterNavigationStarted = true;
-      const targetUrl = getGalleryHref('featured-work');
+      const targetUrl = getPortfolioOverviewHref();
 
       document.body.classList.add('shutter-click-active');
       const minimumEffectTime = new Promise(resolve => window.setTimeout(resolve, 340));

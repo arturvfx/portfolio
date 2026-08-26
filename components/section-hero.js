@@ -1,14 +1,26 @@
 /**
- * Editorial opening hero for a project section.
+ * Editorial opening hero for the portfolio overview.
  * Desktop uses a title index with hover/focus image switching. On mobile,
  * vertical gestures step through the highlights before releasing the page scroll.
  */
 
-function selectSectionHeroProjects(projects, galleryConfig) {
-  if (!galleryConfig || galleryConfig.heroEnabled !== true) return [];
-  const sectionId = galleryConfig.projectSection || galleryConfig.id;
-  return (projects || [])
-    .filter(project => project.section === sectionId && project.published !== false)
+function selectWorkHeroProjects(projects, settings) {
+  const publishedProjects = (projects || []).filter(project => project.published !== false);
+  const selectedIdentities = Array.isArray(settings?.workHeroProjectIds)
+    ? settings.workHeroProjectIds.filter(Boolean).slice(0, 3)
+    : [];
+
+  if (selectedIdentities.length) {
+    const selected = selectedIdentities.map(identity => publishedProjects.find(project =>
+      (project.id && project.id === identity) || project.slug === identity
+    )).filter(Boolean);
+    if (selected.length) return selected;
+  }
+
+  // Existing installations receive a useful overview before the first admin
+  // save. Once explicit choices exist, their order always wins.
+  return publishedProjects
+    .filter(project => project.section === 'featured-work')
     .sort((a, b) => Number(a.order || 99) - Number(b.order || 99))
     .slice(0, 3);
 }
@@ -51,6 +63,8 @@ function renderSectionHero(projects, container, options = {}) {
   container.hidden = false;
   document.body.classList.add('section-hero-active');
   const galleryTitle = options.galleryTitle || '';
+  const previewSourceHref = options.previewSourceHref || '';
+  const previewSourceLabel = options.previewSourceLabel || '';
   container.setAttribute('aria-label', `${galleryTitle || 'Section'} featured projects`);
   const root = document.createElement('div');
   root.className = 'section-hero-inner';
@@ -126,7 +140,11 @@ function renderSectionHero(projects, container, options = {}) {
     }
     link.addEventListener('click', () => {
       if (typeof storeProjectPreview === 'function') {
-        storeProjectPreview(project, { galleryTitle });
+        storeProjectPreview(project, {
+          galleryTitle,
+          sourceHref: previewSourceHref,
+          sourceLabel: previewSourceLabel
+        });
       }
     });
     listItem.appendChild(link);
@@ -164,7 +182,7 @@ function renderSectionHero(projects, container, options = {}) {
   const downButton = document.createElement('button');
   downButton.className = 'section-hero-down';
   downButton.type = 'button';
-  downButton.setAttribute('aria-label', 'View the rest of the projects');
+  downButton.setAttribute('aria-label', options.downLabel || 'View portfolio overview');
   downButton.textContent = '↓';
   downButton.addEventListener('click', () => {
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -236,7 +254,11 @@ function renderSectionHero(projects, container, options = {}) {
 
   function storeActiveProjectPreview() {
     if (typeof storeProjectPreview === 'function') {
-      storeProjectPreview(projects[activeIndex], { galleryTitle });
+      storeProjectPreview(projects[activeIndex], {
+        galleryTitle,
+        sourceHref: previewSourceHref,
+        sourceLabel: previewSourceLabel
+      });
     }
   }
 

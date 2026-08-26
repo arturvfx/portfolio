@@ -12,6 +12,9 @@
     landingEnterLabel: 'ENTER',
     landingWatchReelLabel: 'WATCH REEL',
     landingBackgroundVideo: 'assets/videos/bg-cinema.mp4',
+    workIntroTitle: 'GENERALIST WORKING ACROSS MOTION, VFX COMPOSITING AND EDITORIAL.',
+    workIntroBody: 'A selection of visual effects, motion and editing projects across film, television and branded work.',
+    workHeroProjectIds: [],
     galleryBackgroundVideo: 'assets/videos/bg-cinema.mp4',
     contentTheme: 'dark',
     contactTitle: "LET'S WORK TOGETHER",
@@ -35,11 +38,19 @@
   function normalize(value) {
     const source = value && typeof value === 'object' ? value : {};
     return Object.keys(DEFAULTS).reduce((settings, key) => {
+      if (key === 'workHeroProjectIds') {
+        const identities = Array.isArray(source[key]) ? source[key] : DEFAULTS[key];
+        settings[key] = [...new Set(identities
+          .filter(identity => typeof identity === 'string')
+          .map(identity => identity.trim())
+          .filter(Boolean))].slice(0, 3);
+        return settings;
+      }
       const hasStringValue = typeof source[key] === 'string';
       const candidate = hasStringValue ? source[key].trim() : '';
-      // The landing subtitle is intentionally optional; an explicit empty
-      // string must survive local and remote normalization.
-      if (key === 'landingSubtitle' && hasStringValue) {
+      // These fields are intentionally optional; explicit empty strings must
+      // survive local and remote normalization.
+      if (['landingSubtitle', 'workIntroTitle', 'workIntroBody'].includes(key) && hasStringValue) {
         settings[key] = candidate;
       } else if (key === 'contentTheme') {
         settings[key] = candidate === 'light' ? 'light' : 'dark';

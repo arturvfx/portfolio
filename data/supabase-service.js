@@ -58,8 +58,7 @@
       order: row.display_order,
       backgroundEnabled: row.background_enabled !== false,
       backgroundSource,
-      backgroundVideo: row.background_video || '',
-      heroEnabled: row.hero_enabled === true
+      backgroundVideo: row.background_video || ''
     };
   }
 
@@ -75,7 +74,9 @@
         ? gallery.backgroundSource
         : 'default',
       background_video: gallery.backgroundVideo || '',
-      hero_enabled: gallery.heroEnabled === true
+      // Kept in the row for compatibility with the existing schema. Section
+      // heroes were replaced by the single global Work Overview hero.
+      hero_enabled: false
     };
   }
 

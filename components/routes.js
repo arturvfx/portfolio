@@ -12,7 +12,8 @@ const PORTFOLIO_TOP_LEVEL_SECTIONS = new Set([
 ]);
 
 function isLocalStaticPreview() {
-  return window.location.hostname === 'localhost' ||
+  return window.location.protocol === 'file:' ||
+    window.location.hostname === 'localhost' ||
     window.location.hostname === '127.0.0.1' ||
     window.location.hostname.endsWith('.local');
 }
@@ -35,6 +36,19 @@ function getGalleryHref(sectionId) {
   return PORTFOLIO_TOP_LEVEL_SECTIONS.has(section)
     ? `/${encodedSection}`
     : `/work/${encodedSection}`;
+}
+
+function getPortfolioOverviewHref() {
+  return usesLegacyStaticRoutes()
+    ? 'gallery.html?view=overview'
+    : '/work';
+}
+
+function isPortfolioOverviewLocation() {
+  const queryView = new URLSearchParams(window.location.search).get('view');
+  if (queryView === 'overview') return true;
+  const segments = window.location.pathname.split('/').filter(Boolean);
+  return segments.length === 1 && segments[0] === 'work';
 }
 
 function getPublicGalleryPath(sectionId) {
@@ -88,6 +102,10 @@ function getProjectSlugFromLocation() {
 
 function getCanonicalGalleryUrl(sectionId) {
   return `https://arturaraujo.com${getPublicGalleryPath(sectionId)}`;
+}
+
+function getCanonicalPortfolioOverviewUrl() {
+  return 'https://arturaraujo.com/work';
 }
 
 function getCanonicalProjectUrl(slug) {

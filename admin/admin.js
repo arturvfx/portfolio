@@ -1484,6 +1484,29 @@
     dom.emptyState.style.display = 'none';
     formRevision += 1;
     const settings = siteSettings.normalize(workingSettings);
+    const galleryTitles = new Map(workingGalleries.map(gallery => [gallery.id, gallery.title]));
+    const selectableHeroProjects = workingProjects
+      .filter(project => project.published !== false)
+      .slice()
+      .sort((a, b) => {
+        const galleryA = workingGalleries.find(gallery => gallery.id === a.section);
+        const galleryB = workingGalleries.find(gallery => gallery.id === b.section);
+        return Number(galleryA?.order || 99) - Number(galleryB?.order || 99) ||
+          Number(a.order || 99) - Number(b.order || 99);
+      });
+    const renderHeroProjectOptions = selectedIdentity => {
+      const hasSelectedProject = selectableHeroProjects.some(project =>
+        (project.id || project.slug) === selectedIdentity
+      );
+      const unavailableOption = selectedIdentity && !hasSelectedProject
+        ? `<option value="${escAdm(selectedIdentity)}" selected>Unavailable project — ${escAdm(selectedIdentity)}</option>`
+        : '';
+      return `<option value="">Not selected</option>${unavailableOption}${selectableHeroProjects.map(project => {
+        const identity = project.id || project.slug;
+        const sectionTitle = galleryTitles.get(project.section) || project.section || 'No section';
+        return `<option value="${escAdm(identity)}" ${identity === selectedIdentity ? 'selected' : ''}>${escAdm(project.title)} — ${escAdm(sectionTitle)}</option>`;
+      }).join('')}`;
+    };
 
     dom.form.innerHTML = `
       <div class="form-header">
@@ -1518,7 +1541,31 @@
           <span class="media-upload-note">MP4 or WebM. The uploaded URL is saved only after clicking Save Site Settings.</span>
         </div>
 
-        <h3 class="form-section-heading">Project Selection Page</h3>
+        <h3 class="form-section-heading">Work Overview</h3>
+        <div class="form-group span-2">
+          <label for="setting-workIntroTitle">Presentation Title — Optional</label>
+          <textarea id="setting-workIntroTitle" rows="3" data-site-field="workIntroTitle">${escAdm(settings.workIntroTitle)}</textarea>
+        </div>
+        <div class="form-group span-2">
+          <label for="setting-workIntroBody">Presentation Text — Optional</label>
+          <textarea id="setting-workIntroBody" rows="4" data-site-field="workIntroBody">${escAdm(settings.workIntroBody)}</textarea>
+          <span class="media-upload-note">Leave both presentation fields empty to show only the highlights and section index.</span>
+        </div>
+        <div class="form-group">
+          <label for="setting-workHeroProject1">Highlight 1</label>
+          <select id="setting-workHeroProject1" data-work-hero-slot="0">${renderHeroProjectOptions(settings.workHeroProjectIds[0] || '')}</select>
+        </div>
+        <div class="form-group">
+          <label for="setting-workHeroProject2">Highlight 2</label>
+          <select id="setting-workHeroProject2" data-work-hero-slot="1">${renderHeroProjectOptions(settings.workHeroProjectIds[1] || '')}</select>
+        </div>
+        <div class="form-group span-2">
+          <label for="setting-workHeroProject3">Highlight 3</label>
+          <select id="setting-workHeroProject3" data-work-hero-slot="2">${renderHeroProjectOptions(settings.workHeroProjectIds[2] || '')}</select>
+          <span class="media-upload-note">Choose up to three published projects from any section. Their slot order controls the Hero order.</span>
+        </div>
+
+        <h3 class="form-section-heading">Section Pages</h3>
         <div class="form-group span-2">
           <label for="setting-galleryBackgroundVideo">Default Gallery Background Video Path / URL</label>
           <div class="media-input-row">
@@ -1608,6 +1655,7 @@
       <div class="form-actions">
         <button id="btn-save-site-settings" class="btn btn-primary" type="button">Save Site Settings</button>
         <button id="btn-preview-landing" class="btn btn-secondary" type="button">Preview Landing</button>
+        <button id="btn-preview-work" class="btn btn-secondary" type="button">Preview Work Overview</button>
         <button id="btn-preview-contact" class="btn btn-secondary" type="button">Preview Contact</button>
         <button id="btn-preview-footer" class="btn btn-secondary" type="button">Preview Footer</button>
         <span class="form-dirty-hint" id="dirty-hint" style="display:none" role="status"></span>
@@ -1616,8 +1664,12 @@
     dom.form.querySelectorAll('[data-site-field]').forEach(input => {
       input.addEventListener('input', markFormDirty);
     });
+    dom.form.querySelectorAll('[data-work-hero-slot]').forEach(input => {
+      input.addEventListener('change', markFormDirty);
+    });
     document.getElementById('btn-save-site-settings').addEventListener('click', saveSiteSettings);
     document.getElementById('btn-preview-landing').addEventListener('click', () => openPreview('/'));
+    document.getElementById('btn-preview-work').addEventListener('click', () => openPreview(getPortfolioOverviewHref()));
     document.getElementById('btn-preview-contact').addEventListener('click', () => openPreview('/contact'));
     document.getElementById('btn-preview-footer').addEventListener('click', () => openPreview(`${getGalleryHref('featured-work')}#site-footer`));
     bindSiteVideoUpload('landing', 'landingBackgroundVideo');
@@ -1699,6 +1751,17 @@
     dom.form.querySelectorAll('[data-site-field]').forEach(input => {
       updated[input.getAttribute('data-site-field')] = input.value.trim();
     });
+    updated.workHeroProjectIds = [...dom.form.querySelectorAll('[data-work-hero-slot]')]
+      .map(input => input.value.trim())
+      .filter(Boolean);
+    if (!updated.workHeroProjectIds.length) {
+      showStatus('ERROR: Choose at least one Work Overview highlight.', 'error');
+      return;
+    }
+    if (new Set(updated.workHeroProjectIds).size !== updated.workHeroProjectIds.length) {
+      showStatus('ERROR: Each Work Overview highlight must use a different project.', 'error');
+      return;
+    }
     const required = [
       'landingTitle', 'landingEnterLabel', 'landingWatchReelLabel', 'landingBackgroundVideo', 'galleryBackgroundVideo', 'contentTheme',
       'contactTitle', 'contactIntro', 'contactAvailability', 'contactLocation', 'contactSubmitLabel',
@@ -1769,8 +1832,7 @@
       order: workingGalleries.length + 1,
       backgroundEnabled: true,
       backgroundSource: 'default',
-      backgroundVideo: '',
-      heroEnabled: false
+      backgroundVideo: ''
     };
     workingGalleries.push(gallery);
     adminStorage.saveGalleries(workingGalleries);
@@ -1855,15 +1917,6 @@
             <option value="false" ${gallery.published === false ? 'selected' : ''}>Hidden — admin only</option>
           </select>
         </div>
-        <h3 class="form-section-heading">Featured Hero</h3>
-        <div class="form-group span-2">
-          <label for="gallery-hero-enabled">Opening Highlight</label>
-          <select id="gallery-hero-enabled" data-gallery-field="heroEnabled">
-            <option value="true" ${gallery.heroEnabled === true ? 'selected' : ''}>Enabled — highlight the first three published projects</option>
-            <option value="false" ${gallery.heroEnabled !== true ? 'selected' : ''}>Disabled — start directly with the project grid</option>
-          </select>
-          <span class="media-upload-note">The hero follows the project order in this section. Highlighted projects are removed from the grid below, so they never appear twice.</span>
-        </div>
         <h3 class="form-section-heading">Section Background</h3>
         <div class="form-group span-2">
           <label for="gallery-background-enabled">Background Style</label>
@@ -1933,7 +1986,7 @@
     const updated = { ...workingGalleries[index] };
     dom.form.querySelectorAll('[data-gallery-field]').forEach(input => {
       const field = input.getAttribute('data-gallery-field');
-      if (field === 'published' || field === 'backgroundEnabled' || field === 'heroEnabled') {
+      if (field === 'published' || field === 'backgroundEnabled') {
         updated[field] = input.value === 'true';
       }
       else if (field === 'order') updated[field] = Number.parseInt(input.value, 10);

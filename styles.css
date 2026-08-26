@@ -1417,6 +1417,138 @@ body.section-hero-active .section-title {
   max-width: 700px;
 }
 
+/* ── Global Work Overview ──────────────────────────────────── */
+.work-overview[hidden],
+#portfolio-section-view[hidden] {
+  display: none;
+}
+
+body.portfolio-overview .page-container {
+  min-height: 0;
+  padding: clamp(6.5rem, 9vw, 9rem) clamp(1.75rem, 4vw, 4.5rem) clamp(6rem, 9vw, 9rem);
+}
+
+.work-overview {
+  color: var(--text-primary);
+}
+
+.work-overview-intro {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 2rem clamp(1.25rem, 3vw, 3.5rem);
+  padding-bottom: clamp(6rem, 10vw, 10rem);
+}
+
+.work-overview-kicker {
+  grid-column: 1 / 4;
+  margin: 0;
+  padding-top: 0.55rem;
+  font-family: var(--font-title);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  opacity: 0.5;
+}
+
+.work-overview-title {
+  grid-column: 4 / -1;
+  max-width: 14ch;
+  margin: 0;
+  font-family: var(--font-title);
+  font-size: clamp(2.8rem, 6.2vw, 7.5rem);
+  font-weight: 900;
+  font-kerning: normal;
+  font-feature-settings: 'kern' 1, 'liga' 1;
+  line-height: 0.88;
+  letter-spacing: -0.055em;
+  text-transform: uppercase;
+}
+
+.work-overview-body {
+  grid-column: 7 / -1;
+  max-width: 44rem;
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: clamp(1rem, 1.45vw, 1.35rem);
+  font-weight: 500;
+  line-height: 1.45;
+  color: var(--text-secondary);
+}
+
+.work-section-index {
+  display: block;
+  border-top: 1px solid rgba(243, 241, 236, 0.22);
+}
+
+.work-section-link {
+  display: grid;
+  grid-template-columns: minmax(2.5rem, 5vw) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 1rem clamp(1.25rem, 3vw, 3.5rem);
+  min-height: clamp(7rem, 11vw, 10rem);
+  border-bottom: 1px solid rgba(243, 241, 236, 0.22);
+  color: inherit;
+  text-decoration: none;
+}
+
+.work-section-number,
+.work-section-description {
+  font-family: var(--font-body);
+  font-size: 0.68rem;
+  font-weight: 600;
+  line-height: 1.35;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  opacity: 0.55;
+}
+
+.work-section-copy {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1.5rem 3rem;
+  min-width: 0;
+}
+
+.work-section-title {
+  font-family: var(--font-title);
+  font-size: clamp(2rem, 4.2vw, 5rem);
+  font-weight: 900;
+  font-kerning: normal;
+  font-feature-settings: 'kern' 1, 'liga' 1;
+  line-height: 0.9;
+  letter-spacing: -0.055em;
+  text-transform: uppercase;
+  transition: opacity 0.14s linear;
+}
+
+.work-section-description {
+  max-width: 28rem;
+  text-align: right;
+}
+
+.work-section-arrow {
+  font-family: var(--font-title);
+  font-size: clamp(1.35rem, 2vw, 2rem);
+  font-weight: 700;
+  opacity: 0.55;
+  transition: opacity 0.14s linear;
+}
+
+.work-section-link:hover .work-section-title,
+.work-section-link:focus-visible .work-section-title,
+.work-section-link:hover .work-section-arrow,
+.work-section-link:focus-visible .work-section-arrow {
+  opacity: 0.58;
+}
+
+.work-section-link:focus-visible {
+  outline: 1px solid currentColor;
+  outline-offset: 5px;
+}
+
 /* ═══════════════════════════════════════════════════════════════
    EXHIBITION GALLERY — Project Frame System
    Each project is a cinematic still, not a UI card.
@@ -2278,6 +2410,21 @@ body.site-content-light.gallery-solid-background .frame-category {
   color: var(--content-secondary);
 }
 
+body.site-content-light.gallery-solid-background .work-overview {
+  color: var(--content-text);
+}
+
+body.site-content-light.gallery-solid-background .work-overview-body,
+body.site-content-light.gallery-solid-background .work-section-number,
+body.site-content-light.gallery-solid-background .work-section-description {
+  color: var(--content-secondary);
+}
+
+body.site-content-light.gallery-solid-background .work-section-index,
+body.site-content-light.gallery-solid-background .work-section-link {
+  border-color: var(--content-border);
+}
+
 body.site-content-light.gallery-solid-background .frame-title {
   color: var(--content-text);
   opacity: 1;
@@ -2947,6 +3094,51 @@ body.contact-page {
     grid-row-start: auto !important;
     grid-row-end: auto !important;
     margin-bottom: 0;
+  }
+
+  body.portfolio-overview .page-container {
+    padding: 6rem 1.5rem 5rem;
+  }
+
+  .work-overview-intro {
+    display: block;
+    padding-bottom: 5rem;
+  }
+
+  .work-overview-kicker {
+    margin-bottom: 2.5rem;
+    padding-top: 0;
+  }
+
+  .work-overview-title {
+    max-width: 12ch;
+    font-size: clamp(2.55rem, 13vw, 4.5rem);
+  }
+
+  .work-overview-body {
+    margin-top: 2rem;
+    font-size: 1rem;
+  }
+
+  .work-section-link {
+    grid-template-columns: 2rem minmax(0, 1fr) auto;
+    min-height: 7.5rem;
+    gap: 1rem;
+  }
+
+  .work-section-copy {
+    display: block;
+  }
+
+  .work-section-title {
+    display: block;
+    font-size: clamp(1.75rem, 8vw, 2.7rem);
+  }
+
+  .work-section-description {
+    display: block;
+    margin-top: 0.7rem;
+    text-align: left;
   }
 
   .project-detail-header {

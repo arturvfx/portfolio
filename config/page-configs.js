@@ -9,7 +9,6 @@
  * - backgroundEnabled: boolean
  * - backgroundSource: 'default' | 'homepage' | 'custom'
  * - backgroundVideo: string
- * - heroEnabled: boolean
  * - order: number
  *
  * Local admin overrides are merged at runtime. New sections do not need
@@ -17,9 +16,9 @@
  */
 
 const GALLERIES_DATA = [
-  { id: 'featured-work', title: 'FEATURED WORK', description: '', published: true, order: 1, backgroundEnabled: true, backgroundSource: 'default', backgroundVideo: '', heroEnabled: true },
-  { id: 'content-editing', title: 'CONTENT EDITING', description: '', published: true, order: 2, backgroundEnabled: true, backgroundSource: 'default', backgroundVideo: '', heroEnabled: false },
-  { id: 'digital-alchemy', title: 'DIGITAL ALCHEMY', description: '', published: true, order: 3, backgroundEnabled: true, backgroundSource: 'default', backgroundVideo: '', heroEnabled: false }
+  { id: 'featured-work', title: 'FEATURED WORK', description: '', published: true, order: 1, backgroundEnabled: true, backgroundSource: 'default', backgroundVideo: '' },
+  { id: 'content-editing', title: 'CONTENT EDITING', description: '', published: true, order: 2, backgroundEnabled: true, backgroundSource: 'default', backgroundVideo: '' },
+  { id: 'digital-alchemy', title: 'DIGITAL ALCHEMY', description: '', published: true, order: 3, backgroundEnabled: true, backgroundSource: 'default', backgroundVideo: '' }
 ];
 
 function galleryToPageConfig(gallery) {

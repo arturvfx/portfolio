@@ -1,14 +1,14 @@
 /**
- * Fast landing-to-gallery handoff.
- * Preloads the first published section hero and stores a short-lived snapshot
- * in sessionStorage so the destination can paint media before Supabase finishes.
+ * Fast landing-to-work handoff.
+ * Preloads the explicitly selected overview highlights and stores a short-lived
+ * snapshot so /work can paint its first image before the full Supabase load.
  */
 (function () {
   'use strict';
 
-  const STORAGE_KEY = 'portfolio-section-entry-preview-v1';
+  const STORAGE_KEY = 'portfolio-work-entry-preview-v1';
   const MAX_AGE = 10 * 60 * 1000;
-  const pending = new Map();
+  let pending = null;
 
   function normalizeFocus(value) {
     const number = Number(value);
@@ -26,22 +26,6 @@
       const source = typeof item === 'string' ? { url: item } : (item || {});
       return { url: typeof source.url === 'string' ? source.url.trim() : '', size: source.size || '16-9' };
     }).filter(item => item.url);
-  }
-
-  function galleryFromRow(row) {
-    return {
-      id: row.id,
-      title: row.title,
-      description: row.description || '',
-      published: row.published !== false,
-      order: Number(row.display_order),
-      backgroundEnabled: row.background_enabled !== false,
-      backgroundSource: ['default', 'homepage', 'custom'].includes(row.background_source)
-        ? row.background_source
-        : 'default',
-      backgroundVideo: row.background_video || '',
-      heroEnabled: row.hero_enabled === true
-    };
   }
 
   function projectFromRow(row) {
@@ -70,6 +54,22 @@
       mobileFocusY: normalizeFocus(row.mobile_focus_y),
       mobileCoverScale: normalizeScale(row.mobile_cover_scale)
     };
+  }
+
+  function selectHighlights(projects, settings) {
+    const identities = Array.isArray(settings?.workHeroProjectIds)
+      ? settings.workHeroProjectIds.filter(Boolean).slice(0, 3)
+      : [];
+    if (identities.length) {
+      const selected = identities.map(identity => projects.find(project =>
+        (project.id && project.id === identity) || project.slug === identity
+      )).filter(Boolean);
+      if (selected.length) return selected;
+    }
+    return projects
+      .filter(project => project.section === 'featured-work')
+      .sort((a, b) => Number(a.order || 99) - Number(b.order || 99))
+      .slice(0, 3);
   }
 
   function getFirstMedia(project) {
@@ -115,17 +115,18 @@
     try {
       window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify(preview));
     } catch (error) {
-      // The theme-colored loading surface still works if session storage is blocked.
+      // The theme-colored loading surface still works if storage is blocked.
     }
   }
 
-  function read(sectionId) {
+  function read(viewId) {
+    if (viewId !== 'work') return null;
     try {
       const raw = window.sessionStorage.getItem(STORAGE_KEY);
       if (!raw) return null;
       const preview = JSON.parse(raw);
       const fresh = Number(preview.savedAt) > Date.now() - MAX_AGE;
-      return preview.sectionId === sectionId && fresh ? preview : null;
+      return preview.viewId === 'work' && fresh ? preview : null;
     } catch (error) {
       return null;
     }
@@ -141,53 +142,51 @@
         Authorization: `Bearer ${config.publishableKey}`
       }
     });
-    if (!response.ok) throw new Error(`Entry preview request failed (${response.status}).`);
+    if (!response.ok) throw new Error(`Work preview request failed (${response.status}).`);
     return response.json();
   }
 
-  async function fetchPreview(sectionId) {
-    const [sectionRows, projectRows] = await Promise.all([
-      requestRows('portfolio_sections', {
-        select: 'id,title,description,published,display_order,background_enabled,background_source,background_video,hero_enabled',
-        id: `eq.${sectionId}`,
-        published: 'eq.true',
+  async function fetchPreview() {
+    const [settingsRows, projectRows] = await Promise.all([
+      requestRows('portfolio_site_settings', {
+        select: 'settings',
+        id: 'eq.global',
         limit: '1'
       }),
       requestRows('portfolio_projects', {
         select: 'id,slug,title,category,client,year,services,project_summary,contribution,director,production_company,watch_now_enabled,watch_now_url,cover_image,preview_video,project_stills,section_id,size,published,display_order,mobile_focus_x,mobile_focus_y,mobile_cover_scale',
-        section_id: `eq.${sectionId}`,
         published: 'eq.true',
-        order: 'display_order.asc',
-        limit: '3'
+        order: 'display_order.asc'
       })
     ]);
-    const gallery = sectionRows[0] ? galleryFromRow(sectionRows[0]) : null;
-    if (!gallery || !gallery.heroEnabled) return null;
-    const projects = projectRows.map(projectFromRow);
+    const rawSettings = settingsRows[0]?.settings || {};
+    const settings = window.siteSettings ? siteSettings.normalize(rawSettings) : rawSettings;
+    const projects = selectHighlights(projectRows.map(projectFromRow), settings);
     if (!projects.length) return null;
 
     const mediaReady = await preloadMedia(getFirstMedia(projects[0]));
     if (!mediaReady) return null;
-    const preview = { sectionId, gallery, projects, savedAt: Date.now() };
+    const preview = { viewId: 'work', settings, projects, savedAt: Date.now() };
     save(preview);
     return preview;
   }
 
-  function preload(sectionId = 'featured-work') {
-    const stored = read(sectionId);
+  function preload(viewId = 'work') {
+    if (viewId !== 'work') return Promise.resolve(null);
+    const stored = read('work');
     if (stored) {
       preloadMedia(getFirstMedia(stored.projects[0]));
       return Promise.resolve(stored);
     }
-    if (!pending.has(sectionId)) {
-      pending.set(sectionId, fetchPreview(sectionId)
+    if (!pending) {
+      pending = fetchPreview()
         .catch(error => {
-          console.warn('Could not preload the section entry; using the theme-colored loading surface.', error);
+          console.warn('Could not preload the work overview; using the theme-colored loading surface.', error);
           return null;
         })
-        .finally(() => pending.delete(sectionId)));
+        .finally(() => { pending = null; });
     }
-    return pending.get(sectionId);
+    return pending;
   }
 
   window.sectionEntryPreview = { preload, read };

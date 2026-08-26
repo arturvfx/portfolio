@@ -23,6 +23,7 @@
   "rewrites": [
     { "source": "/contact", "destination": "/contact.html" },
     { "source": "/admin", "destination": "/admin.html" },
+    { "source": "/work", "destination": "/gallery.html?view=overview" },
     { "source": "/featured-work", "destination": "/gallery.html?section=featured-work" },
     { "source": "/content-editing", "destination": "/gallery.html?section=content-editing" },
     { "source": "/digital-alchemy", "destination": "/gallery.html?section=digital-alchemy" },

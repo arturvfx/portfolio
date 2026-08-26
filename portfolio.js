@@ -25,6 +25,13 @@
 function renderPortfolioPage(pageConfig, projects) {
   if (!pageConfig) return;
 
+  document.body.classList.remove('portfolio-overview');
+  document.body.classList.add('portfolio-section');
+  const sectionView = document.getElementById('portfolio-section-view');
+  const overviewView = document.getElementById('portfolio-overview-view');
+  if (sectionView) sectionView.hidden = false;
+  if (overviewView) overviewView.hidden = true;
+
   // 1. Update Section Title
   const titleEl = document.querySelector('.section-title');
   if (titleEl && pageConfig.title) {
@@ -56,19 +63,11 @@ function renderPortfolioPage(pageConfig, projects) {
     });
   }
 
-  // 4. Mount the optional editorial hero and exclude those projects below.
+  // 4. Section pages start directly with their project grid. The editorial
+  // hero belongs exclusively to the global /work overview.
   const heroContainer = document.getElementById('section-featured-hero');
-  const heroProjects = typeof selectSectionHeroProjects === 'function'
-    ? selectSectionHeroProjects(projects, pageConfig)
-    : [];
-  const publishedSectionProjectCount = projects.filter(project =>
-    project.section === pageConfig.projectSection && project.published !== false
-  ).length;
   if (typeof renderSectionHero === 'function') {
-    renderSectionHero(heroProjects, heroContainer, {
-      galleryTitle: pageConfig.title || '',
-      hasRemainingProjects: publishedSectionProjectCount > heroProjects.length
-    });
+    renderSectionHero([], heroContainer);
   }
 
   // 5. Mount Project Gallery
@@ -77,15 +76,121 @@ function renderPortfolioPage(pageConfig, projects) {
     document.querySelector('.portfolio-grid[data-page]');
 
   if (container) {
-    renderProjectGallery(projects, container, {
-      ...pageConfig,
-      excludeProjectIds: heroProjects.map(project => project.id || project.slug)
-    });
+    container.hidden = false;
+    renderProjectGallery(projects, container, pageConfig);
   }
 }
 
 let publicPortfolioRuntime = null;
 let activePortfolioGallery = null;
+let activePortfolioView = null;
+
+function getCurrentWorkSettings() {
+  return (window.siteSettings?.getCurrent ? siteSettings.getCurrent() : siteSettings?.loadLocal?.()) || {};
+}
+
+function updatePortfolioOverviewMetadata(settings) {
+  const title = 'ARTUR ARAUJO | Selected Work';
+  const description = settings.workIntroBody || settings.workIntroTitle ||
+    'Selected VFX, motion and editorial work by Artur Araujo.';
+  document.title = title;
+  setPortfolioMeta('meta[name="description"]', description);
+  setPortfolioMeta('meta[property="og:title"]', title);
+  setPortfolioMeta('meta[property="og:description"]', description);
+  const canonicalUrl = getCanonicalPortfolioOverviewUrl();
+  document.querySelector('link[rel="canonical"]')?.setAttribute('href', canonicalUrl);
+  setPortfolioMeta('meta[property="og:url"]', canonicalUrl);
+}
+
+function renderPortfolioOverview(settings, projects, galleries) {
+  const normalizedSettings = window.siteSettings
+    ? siteSettings.normalize(settings)
+    : settings || {};
+  const sectionView = document.getElementById('portfolio-section-view');
+  const overviewView = document.getElementById('portfolio-overview-view');
+  const container = document.getElementById('project-gallery');
+  const heroContainer = document.getElementById('section-featured-hero');
+
+  document.body.classList.add('portfolio-overview');
+  document.body.classList.remove('portfolio-section');
+  if (sectionView) sectionView.hidden = true;
+  if (overviewView) overviewView.hidden = false;
+  if (container) {
+    if (typeof destroyProjectGalleryMasonry === 'function') destroyProjectGalleryMasonry(container);
+    container.replaceChildren();
+    container.hidden = true;
+    container.setAttribute('data-page', 'work');
+  }
+
+  const heroProjects = typeof selectWorkHeroProjects === 'function'
+    ? selectWorkHeroProjects(projects, normalizedSettings)
+    : [];
+  if (typeof renderSectionHero === 'function') {
+    renderSectionHero(heroProjects, heroContainer, {
+      galleryTitle: 'SELECTED WORK',
+      hasRemainingProjects: true,
+      downLabel: 'View portfolio introduction and sections',
+      previewSourceHref: getPortfolioOverviewHref(),
+      previewSourceLabel: 'WORK'
+    });
+  }
+
+  const intro = document.getElementById('work-overview-intro');
+  const introTitle = document.getElementById('work-overview-title');
+  const introBody = document.getElementById('work-overview-body');
+  if (introTitle) introTitle.textContent = normalizedSettings.workIntroTitle || '';
+  if (introBody) introBody.textContent = normalizedSettings.workIntroBody || '';
+  if (introTitle) introTitle.hidden = !normalizedSettings.workIntroTitle;
+  if (introBody) introBody.hidden = !normalizedSettings.workIntroBody;
+  if (intro) intro.hidden = !normalizedSettings.workIntroTitle && !normalizedSettings.workIntroBody;
+
+  const sectionIndex = document.getElementById('work-section-index');
+  if (sectionIndex) {
+    sectionIndex.replaceChildren();
+    galleries
+      .filter(gallery => gallery.published !== false)
+      .sort((a, b) => Number(a.order) - Number(b.order))
+      .forEach((gallery, index) => {
+        const link = document.createElement('a');
+        link.className = 'work-section-link';
+        link.href = getGalleryHref(gallery.id);
+        link.setAttribute('data-section', gallery.id);
+        link.addEventListener('click', event => {
+          if (!publicPortfolioRuntime) return;
+          event.preventDefault();
+          navigatePortfolioSection(gallery.id, { history: 'push', scroll: true });
+        });
+
+        const number = document.createElement('span');
+        number.className = 'work-section-number';
+        number.textContent = String(index + 1).padStart(2, '0');
+        const copy = document.createElement('span');
+        copy.className = 'work-section-copy';
+        const heading = document.createElement('span');
+        heading.className = 'work-section-title';
+        heading.textContent = gallery.title;
+        copy.appendChild(heading);
+        if (gallery.description) {
+          const description = document.createElement('span');
+          description.className = 'work-section-description';
+          description.textContent = gallery.description;
+          copy.appendChild(description);
+        }
+        const arrow = document.createElement('span');
+        arrow.className = 'work-section-arrow';
+        arrow.setAttribute('aria-hidden', 'true');
+        arrow.textContent = '→';
+        link.append(number, copy, arrow);
+        sectionIndex.appendChild(link);
+      });
+  }
+
+  document.querySelectorAll('.nav-link').forEach(link => {
+    link.classList.remove('active');
+    link.removeAttribute('aria-current');
+  });
+  updatePortfolioOverviewMetadata(normalizedSettings);
+}
 
 function resolveGalleryBackgroundUrl(gallery, settings) {
   if (gallery.backgroundSource === 'homepage') return settings.landingBackgroundVideo;
@@ -174,6 +279,7 @@ function navigatePortfolioSection(sectionId, options = {}) {
     : { ...gallery, projectSection: gallery.id, activeNav: gallery.id, containerId: 'project-gallery' };
 
   container.setAttribute('data-page', gallery.id);
+  activePortfolioView = 'section';
   updateGalleryMetadata(gallery);
   renderPortfolioPage(pageConfig, publicPortfolioRuntime.projects);
   applyGalleryBackground(gallery);
@@ -189,8 +295,38 @@ function navigatePortfolioSection(sectionId, options = {}) {
   return true;
 }
 
+function navigatePortfolioOverview(options = {}) {
+  if (!publicPortfolioRuntime) return false;
+  activePortfolioView = 'overview';
+  renderPortfolioOverview(
+    getCurrentWorkSettings(),
+    publicPortfolioRuntime.projects,
+    publicPortfolioRuntime.galleries
+  );
+  applyGalleryBackground({ id: 'work', backgroundEnabled: false });
+
+  if (options.history === 'push' || options.history === 'replace') {
+    const method = options.history === 'replace' ? 'replaceState' : 'pushState';
+    window.history[method]({ portfolioView: 'overview' }, '', getPortfolioOverviewHref());
+  }
+
+  const menu = document.getElementById('nav-menu');
+  if (menu) menu.classList.remove('open');
+  if (options.scroll !== false) window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+  return true;
+}
+
 window.addEventListener('portfolio-site-settings-applied', event => {
-  if (activePortfolioGallery) applyGalleryBackground(activePortfolioGallery, event.detail);
+  if (activePortfolioView === 'overview' && publicPortfolioRuntime) {
+    renderPortfolioOverview(
+      event.detail,
+      publicPortfolioRuntime.projects,
+      publicPortfolioRuntime.galleries
+    );
+    applyGalleryBackground({ id: 'work', backgroundEnabled: false }, event.detail);
+  } else if (activePortfolioGallery) {
+    applyGalleryBackground(activePortfolioGallery, event.detail);
+  }
 });
 
 function getLocalPortfolioData() {
@@ -276,21 +412,21 @@ function renderInitialGalleryNavigation() {
   let activeGallery = null;
 
   if (document.getElementById('project-gallery')) {
-    activeId = getGallerySectionFromLocation(
-      document.getElementById('project-gallery')?.getAttribute('data-page') ||
-      'featured-work'
-    );
-    activeGallery = resolvePublishedGallery(localPortfolio.galleries, activeId);
-    activeId = activeGallery.id;
-
-    const entryPreview = window.sectionEntryPreview?.read(activeId);
-    if (entryPreview?.gallery && entryPreview.projects?.length) {
-      activeGallery = entryPreview.gallery;
-      const pageConfig = typeof galleryToPageConfig === 'function'
-        ? galleryToPageConfig(activeGallery)
-        : { ...activeGallery, projectSection: activeGallery.id, activeNav: activeGallery.id, containerId: 'project-gallery' };
-      renderPortfolioPage(pageConfig, entryPreview.projects);
+    if (isPortfolioOverviewLocation()) {
+      const entryPreview = window.sectionEntryPreview?.read('work');
+      renderPortfolioOverview(
+        entryPreview?.settings || getCurrentWorkSettings(),
+        entryPreview?.projects?.length ? entryPreview.projects : localPortfolio.projects,
+        localPortfolio.galleries
+      );
       document.body.classList.add('section-entry-preview-ready');
+    } else {
+      activeId = getGallerySectionFromLocation(
+        document.getElementById('project-gallery')?.getAttribute('data-page') ||
+        'featured-work'
+      );
+      activeGallery = resolvePublishedGallery(localPortfolio.galleries, activeId);
+      activeId = activeGallery.id;
     }
   } else if (currentPath.endsWith('/project.html') || currentPath.includes('/project/')) {
     const slug = getProjectSlugFromLocation();
@@ -323,12 +459,17 @@ async function initPortfolioSystem() {
     return;
   }
   publicPortfolioRuntime = portfolioData;
-  const requestedId = getGallerySectionFromLocation(
-    container.getAttribute('data-page') || 'featured-work'
-  );
-  const gallery = resolvePublishedGallery(galleries, requestedId);
-  renderGalleryNavigation(galleries, gallery.id);
-  navigatePortfolioSection(gallery.id, { history: 'none', scroll: false });
+  if (isPortfolioOverviewLocation()) {
+    renderGalleryNavigation(galleries, null);
+    navigatePortfolioOverview({ history: 'none', scroll: false });
+  } else {
+    const requestedId = getGallerySectionFromLocation(
+      container.getAttribute('data-page') || 'featured-work'
+    );
+    const gallery = resolvePublishedGallery(galleries, requestedId);
+    renderGalleryNavigation(galleries, gallery.id);
+    navigatePortfolioSection(gallery.id, { history: 'none', scroll: false });
+  }
   document.body.classList.remove('section-entry-preview-ready');
   document.body.classList.remove('gallery-loading');
   document.body.classList.add('portfolio-ready');
@@ -336,8 +477,12 @@ async function initPortfolioSystem() {
   if (!window.__portfolioPopstateBound) {
     window.__portfolioPopstateBound = true;
     window.addEventListener('popstate', () => {
-      const nextSection = getGallerySectionFromLocation('featured-work');
-      navigatePortfolioSection(nextSection, { history: 'none', scroll: true });
+      if (isPortfolioOverviewLocation()) {
+        navigatePortfolioOverview({ history: 'none', scroll: true });
+      } else {
+        const nextSection = getGallerySectionFromLocation('featured-work');
+        navigatePortfolioSection(nextSection, { history: 'none', scroll: true });
+      }
     });
   }
 }

@@ -18,8 +18,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@600;700;800;900&family=Inter:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=20260826-masonry-gallery">
-  <script src="config/site-settings.js?v=20260825-theme-loading-cut"></script>
+  <link rel="stylesheet" href="styles.css?v=20260826-work-overview">
+  <script src="config/site-settings.js?v=20260826-work-overview"></script>
 </head>
 <body class="page-scrollable gallery-loading site-settings-loading">
   <div class="video-background-wrapper">
@@ -43,11 +43,22 @@
   <section id="section-featured-hero" class="section-featured-hero" hidden></section>
 
   <main class="page-container">
-    <header class="section-header">
-      <h1 class="section-title" data-text=""></h1>
-      <p class="section-subtitle" style="display:none"></p>
-    </header>
-    <div id="project-gallery" class="portfolio-grid" data-page="featured-work"></div>
+    <div id="portfolio-section-view">
+      <header class="section-header">
+        <h1 class="section-title" data-text=""></h1>
+        <p class="section-subtitle" style="display:none"></p>
+      </header>
+      <div id="project-gallery" class="portfolio-grid" data-page="featured-work"></div>
+    </div>
+
+    <section id="portfolio-overview-view" class="work-overview" aria-label="Portfolio overview" hidden>
+      <header id="work-overview-intro" class="work-overview-intro">
+        <p class="work-overview-kicker">ABOUT THE WORK</p>
+        <h1 id="work-overview-title" class="work-overview-title">GENERALIST WORKING ACROSS MOTION, VFX COMPOSITING AND EDITORIAL.</h1>
+        <p id="work-overview-body" class="work-overview-body">A selection of visual effects, motion and editing projects across film, television and branded work.</p>
+      </header>
+      <nav id="work-section-index" class="work-section-index" aria-label="Project sections"></nav>
+    </section>
   </main>
 
   <footer class="site-footer" id="site-footer">
@@ -60,20 +71,20 @@
   </footer>
 
   <script src="data/projects-data.js?v=20260826-code-audit"></script>
-  <script src="config/page-configs.js?v=20260825-section-hero"></script>
-  <script src="components/routes.js?v=20260826-code-audit"></script>
-  <script src="components/project-preview.js?v=20260826-player-ratio-handoff"></script>
-  <script src="components/section-entry-preview.js?v=20260825-instant-project-text"></script>
+  <script src="config/page-configs.js?v=20260826-work-overview"></script>
+  <script src="components/routes.js?v=20260826-work-overview"></script>
+  <script src="components/project-preview.js?v=20260826-work-overview"></script>
+  <script src="components/section-entry-preview.js?v=20260826-work-overview"></script>
   <script src="components/project-frame.js?v=20260826-code-audit"></script>
-  <script src="components/section-hero.js?v=20260825-mobile-hero-tap"></script>
+  <script src="components/section-hero.js?v=20260826-work-overview"></script>
   <script src="components/project-gallery.js?v=20260826-masonry-gallery"></script>
   <script src="admin/admin-storage.js?v=20260825-mobile-scale"></script>
-  <script src="portfolio.js?v=20260825-entry-preload"></script>
+  <script src="portfolio.js?v=20260826-work-overview"></script>
   <script>renderInitialGalleryNavigation();</script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="config/supabase-config.js?v=20260804-public-db"></script>
   <script>siteSettings.hydrate();</script>
   <script src="data/supabase-service.js?v=20260825-mobile-scale"></script>
-  <script src="script.js?v=20260826-code-audit"></script>
+  <script src="script.js?v=20260826-work-overview"></script>
 </body>
 </html>

@@ -342,9 +342,12 @@ async function initProjectDetail() {
 
   const backLink = document.getElementById('project-back-link');
   if (backLink) {
-    backLink.href = getGalleryHref(project.section);
     const gallery = portfolioData.galleries.find(item => item.id === project.section);
-    backLink.textContent = `← ${gallery ? gallery.title : 'BACK TO GALLERY'}`;
+    const storedPreview = typeof readProjectPreview === 'function'
+      ? readProjectPreview(project.slug)
+      : null;
+    backLink.href = storedPreview?.sourceHref || getGalleryHref(project.section);
+    backLink.textContent = `← ${storedPreview?.sourceLabel || (gallery ? gallery.title : 'BACK TO GALLERY')}`;
   }
 
   renderProjectDetailMedia(project);

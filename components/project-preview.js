@@ -11,7 +11,7 @@ function storeProjectPreview(project, options = {}) {
   if (!project || !project.slug) return;
 
   const preview = {
-    version: 3,
+    version: 4,
     slug: project.slug,
     title: project.title || '',
     category: project.category || '',
@@ -26,6 +26,8 @@ function storeProjectPreview(project, options = {}) {
     watchNowUrl: project.watchNowUrl || '',
     section: project.section || 'featured-work',
     galleryTitle: options.galleryTitle || '',
+    sourceHref: options.sourceHref || '',
+    sourceLabel: options.sourceLabel || '',
     size: project.size || '16-9',
     coverImage: project.coverImage || '',
     hasYoutubeVideo: Boolean(String(project.youtubeUrl || '').trim()),
@@ -136,8 +138,8 @@ function hydrateStoredProjectPreview() {
     : null;
   const backLink = document.getElementById('project-back-link');
   if (backLink) {
-    backLink.href = getGalleryHref(preview.section);
-    backLink.textContent = `← ${preview.galleryTitle || (gallery ? gallery.title : 'BACK TO GALLERY')}`;
+    backLink.href = preview.sourceHref || getGalleryHref(preview.section);
+    backLink.textContent = `← ${preview.sourceLabel || preview.galleryTitle || (gallery ? gallery.title : 'BACK TO GALLERY')}`;
   }
 
   const media = document.getElementById('project-detail-media');
