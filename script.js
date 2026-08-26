@@ -233,6 +233,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         event.preventDefault();
         event.stopImmediatePropagation();
         if (link.classList.contains('active')) {
+          runNavInteractionFlicker(link);
           window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
           return;
         }

@@ -946,22 +946,74 @@ body.portfolio-ready .page-container {
   grid-template-rows: repeat(2, 0.34rem);
   gap: 0.16rem;
   width: max-content;
-  filter: blur(0.28px);
+  filter: blur(0.62px);
 }
 
 .nav-overview-cell {
+  position: relative;
   width: 0.34rem;
   height: 0.34rem;
   border: 1px solid currentColor;
+}
+
+.nav-overview-cell::before,
+.nav-overview-cell::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border: 1px solid currentColor;
+  opacity: 0;
+  pointer-events: none;
+  mix-blend-mode: screen;
+}
+
+.nav-overview-cell::before {
+  color: rgba(255, 35, 75, 0.58);
+  transform: translate(-1.2px, -0.15px);
+}
+
+.nav-overview-cell::after {
+  color: rgba(0, 225, 255, 0.58);
+  transform: translate(1.2px, 0.15px);
 }
 
 .nav-overview-link.active .nav-overview-cell {
   background: currentColor;
 }
 
-.nav-overview-link:is(:hover, :focus-visible) .nav-overview-symbol,
 .nav-overview-link.active .nav-overview-symbol {
+  filter: blur(0.1px);
+}
+
+.nav-overview-link:is(:hover, :focus-visible) .nav-overview-symbol {
   filter: blur(0);
+}
+
+.nav-overview-link.active .nav-overview-cell::before,
+.nav-overview-link.active .nav-overview-cell::after,
+.nav-overview-link:is(:hover, :focus-visible) .nav-overview-cell::before,
+.nav-overview-link:is(:hover, :focus-visible) .nav-overview-cell::after {
+  opacity: 0.56;
+}
+
+.nav-overview-link.active .nav-overview-cell::before,
+.nav-overview-link.active .nav-overview-cell::after {
+  background: currentColor;
+}
+
+.nav-overview-link.is-nav-light-dip .nav-overview-symbol {
+  opacity: 0.56;
+  filter: blur(0.72px) brightness(0.72);
+}
+
+.nav-overview-link.is-nav-light-flare .nav-overview-symbol {
+  opacity: 1;
+  filter: blur(0.3px) brightness(1.28);
+}
+
+.nav-overview-link.is-nav-light-pulse .nav-overview-symbol {
+  opacity: 0.9;
+  filter: blur(0.46px) brightness(1.12);
 }
 
 .nav-link-label {
@@ -1477,15 +1529,15 @@ body.portfolio-overview .page-container {
 
 .work-overview-title {
   grid-column: 1 / 9;
-  max-width: 14ch;
+  max-width: 18ch;
   margin: 0;
   font-family: var(--font-title);
-  font-size: clamp(2.8rem, 6.2vw, 7.5rem);
-  font-weight: 900;
+  font-size: var(--featured-hero-title-size);
+  font-weight: 800;
   font-kerning: normal;
   font-feature-settings: 'kern' 1, 'liga' 1;
-  line-height: 0.88;
-  letter-spacing: -0.055em;
+  line-height: var(--featured-hero-title-leading);
+  letter-spacing: var(--featured-hero-title-tracking);
   text-transform: uppercase;
 }
 
@@ -3127,8 +3179,8 @@ body.contact-page {
   }
 
   .work-overview-title {
-    max-width: 12ch;
-    font-size: clamp(2.55rem, 13vw, 4.5rem);
+    max-width: 14ch;
+    font-size: var(--featured-hero-title-size);
   }
 
   .work-overview-body {
