@@ -1426,8 +1426,8 @@ body.section-hero-active .section-header {
 }
 
 body.section-hero-active .section-title {
-  font-size: clamp(3rem, 5.5vw, 5.5rem);
-  line-height: 0.92;
+  font-size: var(--featured-hero-title-size);
+  line-height: var(--featured-hero-title-leading);
 }
 
 .section-title {
@@ -2729,10 +2729,6 @@ body.contact-page {
 
   body.section-hero-active .section-header {
     margin-bottom: 2.5rem;
-  }
-
-  body.section-hero-active .section-title {
-    font-size: clamp(2.75rem, 12vw, 4rem);
   }
 
   .section-hero-inner {
