@@ -744,8 +744,26 @@ body.project-loading #project-detail-content {
   visibility: hidden;
 }
 
-body.project-page:not(.project-data-ready) .project-detail-information {
+body.project-page:not(.project-data-ready):not(.project-text-preview-ready) .project-detail-information {
   visibility: hidden;
+}
+
+body.project-preview-media-loading .project-detail-media img {
+  visibility: hidden;
+}
+
+body.site-content-light.project-preview-media-loading .project-detail-hero,
+body.site-content-light.project-preview-media-loading .project-detail-media {
+  background: var(--content-surface, #f3f1ec);
+}
+
+body.site-content-light.project-preview-media-loading .project-detail-hero::after {
+  display: none;
+}
+
+body.site-content-light.project-preview-media-loading .project-detail-title,
+body.site-content-light.project-preview-media-loading .project-detail-category {
+  color: var(--content-text, #171716);
 }
 
 body.gallery-loading .page-container {

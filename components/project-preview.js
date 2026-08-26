@@ -71,9 +71,19 @@ function storeProjectPreview(project, options = {}) {
   if (!project || !project.slug) return;
 
   const preview = {
+    version: 2,
     slug: project.slug,
     title: project.title || '',
     category: project.category || '',
+    client: project.client || '',
+    year: project.year || '',
+    services: Array.isArray(project.services) ? project.services.filter(Boolean) : [],
+    projectSummary: project.projectSummary || '',
+    contribution: project.contribution || '',
+    director: project.director || '',
+    productionCompany: project.productionCompany || '',
+    watchNowEnabled: project.watchNowEnabled === true,
+    watchNowUrl: project.watchNowUrl || '',
     section: project.section || 'featured-work',
     galleryTitle: options.galleryTitle || '',
     size: project.size || '16-9',
@@ -120,6 +130,66 @@ function hydrateStoredProjectPreview() {
     category.hidden = !preview.category;
   }
 
+  if (Number(preview.version) >= 2) {
+    const client = document.getElementById('project-detail-client');
+    const year = document.getElementById('project-detail-year');
+    if (client) {
+      client.textContent = preview.client || '';
+      if (client.parentElement) client.parentElement.hidden = !preview.client;
+    }
+    if (year) {
+      year.textContent = preview.year || '';
+      if (year.parentElement) year.parentElement.hidden = !preview.year;
+    }
+
+    const servicesBlock = document.getElementById('project-detail-services-block');
+    const services = document.getElementById('project-detail-services');
+    if (services) {
+      services.replaceChildren(...preview.services.map(service => {
+        const item = document.createElement('li');
+        item.textContent = service;
+        return item;
+      }));
+    }
+    if (servicesBlock) servicesBlock.hidden = preview.services.length === 0;
+
+    const summaryBlock = document.getElementById('project-context-block');
+    const summary = document.getElementById('project-detail-summary');
+    const contributionBlock = document.getElementById('project-contribution-block');
+    const contribution = document.getElementById('project-detail-contribution');
+    const editorial = document.getElementById('project-detail-editorial');
+    if (summary) summary.textContent = preview.projectSummary || '';
+    if (contribution) contribution.textContent = preview.contribution || '';
+    if (summaryBlock) summaryBlock.hidden = !preview.projectSummary;
+    if (contributionBlock) contributionBlock.hidden = !preview.contribution;
+    if (editorial) editorial.hidden = !preview.projectSummary && !preview.contribution;
+
+    const directorCredit = document.getElementById('project-director-credit');
+    const director = document.getElementById('project-detail-director');
+    const productionCredit = document.getElementById('project-production-credit');
+    const production = document.getElementById('project-detail-production');
+    const credits = document.getElementById('project-detail-credits');
+    if (director) director.textContent = preview.director || '';
+    if (production) production.textContent = preview.productionCompany || '';
+    if (directorCredit) directorCredit.hidden = !preview.director;
+    if (productionCredit) productionCredit.hidden = !preview.productionCompany;
+    if (credits) credits.hidden = !preview.director && !preview.productionCompany;
+
+    const watchNow = document.getElementById('project-watch-now');
+    if (watchNow) {
+      let watchUrl = '';
+      try {
+        const parsed = new URL(preview.watchNowUrl);
+        if (['http:', 'https:'].includes(parsed.protocol)) watchUrl = parsed.toString();
+      } catch (error) {
+        watchUrl = '';
+      }
+      watchNow.href = watchUrl;
+      watchNow.hidden = !preview.watchNowEnabled || !watchUrl;
+    }
+    document.body.classList.add('project-text-preview-ready');
+  }
+
   const gallery = typeof GALLERIES_DATA !== 'undefined'
     ? GALLERIES_DATA.find(item => item.id === preview.section)
     : null;
@@ -130,7 +200,6 @@ function hydrateStoredProjectPreview() {
   }
 
   const media = document.getElementById('project-detail-media');
-  let waitsForCover = false;
   if (media) {
     media.className = `project-detail-media detail-ratio-${preview.size}`;
     const mobileFocusX = Number.isFinite(Number(preview.mobileFocusX))
@@ -150,10 +219,9 @@ function hydrateStoredProjectPreview() {
       image.src = preview.coverImage;
       image.alt = preview.title;
       media.replaceChildren(image);
-      waitsForCover = true;
+      document.body.classList.add('project-preview-media-loading');
       const reveal = () => {
-        document.body.classList.remove('project-loading');
-        document.body.classList.add('project-preview-ready');
+        document.body.classList.remove('project-preview-media-loading');
       };
       if (image.complete && image.naturalWidth) reveal();
       else {
@@ -163,9 +231,7 @@ function hydrateStoredProjectPreview() {
   }
 
   document.title = `ARTUR ARAUJO | ${preview.title}`;
-  if (!waitsForCover) {
-    document.body.classList.remove('project-loading');
-    document.body.classList.add('project-preview-ready');
-  }
+  document.body.classList.remove('project-loading');
+  document.body.classList.add('project-preview-ready');
   return true;
 }

@@ -23,7 +23,12 @@ function getSafeExternalUrl(value) {
 }
 
 function markProjectDataReady() {
-  document.body.classList.remove('project-loading', 'project-preview-ready');
+  document.body.classList.remove(
+    'project-loading',
+    'project-preview-ready',
+    'project-preview-media-loading',
+    'project-text-preview-ready'
+  );
   document.body.classList.add('project-data-ready');
 }
 
