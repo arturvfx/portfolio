@@ -1554,24 +1554,27 @@ body.portfolio-overview .page-container {
 }
 
 .work-section-index {
-  display: block;
-  border-top: 1px solid rgba(243, 241, 236, 0.22);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: clamp(1rem, 1.6vw, 1.5rem);
 }
 
 .work-section-link {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 2rem;
-  min-height: clamp(4.75rem, 7vw, 6.5rem);
-  border-bottom: 1px solid rgba(243, 241, 236, 0.22);
+  gap: 0.32em;
+  width: auto;
+  min-height: 0;
+  padding: 0.15rem 0;
+  font-size: clamp(1.45rem, 2.2vw, 2.4rem);
   color: inherit;
   text-decoration: none;
 }
 
 .work-section-title {
   font-family: var(--font-title);
-  font-size: clamp(1.45rem, 2.2vw, 2.4rem);
+  font-size: 1em;
   font-weight: 800;
   font-kerning: normal;
   font-feature-settings: 'kern' 1, 'liga' 1;
@@ -1584,8 +1587,8 @@ body.portfolio-overview .page-container {
 
 .work-section-arrow {
   font-family: var(--font-title);
-  font-size: 1rem;
-  font-weight: 600;
+  font-size: 1em;
+  font-weight: 800;
   line-height: 1;
   opacity: 0.45;
   transition: opacity 0.12s linear;
@@ -2475,11 +2478,6 @@ body.site-content-light.gallery-solid-background .work-overview-body {
   color: var(--content-secondary);
 }
 
-body.site-content-light.gallery-solid-background .work-section-index,
-body.site-content-light.gallery-solid-background .work-section-link {
-  border-color: var(--content-border);
-}
-
 body.site-content-light.gallery-solid-background .frame-title {
   color: var(--content-text);
   opacity: 1;
@@ -3189,12 +3187,11 @@ body.contact-page {
   }
 
   .work-section-link {
-    min-height: 5.5rem;
-    gap: 1rem;
+    font-size: clamp(1.35rem, 6vw, 1.9rem);
   }
 
   .work-section-title {
-    font-size: clamp(1.35rem, 6vw, 1.9rem);
+    font-size: 1em;
   }
 
   .project-detail-header {
