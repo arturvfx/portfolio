@@ -1391,7 +1391,6 @@ body.section-hero-active .section-title {
   color: var(--text-primary);
   position: relative;
   display: inline-block;
-  filter: blur(0.35px);
   text-shadow:
     0 0 10px rgba(243, 241, 236, 0.125),
     0 4px 20px rgba(0, 0, 0, 0.9);
@@ -1563,7 +1562,8 @@ body.section-hero-active .section-title {
 .frame-cover,
 .frame-preview {
   position: absolute;
-  inset: 0;
+  /* Prevent fractional-pixel seams between the media layer and its clipped frame. */
+  inset: -1px;
 }
 
 .frame-cover { z-index: 0; }
