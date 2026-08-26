@@ -4,14 +4,14 @@
  * detail hero can be hydrated before the remote portfolio request completes.
  */
 
-const PROJECT_PREVIEW_STORAGE_KEY = 'portfolio-project-preview-v1';
+const PROJECT_PREVIEW_STORAGE_KEY = 'portfolio-project-preview-v2';
 const PROJECT_PREVIEW_MAX_AGE = 30 * 60 * 1000;
 
 function storeProjectPreview(project, options = {}) {
   if (!project || !project.slug) return;
 
   const preview = {
-    version: 2,
+    version: 3,
     slug: project.slug,
     title: project.title || '',
     category: project.category || '',
@@ -28,6 +28,7 @@ function storeProjectPreview(project, options = {}) {
     galleryTitle: options.galleryTitle || '',
     size: project.size || '16-9',
     coverImage: project.coverImage || '',
+    hasYoutubeVideo: Boolean(String(project.youtubeUrl || '').trim()),
     mobileFocusX: Number.isFinite(Number(project.mobileFocusX)) ? Number(project.mobileFocusX) : 50,
     mobileFocusY: Number.isFinite(Number(project.mobileFocusY)) ? Number(project.mobileFocusY) : 50,
     mobileCoverScale: Number.isFinite(Number(project.mobileCoverScale)) ? Number(project.mobileCoverScale) : 100,
@@ -141,7 +142,8 @@ function hydrateStoredProjectPreview() {
 
   const media = document.getElementById('project-detail-media');
   if (media) {
-    media.className = `project-detail-media detail-ratio-${preview.size}`;
+    const detailRatio = preview.hasYoutubeVideo ? '16-9' : (preview.size || '16-9');
+    media.className = `project-detail-media detail-ratio-${detailRatio}`;
     const mobileFocusX = Number.isFinite(Number(preview.mobileFocusX))
       ? Math.max(0, Math.min(100, Number(preview.mobileFocusX)))
       : 50;
