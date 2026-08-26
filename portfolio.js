@@ -150,7 +150,7 @@ function renderPortfolioOverview(settings, projects, galleries) {
     galleries
       .filter(gallery => gallery.published !== false)
       .sort((a, b) => Number(a.order) - Number(b.order))
-      .forEach((gallery, index) => {
+      .forEach(gallery => {
         const link = document.createElement('a');
         link.className = 'work-section-link';
         link.href = getGalleryHref(gallery.id);
@@ -161,26 +161,14 @@ function renderPortfolioOverview(settings, projects, galleries) {
           navigatePortfolioSection(gallery.id, { history: 'push', scroll: true });
         });
 
-        const number = document.createElement('span');
-        number.className = 'work-section-number';
-        number.textContent = String(index + 1).padStart(2, '0');
-        const copy = document.createElement('span');
-        copy.className = 'work-section-copy';
         const heading = document.createElement('span');
         heading.className = 'work-section-title';
         heading.textContent = gallery.title;
-        copy.appendChild(heading);
-        if (gallery.description) {
-          const description = document.createElement('span');
-          description.className = 'work-section-description';
-          description.textContent = gallery.description;
-          copy.appendChild(description);
-        }
         const arrow = document.createElement('span');
         arrow.className = 'work-section-arrow';
         arrow.setAttribute('aria-hidden', 'true');
         arrow.textContent = '→';
-        link.append(number, copy, arrow);
+        link.append(heading, arrow);
         sectionIndex.appendChild(link);
       });
   }
