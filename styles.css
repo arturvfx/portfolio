@@ -927,44 +927,6 @@ body.portfolio-ready .page-container {
   transition: none;
 }
 
-.nav-link::before,
-.nav-link::after {
-  content: '';
-  position: absolute;
-  right: 22%;
-  left: 22%;
-  height: 1px;
-  pointer-events: none;
-  opacity: 0;
-  transform: none;
-  transition: none;
-}
-
-.nav-link::before {
-  bottom: 1px;
-  margin-left: -3px;
-  background: rgba(255, 20, 68, 1);
-  filter: blur(0.5px);
-  box-shadow:
-    -1px 0 2px rgba(255, 20, 68, 0.95),
-    -3px 0 7px rgba(255, 20, 68, 0.76),
-    0 0 14px rgba(255, 20, 68, 0.52),
-    0 0 24px rgba(255, 20, 68, 0.28);
-}
-
-.nav-link::after {
-  bottom: 0;
-  background: rgba(243, 241, 236, 0.96);
-  filter: blur(0.5px);
-  box-shadow:
-    3px 1px 1.5px rgba(0, 225, 255, 1),
-    3px 1px 3px rgba(0, 225, 255, 0.94),
-    3px 1px 9px rgba(0, 225, 255, 0.72),
-    1px 0 17px rgba(0, 225, 255, 0.48),
-    0 0 14px rgba(243, 241, 236, 0.58),
-    0 0 24px rgba(243, 241, 236, 0.24);
-}
-
 .nav-link:hover,
 .nav-link:focus-visible {
   opacity: 1;
@@ -1048,16 +1010,6 @@ body.portfolio-ready .page-container {
   opacity: 0.5;
 }
 
-.nav-link.active::before,
-.nav-link.active::after {
-  opacity: 0.92;
-}
-
-.nav-link:is(:hover, :focus-visible)::before,
-.nav-link:is(:hover, :focus-visible)::after {
-  opacity: 1;
-}
-
 .nav-link.is-nav-light-dip .nav-link-label {
   opacity: 0.56;
   filter: blur(0.72px) brightness(0.72);
@@ -1076,30 +1028,10 @@ body.portfolio-ready .page-container {
   text-shadow: none;
 }
 
-.nav-link.is-nav-light-dip::before,
-.nav-link.is-nav-light-dip::after {
-  opacity: 0.48;
-  filter: blur(0.35px) brightness(0.7);
-}
-
-.nav-link.is-nav-light-flare::before,
-.nav-link.is-nav-light-flare::after {
-  opacity: 1;
-  filter: blur(0.35px) brightness(1.42);
-}
-
-.nav-link.is-nav-light-pulse::before,
-.nav-link.is-nav-light-pulse::after {
-  opacity: 0.96;
-  filter: blur(0.28px) brightness(1.16);
-}
-
 @media (prefers-reduced-motion: reduce) {
   .nav-link-label,
   .nav-link-label::before,
   .nav-link-label::after,
-  .nav-link::before,
-  .nav-link::after,
   .section-hero-project-link,
   .section-hero-project-title,
   .section-hero-project-category {
