@@ -167,6 +167,7 @@ function renderPortfolioOverview(settings, projects, galleries) {
         const arrow = document.createElement('span');
         arrow.className = 'work-section-arrow';
         arrow.setAttribute('aria-hidden', 'true');
+        arrow.textContent = '↓';
         link.append(heading, arrow);
         sectionIndex.appendChild(link);
       });
