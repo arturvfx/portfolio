@@ -724,7 +724,7 @@ body.project-page {
 }
 
 html.site-content-light body.project-page {
-  background: #f3f1ec;
+  background: #f8f8f8;
 }
 
 body.project-loading #project-detail-content {
@@ -741,7 +741,7 @@ body.project-preview-media-loading .project-detail-media img {
 
 body.site-content-light.project-preview-media-loading .project-detail-hero,
 body.site-content-light.project-preview-media-loading .project-detail-media {
-  background: var(--content-surface, #f3f1ec);
+  background: var(--content-surface, #f8f8f8);
 }
 
 body.site-content-light.project-preview-media-loading .project-detail-hero::after {
@@ -2222,7 +2222,7 @@ body.project-video-open {
 
 /* Global light content theme — navigation, footer, Contact and media stay dark. */
 body.site-content-light {
-  --content-surface: #f3f1ec;
+  --content-surface: #f8f8f8;
   --content-text: #171716;
   --content-secondary: #3e3c38;
   --content-muted: #716e67;
@@ -2230,7 +2230,7 @@ body.site-content-light {
 }
 
 html.site-content-light {
-  background: #f3f1ec;
+  background: #f8f8f8;
 }
 
 body.site-content-light.gallery-solid-background {
