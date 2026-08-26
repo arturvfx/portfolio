@@ -24,7 +24,7 @@
  * - youtubeUrl: string (optional full video for the project page)
  * - projectStills: { url: string, size: '16-9' | '9-16' | '4-3' }[] (max 3)
  * - section: string ('featured-work' | 'content-editing' | 'digital-alchemy')
- * - size: string ('16-9' | '9-16' | '4-3' | 'featured')
+ * - size: string ('16-9' | '9-16' | '4-3')
  * - published: boolean
  * - order: number
  */
@@ -66,7 +66,7 @@ const PROJECTS_DATA = [
     client: 'Prime Video',
     category: 'DIRECTION & EDITORIAL',
     year: '2025',
-    previewVideo: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
+    previewVideo: 'assets/videos/bg-cinema.mp4',
     coverImage: '',
     section: 'featured-work',
     size: '4-3',
@@ -94,7 +94,7 @@ const PROJECTS_DATA = [
     client: 'VFX Studio',
     category: 'PARTICLE SIMULATION',
     year: '2024',
-    previewVideo: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
+    previewVideo: 'assets/videos/bg-cinema.mp4',
     coverImage: '',
     section: 'featured-work',
     size: '4-3',
@@ -138,7 +138,7 @@ const PROJECTS_DATA = [
     client: 'Music Video',
     category: 'MUSIC VIDEO / EDITORIAL',
     year: '2025',
-    previewVideo: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
+    previewVideo: 'assets/videos/bg-cinema.mp4',
     coverImage: '',
     section: 'content-editing',
     size: '9-16',
@@ -180,7 +180,7 @@ const PROJECTS_DATA = [
     client: 'Music Video',
     category: 'RHYTHMIC SEQUENCE',
     year: '2024',
-    previewVideo: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
+    previewVideo: 'assets/videos/bg-cinema.mp4',
     coverImage: '',
     section: 'content-editing',
     size: '16-9',
@@ -224,7 +224,7 @@ const PROJECTS_DATA = [
     client: 'Shader Art',
     category: 'SHADER ART & LIGHTING',
     year: '2025',
-    previewVideo: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
+    previewVideo: 'assets/videos/bg-cinema.mp4',
     coverImage: '',
     section: 'digital-alchemy',
     size: '9-16',
@@ -266,7 +266,7 @@ const PROJECTS_DATA = [
     client: 'Computational Shader',
     category: 'COMPUTATIONAL SHADER',
     year: '2024',
-    previewVideo: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
+    previewVideo: 'assets/videos/bg-cinema.mp4',
     coverImage: '',
     section: 'digital-alchemy',
     size: '4-3',

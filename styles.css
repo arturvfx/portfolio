@@ -1417,37 +1417,6 @@ body.section-hero-active .section-title {
   max-width: 700px;
 }
 
-/* Category Filter Bar */
-.filter-bar {
-  display: flex;
-  gap: 1rem;
-  margin-bottom: 3rem;
-  flex-wrap: wrap;
-}
-
-.filter-btn {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(243, 241, 236, 0.12);
-  color: var(--text-secondary);
-  padding: 0.5rem 1.25rem;
-  font-family: var(--font-body);
-  font-size: 0.75rem;
-  font-weight: 500;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  backdrop-filter: blur(4px);
-}
-
-.filter-btn:hover,
-.filter-btn.active {
-  background: rgba(243, 241, 236, 0.1);
-  color: var(--text-primary);
-  border-color: rgba(243, 241, 236, 0.4);
-  box-shadow: 0 0 15px rgba(243, 241, 236, 0.1);
-}
-
 /* ═══════════════════════════════════════════════════════════════
    EXHIBITION GALLERY — Project Frame System
    Each project is a cinematic still, not a UI card.
@@ -1484,29 +1453,18 @@ body.section-hero-active .section-title {
 /* ── 3 Aspect Ratio Standards (16:9 | 9:16 | 4:3) ───────────── */
 
 /* 1. Widescreen Cinema (16:9) */
-.frame-16-9 .frame-thumb,
-.ratio-16-9 .frame-thumb,
-.frame-featured .frame-thumb {
+.frame-16-9 .frame-thumb {
   aspect-ratio: var(--featured-frame-ratio-16-9, 16 / 9);
 }
 
 /* 2. Vertical Cinema Poster / Story (9:16) */
-.frame-9-16 .frame-thumb,
-.ratio-9-16 .frame-thumb,
-.frame-portrait .frame-thumb {
+.frame-9-16 .frame-thumb {
   aspect-ratio: var(--featured-frame-ratio-9-16, 9 / 16);
 }
 
 /* 3. Classic Film / Photo Still (4:3) */
-.frame-4-3 .frame-thumb,
-.ratio-4-3 .frame-thumb,
-.frame-standard .frame-thumb {
+.frame-4-3 .frame-thumb {
   aspect-ratio: var(--featured-frame-ratio-4-3, 4 / 3);
-}
-
-/* Optional Full-width span variant */
-.frame-span-2 {
-  grid-column: span 2;
 }
 
 /* ── Frame Thumb (The Cinematic Still) ────────────────────── */
@@ -2961,10 +2919,6 @@ body.contact-page {
   .portfolio-grid {
     grid-template-columns: 1fr;
     gap: 2.5rem;
-  }
-
-  .frame-span-2 {
-    grid-column: span 1;
   }
 
   .project-detail-header {

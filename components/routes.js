@@ -45,13 +45,21 @@ function getPublicGalleryPath(sectionId) {
     : `/work/${encodedSection}`;
 }
 
+function decodePathSegment(value) {
+  try {
+    return decodeURIComponent(value);
+  } catch (error) {
+    return value;
+  }
+}
+
 function getGallerySectionFromLocation(fallback = 'featured-work') {
   const querySection = new URLSearchParams(window.location.search).get('section');
   if (querySection) return querySection;
 
   const segments = window.location.pathname.split('/').filter(Boolean);
   if (segments[0] === 'work' && segments[1]) {
-    return decodeURIComponent(segments[1]);
+    return decodePathSegment(segments[1]);
   }
 
   if (segments.length === 1 && PORTFOLIO_TOP_LEVEL_SECTIONS.has(segments[0])) {
@@ -74,7 +82,7 @@ function getProjectSlugFromLocation() {
 
   const segments = window.location.pathname.split('/').filter(Boolean);
   return segments[0] === 'project' && segments[1]
-    ? decodeURIComponent(segments[1])
+    ? decodePathSegment(segments[1])
     : null;
 }
 

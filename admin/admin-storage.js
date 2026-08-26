@@ -337,22 +337,32 @@
       errors.push('"projects" array is empty.');
     }
 
-    // Track ids for uniqueness check
-    const seen = new Set();
+    const seenIds = new Set();
+    const seenSlugs = new Set();
 
     payload.projects.forEach((p, i) => {
       const ref = `Project ${i + 1}`;
 
-      if (!p.id && !p.slug) errors.push(`${ref}: missing "id" or "slug".`);
-
-      const key = p.id || p.slug;
-      if (key) {
-        if (seen.has(key)) errors.push(`${ref}: duplicate id/slug "${key}".`);
-        seen.add(key);
+      if (!p || typeof p !== 'object' || Array.isArray(p)) {
+        errors.push(`${ref}: must be an object.`);
+        return;
       }
 
-      if (!p.title || typeof p.title !== 'string') errors.push(`${ref}: missing or invalid "title".`);
-      if (!p.section || typeof p.section !== 'string') errors.push(`${ref}: missing or invalid "section".`);
+      if (typeof p.id !== 'string' || !p.id.trim()) {
+        errors.push(`${ref}: missing or invalid "id".`);
+      } else {
+        if (seenIds.has(p.id)) errors.push(`${ref}: duplicate id "${p.id}".`);
+        seenIds.add(p.id);
+      }
+      if (typeof p.slug !== 'string' || !p.slug.trim()) {
+        errors.push(`${ref}: missing or invalid "slug".`);
+      } else {
+        if (seenSlugs.has(p.slug)) errors.push(`${ref}: duplicate slug "${p.slug}".`);
+        seenSlugs.add(p.slug);
+      }
+
+      if (typeof p.title !== 'string' || !p.title.trim()) errors.push(`${ref}: missing or invalid "title".`);
+      if (typeof p.section !== 'string' || !p.section.trim()) errors.push(`${ref}: missing or invalid "section".`);
       if (p.coverImage != null && typeof p.coverImage !== 'string') {
         errors.push(`${ref}: "coverImage" must be a string.`);
       }
@@ -400,7 +410,9 @@
       if (p.watchNowEnabled != null && typeof p.watchNowEnabled !== 'boolean') {
         errors.push(`${ref}: "watchNowEnabled" must be a boolean.`);
       }
-      if (typeof p.order !== 'number' || isNaN(p.order)) errors.push(`${ref}: "order" must be a number.`);
+      if (!Number.isInteger(p.order) || p.order < 1) {
+        errors.push(`${ref}: "order" must be a whole number greater than 0.`);
+      }
       if (typeof p.published !== 'boolean') errors.push(`${ref}: "published" must be a boolean.`);
       if (!SUPPORTED_SIZES.includes(p.size)) {
         errors.push(`${ref}: "size" must be one of: ${SUPPORTED_SIZES.join(', ')}. Got: "${p.size}".`);

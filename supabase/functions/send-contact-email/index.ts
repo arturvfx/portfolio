@@ -10,15 +10,25 @@ type ContactPayload = {
 
 const encoder = new TextEncoder();
 
-function getCorsHeaders(request: Request) {
-  const origin = request.headers.get('origin') || '';
-  const configured = (Deno.env.get('CONTACT_ALLOWED_ORIGINS') || '')
+function getConfiguredOrigins() {
+  return (Deno.env.get('CONTACT_ALLOWED_ORIGINS') || '')
     .split(',')
     .map(value => value.trim())
     .filter(Boolean);
+}
+
+function isAllowedBrowserOrigin(request: Request) {
+  const origin = request.headers.get('origin') || '';
+  const configured = getConfiguredOrigins();
+  return configured.length === 0 || !origin || configured.includes(origin);
+}
+
+function getCorsHeaders(request: Request) {
+  const origin = request.headers.get('origin') || '';
+  const configured = getConfiguredOrigins();
   const allowedOrigin = configured.length === 0
     ? '*'
-    : (configured.includes(origin) ? origin : configured[0]);
+    : (configured.includes(origin) ? origin : 'null');
   return {
     'Access-Control-Allow-Origin': allowedOrigin,
     'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -61,17 +71,21 @@ async function sha256(value: string) {
 }
 
 Deno.serve(async request => {
+  if (!isAllowedBrowserOrigin(request)) {
+    return json(request, { error: 'Origin not allowed.' }, 403);
+  }
   if (request.method === 'OPTIONS') {
     return new Response('ok', { headers: getCorsHeaders(request) });
   }
   if (request.method !== 'POST') return json(request, { error: 'Method not allowed.' }, 405);
 
-  const contentLength = Number(request.headers.get('content-length') || 0);
-  if (contentLength > 20000) return json(request, { error: 'Request is too large.' }, 413);
-
   let payload: ContactPayload;
   try {
-    payload = await request.json();
+    const rawBody = await request.text();
+    if (encoder.encode(rawBody).byteLength > 20000) {
+      return json(request, { error: 'Request is too large.' }, 413);
+    }
+    payload = JSON.parse(rawBody);
   } catch (_error) {
     return json(request, { error: 'Invalid request body.' }, 400);
   }
@@ -124,7 +138,9 @@ Deno.serve(async request => {
     .single();
   if (insert.error) return json(request, { error: 'Could not save your message.' }, 500);
 
-  const subject = `Portfolio contact — ${name} — ${category}`;
+  const subjectName = name.replace(/[\r\n]+/g, ' ');
+  const subjectCategory = category.replace(/[\r\n]+/g, ' ');
+  const subject = `Portfolio contact — ${subjectName} — ${subjectCategory}`;
   const safeName = escapeHtml(name);
   const safeEmail = escapeHtml(email);
   const safeCategory = escapeHtml(category);

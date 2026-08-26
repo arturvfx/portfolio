@@ -22,6 +22,15 @@ function getSafeExternalUrl(value) {
   }
 }
 
+function resolveProjectMediaUrl(value) {
+  try {
+    const url = new URL(String(value || '').trim(), window.location.href);
+    return ['http:', 'https:'].includes(url.protocol) ? url.href : '';
+  } catch (error) {
+    return '';
+  }
+}
+
 function markProjectDataReady() {
   document.body.classList.remove(
     'project-loading',
@@ -359,9 +368,11 @@ function updateProjectMetadata(project) {
   setProjectMeta('property', 'og:url', canonicalUrl);
 
   if (project.coverImage) {
-    const imageUrl = new URL(project.coverImage, window.location.href).href;
-    setProjectMeta('property', 'og:image', imageUrl);
-    setProjectMeta('name', 'twitter:image', imageUrl);
+    const imageUrl = resolveProjectMediaUrl(project.coverImage);
+    if (imageUrl) {
+      setProjectMeta('property', 'og:image', imageUrl);
+      setProjectMeta('name', 'twitter:image', imageUrl);
+    }
   }
 }
 

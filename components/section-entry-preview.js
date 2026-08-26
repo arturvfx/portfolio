@@ -115,7 +115,7 @@
     try {
       window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify(preview));
     } catch (error) {
-      // The black loading fallback still works if session storage is blocked.
+      // The theme-colored loading surface still works if session storage is blocked.
     }
   }
 
@@ -182,7 +182,7 @@
     if (!pending.has(sectionId)) {
       pending.set(sectionId, fetchPreview(sectionId)
         .catch(error => {
-          console.warn('Could not preload the section entry; using the black loading fallback.', error);
+          console.warn('Could not preload the section entry; using the theme-colored loading surface.', error);
           return null;
         })
         .finally(() => pending.delete(sectionId)));

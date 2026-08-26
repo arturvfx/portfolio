@@ -1342,8 +1342,13 @@
 
   // ─── Preview ─────────────────────────────────────────────────
 
+  function openPreview(url) {
+    const preview = window.open(url, '_blank', 'noopener,noreferrer');
+    if (preview) preview.opener = null;
+  }
+
   function previewGallery() {
-    window.open(getGalleryHref(managedSection), '_blank');
+    openPreview(getGalleryHref(managedSection));
   }
 
   // ─── Export ──────────────────────────────────────────────────
@@ -1363,6 +1368,11 @@
   function handleImportFile(e) {
     const file = e.target.files[0];
     if (!file) return;
+    if (file.size > 2 * 1024 * 1024) {
+      showStatus('ERROR: JSON import files must be smaller than 2 MB.', 'error');
+      e.target.value = '';
+      return;
+    }
 
     const reader = new FileReader();
     reader.onload = async function (ev) {
@@ -1380,8 +1390,20 @@
         return;
       }
 
+      if (payload.section && payload.section !== managedSection) {
+        showStatus(
+          `ERROR: This file belongs to “${payload.section}”. Select that section before importing it.`,
+          'error'
+        );
+        return;
+      }
+
       // Merge: replace only projects matching this section; keep others intact
       const importedSectionProjects = payload.projects.filter(p => p.section === managedSection);
+      if (!importedSectionProjects.length) {
+        showStatus('ERROR: This file contains no projects for the selected section.', 'error');
+        return;
+      }
       const otherProjects = workingProjects.filter(p => p.section !== managedSection);
 
       workingProjects = [...otherProjects, ...importedSectionProjects];
@@ -1595,9 +1617,9 @@
       input.addEventListener('input', markFormDirty);
     });
     document.getElementById('btn-save-site-settings').addEventListener('click', saveSiteSettings);
-    document.getElementById('btn-preview-landing').addEventListener('click', () => window.open('/', '_blank'));
-    document.getElementById('btn-preview-contact').addEventListener('click', () => window.open('/contact', '_blank'));
-    document.getElementById('btn-preview-footer').addEventListener('click', () => window.open(`${getGalleryHref('featured-work')}#site-footer`, '_blank'));
+    document.getElementById('btn-preview-landing').addEventListener('click', () => openPreview('/'));
+    document.getElementById('btn-preview-contact').addEventListener('click', () => openPreview('/contact'));
+    document.getElementById('btn-preview-footer').addEventListener('click', () => openPreview(`${getGalleryHref('featured-work')}#site-footer`));
     bindSiteVideoUpload('landing', 'landingBackgroundVideo');
     bindSiteVideoUpload('gallery', 'galleryBackgroundVideo');
   }

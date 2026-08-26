@@ -34,10 +34,9 @@ function escapeHtml(str) {
 function renderProjectFrame(project, options = {}) {
   const frame = document.createElement('article');
   const rawSize = project.size || '16-9';
-  const sizeClass = `frame-${rawSize} ratio-${rawSize}`;
+  const sizeClass = `frame-${rawSize}`;
 
-  frame.className = `project-frame project-card ${sizeClass}`;
-  frame.setAttribute('data-category', project.category);
+  frame.className = `project-frame ${sizeClass}`;
   frame.setAttribute('data-slug', project.slug);
   frame.setAttribute('data-size', rawSize);
   frame.setAttribute('data-id', project.id || project.slug);

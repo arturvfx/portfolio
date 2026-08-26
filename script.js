@@ -161,6 +161,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const menuNavLinks = document.querySelectorAll('.nav-link');
   const navToggle = document.getElementById('nav-toggle');
   const navMenu = document.getElementById('nav-menu');
+  const mobileMenuMedia = window.matchMedia('(max-width: 900px)');
   const flickerClasses = ['is-nav-light-dip', 'is-nav-light-flare', 'is-nav-light-pulse'];
   const navFlickerTokens = new WeakMap();
 
@@ -171,6 +172,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     navToggle.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
     document.documentElement.classList.toggle('mobile-menu-open', open);
     document.body.classList.toggle('mobile-menu-open', open);
+    if (open) {
+      window.requestAnimationFrame(() => navMenu.querySelector('a[href]')?.focus());
+    } else if (navMenu.contains(document.activeElement)) {
+      navToggle.focus();
+    }
   }
 
   function clearNavFlicker(link) {
@@ -319,37 +325,37 @@ document.addEventListener('DOMContentLoaded', async () => {
       setMobileMenuOpen(!navMenu.classList.contains('open'));
     });
     document.addEventListener('keydown', event => {
-      if (event.key === 'Escape') setMobileMenuOpen(false);
+      if (event.key === 'Escape') {
+        setMobileMenuOpen(false);
+        return;
+      }
+      if (event.key !== 'Tab' || !navMenu.classList.contains('open')) return;
+      const focusable = [navToggle, ...navMenu.querySelectorAll('a[href]')];
+      if (!focusable.length) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
     });
     document.addEventListener('click', event => {
       if (!navMenu.classList.contains('open')) return;
       if (navMenu.contains(event.target) || navToggle.contains(event.target)) return;
       setMobileMenuOpen(false);
     });
-  }
 
-  // --- Portfolio Category Filter Bar ---
-  const filterBtns = document.querySelectorAll('.filter-btn');
-
-  if (filterBtns.length > 0) {
-    filterBtns.forEach(btn => {
-      btn.addEventListener('click', () => {
-        filterBtns.forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-
-        const filter = btn.getAttribute('data-filter');
-        const projectCards = document.querySelectorAll('.project-card');
-
-        projectCards.forEach(card => {
-          const category = card.getAttribute('data-category');
-          if (filter === 'all' || category === filter) {
-            card.style.display = 'flex';
-            card.style.animation = 'fadeInUp 0.5s ease forwards';
-          } else {
-            card.style.display = 'none';
-          }
-        });
-      });
-    });
+    const closeMenuOutsideMobile = event => {
+      if (!event.matches) setMobileMenuOpen(false);
+    };
+    if (typeof mobileMenuMedia.addEventListener === 'function') {
+      mobileMenuMedia.addEventListener('change', closeMenuOutsideMobile);
+    } else if (typeof mobileMenuMedia.addListener === 'function') {
+      mobileMenuMedia.addListener(closeMenuOutsideMobile);
+    }
+    if (!mobileMenuMedia.matches) setMobileMenuOpen(false);
   }
 });
