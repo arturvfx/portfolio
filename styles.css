@@ -1428,6 +1428,17 @@ body.section-hero-active .section-title {
   grid-template-columns: repeat(3, 1fr);
   align-items: start;
   gap: var(--featured-gallery-row-gap, 3.5rem) var(--featured-gallery-col-gap, 2vw);
+  --portfolio-masonry-row-gap: var(--featured-gallery-row-gap, 3.5rem);
+}
+
+.portfolio-grid.is-masonry {
+  grid-auto-flow: row;
+  grid-auto-rows: 4px;
+  row-gap: 0;
+}
+
+.portfolio-grid.is-masonry .project-frame {
+  margin-bottom: var(--portfolio-masonry-row-gap);
 }
 
 /* ── Project Frame (Base) ─────────────────────────────────── */
@@ -2870,6 +2881,11 @@ body.contact-page {
   .portfolio-grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 3rem 2vw;
+    --portfolio-masonry-row-gap: 3rem;
+  }
+
+  .portfolio-grid.is-masonry {
+    row-gap: 0;
   }
 }
 
@@ -2919,6 +2935,18 @@ body.contact-page {
   .portfolio-grid {
     grid-template-columns: 1fr;
     gap: 2.5rem;
+  }
+
+  .portfolio-grid.is-masonry {
+    grid-auto-rows: auto;
+    row-gap: 2.5rem;
+  }
+
+  .portfolio-grid.is-masonry .project-frame {
+    grid-column-start: auto !important;
+    grid-row-start: auto !important;
+    grid-row-end: auto !important;
+    margin-bottom: 0;
   }
 
   .project-detail-header {
