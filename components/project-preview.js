@@ -6,66 +6,6 @@
 
 const PROJECT_PREVIEW_STORAGE_KEY = 'portfolio-project-preview-v1';
 const PROJECT_PREVIEW_MAX_AGE = 30 * 60 * 1000;
-const PROJECT_PRELOAD_LIMIT = 2;
-const projectPreloads = new Map();
-let mobileProjectObserver = null;
-
-function preloadProjectPreview(project) {
-  const url = project && typeof project.coverImage === 'string' ? project.coverImage.trim() : '';
-  if (!url) return Promise.resolve(false);
-  if (projectPreloads.has(url)) return projectPreloads.get(url);
-
-  const preload = new Promise(resolve => {
-    const image = new Image();
-    let settled = false;
-    const finish = loaded => {
-      if (settled) return;
-      settled = true;
-      window.clearTimeout(timeoutId);
-      resolve(loaded);
-    };
-    const timeoutId = window.setTimeout(() => finish(false), 5000);
-    image.addEventListener('load', () => finish(true), { once: true });
-    image.addEventListener('error', () => finish(false), { once: true });
-    image.src = url;
-    if (image.complete && image.naturalWidth) finish(true);
-  });
-
-  projectPreloads.set(url, preload);
-  while (projectPreloads.size > PROJECT_PRELOAD_LIMIT) {
-    projectPreloads.delete(projectPreloads.keys().next().value);
-  }
-  return preload;
-}
-
-function observeMobileProjectPreview(element, project) {
-  const isMobile = window.matchMedia &&
-    window.matchMedia('(max-width: 900px), (hover: none), (pointer: coarse)').matches;
-  if (!element || !project || !isMobile || !('IntersectionObserver' in window)) return;
-
-  if (!mobileProjectObserver) {
-    mobileProjectObserver = new IntersectionObserver(entries => {
-      entries.forEach(entry => {
-        if (!entry.isIntersecting) return;
-        const observedProject = entry.target._previewProject;
-        if (observedProject) preloadProjectPreview(observedProject);
-        mobileProjectObserver.unobserve(entry.target);
-        delete entry.target._previewProject;
-      });
-    }, { rootMargin: '280px 0px', threshold: 0.01 });
-  }
-
-  element._previewProject = project;
-  mobileProjectObserver.observe(element);
-}
-
-function clearObservedProjectPreviews(container) {
-  if (!container || !mobileProjectObserver) return;
-  container.querySelectorAll('.project-frame').forEach(frame => {
-    mobileProjectObserver.unobserve(frame);
-    delete frame._previewProject;
-  });
-}
 
 function storeProjectPreview(project, options = {}) {
   if (!project || !project.slug) return;

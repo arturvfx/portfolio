@@ -57,7 +57,7 @@ function renderProjectFrame(project, options = {}) {
     <a href="${getProjectHref(project.slug)}" class="frame-link project-link" aria-label="${escapeHtml(project.title)}">
       <div class="${thumbClasses}">
         ${coverImage
-          ? `<img class="frame-cover" src="${escapeHtml(coverImage)}" alt="${escapeHtml(project.title)}" loading="lazy" />`
+          ? `<img class="frame-cover" src="${escapeHtml(coverImage)}" alt="${escapeHtml(project.title)}" loading="lazy" decoding="async" />`
           : ''}
         ${previewVideo
           ? `<video class="frame-preview" muted loop playsinline preload="${coverImage ? 'metadata' : 'auto'}">
@@ -78,14 +78,6 @@ function renderProjectFrame(project, options = {}) {
   const projectLink = frame.querySelector('.frame-link');
   if (projectLink && typeof storeProjectPreview === 'function') {
     projectLink.addEventListener('click', () => storeProjectPreview(project, options));
-  }
-
-  if (typeof preloadProjectPreview === 'function') {
-    frame.addEventListener('pointerenter', () => preloadProjectPreview(project), { passive: true });
-    projectLink?.addEventListener('focus', () => preloadProjectPreview(project));
-  }
-  if (typeof observeMobileProjectPreview === 'function') {
-    observeMobileProjectPreview(frame, project);
   }
 
   const video = frame.querySelector('.frame-preview');

@@ -40,9 +40,6 @@ function renderProjectGallery(projects, container, galleryConfig) {
     })
     .sort((a, b) => (a.order || 99) - (b.order || 99));
 
-  if (typeof clearObservedProjectPreviews === 'function') {
-    clearObservedProjectPreviews(container);
-  }
   container.innerHTML = '';
   const galleryTitle = typeof galleryConfig === 'object' && galleryConfig
     ? galleryConfig.title || ''
