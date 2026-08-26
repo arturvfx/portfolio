@@ -225,8 +225,21 @@ document.addEventListener('DOMContentLoaded', async () => {
       setMobileMenuOpen(false);
       const currentUrl = new URL(window.location.href);
       const targetUrl = new URL(link.href, window.location.href);
+      const targetView = link.getAttribute('data-view');
       const targetSection = link.getAttribute('data-section') || targetUrl.searchParams.get('section');
       const isGalleryPage = Boolean(document.getElementById('project-gallery'));
+
+      if (isGalleryPage && targetView === 'overview' && typeof navigatePortfolioOverview === 'function') {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        if (link.classList.contains('active')) {
+          window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+          return;
+        }
+        menuNavLinks.forEach(clearNavFlicker);
+        navigatePortfolioOverview({ history: 'push', scroll: true });
+        return;
+      }
 
       if (isGalleryPage && targetSection && typeof navigatePortfolioSection === 'function') {
         event.preventDefault();

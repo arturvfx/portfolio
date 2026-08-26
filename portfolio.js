@@ -174,8 +174,10 @@ function renderPortfolioOverview(settings, projects, galleries) {
   }
 
   document.querySelectorAll('.nav-link').forEach(link => {
-    link.classList.remove('active');
-    link.removeAttribute('aria-current');
+    const isOverviewLink = link.getAttribute('data-view') === 'overview';
+    link.classList.toggle('active', isOverviewLink);
+    if (isOverviewLink) link.setAttribute('aria-current', 'page');
+    else link.removeAttribute('aria-current');
   });
   updatePortfolioOverviewMetadata(normalizedSettings);
 }
@@ -362,6 +364,27 @@ function renderGalleryNavigation(galleries, activeId) {
   if (!menu) return;
   menu.innerHTML = '';
 
+  const overviewItem = document.createElement('li');
+  overviewItem.className = 'nav-item nav-overview-item';
+  const overviewLink = document.createElement('a');
+  overviewLink.href = getPortfolioOverviewHref();
+  overviewLink.className = 'nav-link nav-overview-link' + (activeId === 'work' ? ' active' : '');
+  overviewLink.setAttribute('data-view', 'overview');
+  overviewLink.setAttribute('aria-label', 'Work overview');
+  overviewLink.title = 'Work overview';
+  if (activeId === 'work') overviewLink.setAttribute('aria-current', 'page');
+  const overviewSymbol = document.createElement('span');
+  overviewSymbol.className = 'nav-overview-symbol';
+  overviewSymbol.setAttribute('aria-hidden', 'true');
+  for (let index = 0; index < 4; index += 1) {
+    const cell = document.createElement('span');
+    cell.className = 'nav-overview-cell';
+    overviewSymbol.appendChild(cell);
+  }
+  overviewLink.appendChild(overviewSymbol);
+  overviewItem.appendChild(overviewLink);
+  menu.appendChild(overviewItem);
+
   galleries
     .filter(gallery => gallery.published !== false)
     .sort((a, b) => Number(a.order) - Number(b.order))
@@ -401,6 +424,7 @@ function renderInitialGalleryNavigation() {
 
   if (document.getElementById('project-gallery')) {
     if (isPortfolioOverviewLocation()) {
+      activeId = 'work';
       const entryPreview = window.sectionEntryPreview?.read('work');
       renderPortfolioOverview(
         entryPreview?.settings || getCurrentWorkSettings(),
@@ -448,7 +472,7 @@ async function initPortfolioSystem() {
   }
   publicPortfolioRuntime = portfolioData;
   if (isPortfolioOverviewLocation()) {
-    renderGalleryNavigation(galleries, null);
+    renderGalleryNavigation(galleries, 'work');
     navigatePortfolioOverview({ history: 'none', scroll: false });
   } else {
     const requestedId = getGallerySectionFromLocation(

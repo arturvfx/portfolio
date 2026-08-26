@@ -1507,6 +1507,15 @@
         return `<option value="${escAdm(identity)}" ${identity === selectedIdentity ? 'selected' : ''}>${escAdm(project.title)} — ${escAdm(sectionTitle)}</option>`;
       }).join('')}`;
     };
+    const usesAutomaticHeroFallback = !settings.workHeroProjectIds.length;
+    const effectiveHeroProjectIds = usesAutomaticHeroFallback
+      ? selectableHeroProjects
+        .filter(project => project.section === 'featured-work')
+        .sort((a, b) => Number(a.order || 99) - Number(b.order || 99))
+        .slice(0, 3)
+        .map(project => project.id || project.slug)
+        .filter(Boolean)
+      : settings.workHeroProjectIds;
 
     dom.form.innerHTML = `
       <div class="form-header">
@@ -1553,16 +1562,18 @@
         </div>
         <div class="form-group">
           <label for="setting-workHeroProject1">Highlight 1</label>
-          <select id="setting-workHeroProject1" data-work-hero-slot="0">${renderHeroProjectOptions(settings.workHeroProjectIds[0] || '')}</select>
+          <select id="setting-workHeroProject1" data-work-hero-slot="0">${renderHeroProjectOptions(effectiveHeroProjectIds[0] || '')}</select>
         </div>
         <div class="form-group">
           <label for="setting-workHeroProject2">Highlight 2</label>
-          <select id="setting-workHeroProject2" data-work-hero-slot="1">${renderHeroProjectOptions(settings.workHeroProjectIds[1] || '')}</select>
+          <select id="setting-workHeroProject2" data-work-hero-slot="1">${renderHeroProjectOptions(effectiveHeroProjectIds[1] || '')}</select>
         </div>
         <div class="form-group span-2">
           <label for="setting-workHeroProject3">Highlight 3</label>
-          <select id="setting-workHeroProject3" data-work-hero-slot="2">${renderHeroProjectOptions(settings.workHeroProjectIds[2] || '')}</select>
-          <span class="media-upload-note">Choose up to three published projects from any section. Their slot order controls the Hero order.</span>
+          <select id="setting-workHeroProject3" data-work-hero-slot="2">${renderHeroProjectOptions(effectiveHeroProjectIds[2] || '')}</select>
+          <span class="media-upload-note">${usesAutomaticHeroFallback
+            ? 'Showing the current automatic fallback. Save Site Settings to make these choices explicit, or replace them before saving.'
+            : 'Choose up to three published projects from any section. Their slot order controls the Hero order.'}</span>
         </div>
 
         <h3 class="form-section-heading">Section Pages</h3>
