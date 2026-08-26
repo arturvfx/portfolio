@@ -43,6 +43,10 @@ function getMobileCoverScale(value) {
 
 function renderSectionHero(projects, container, options = {}) {
   if (!container) return;
+  if (container._mobileResetTimer) {
+    window.clearTimeout(container._mobileResetTimer);
+    container._mobileResetTimer = null;
+  }
   if (container._backgroundObserver) {
     container._backgroundObserver.disconnect();
     container._backgroundObserver = null;
@@ -194,6 +198,20 @@ function renderSectionHero(projects, container, options = {}) {
 
   let activeIndex = 0;
   let titleFitFrame = 0;
+  const isMobileHero = () => window.matchMedia('(max-width: 900px)').matches;
+
+  function scheduleMobileReset() {
+    window.clearTimeout(container._mobileResetTimer);
+    container._mobileResetTimer = null;
+    if (!isMobileHero() || projects.length < 2 || activeIndex !== projects.length - 1) return;
+    container._mobileResetTimer = window.setTimeout(() => {
+      container._mobileResetTimer = null;
+      if (root.isConnected && isMobileHero() && activeIndex === projects.length - 1) {
+        setActiveProject(0);
+      }
+    }, 6000);
+  }
+
   function renderMobileTitle(titleText) {
     const words = String(titleText || '').trim().split(/\s+/).filter(Boolean);
     const fragments = [];
@@ -245,6 +263,7 @@ function renderSectionHero(projects, container, options = {}) {
     counter.classList.toggle('is-complete', activeIndex === projects.length - 1);
     counter.setAttribute('aria-label', `Project ${activeIndex + 1} of ${projects.length}`);
     scheduleMobileTitleFit();
+    scheduleMobileReset();
   }
 
   desktopLinks.forEach((item, index) => {
@@ -267,7 +286,6 @@ function renderSectionHero(projects, container, options = {}) {
   let touchStart = null;
   let suppressClick = false;
   let suppressClickUntil = 0;
-  const isMobileHero = () => window.matchMedia('(max-width: 900px)').matches;
   const canStepVertically = direction => direction > 0
     ? activeIndex < projects.length - 1
     : activeIndex > 0;
@@ -281,6 +299,7 @@ function renderSectionHero(projects, container, options = {}) {
 
   root.addEventListener('touchstart', event => {
     if (!isMobileHero() || event.touches.length !== 1) return;
+    scheduleMobileReset();
     const touch = event.touches[0];
     touchStart = { x: touch.clientX, y: touch.clientY };
   }, { passive: true });
@@ -309,6 +328,7 @@ function renderSectionHero(projects, container, options = {}) {
   let wheelReleaseTimer = null;
   root.addEventListener('wheel', event => {
     if (!isMobileHero() || Math.abs(event.deltaY) <= Math.abs(event.deltaX)) return;
+    scheduleMobileReset();
     if (wheelGestureLocked) {
       event.preventDefault();
       window.clearTimeout(wheelReleaseTimer);
@@ -338,6 +358,7 @@ function renderSectionHero(projects, container, options = {}) {
   });
   root.addEventListener('keydown', event => {
     if (!isMobileHero()) return;
+    scheduleMobileReset();
     if (event.key === 'ArrowDown' && canStepVertically(1)) {
       event.preventDefault();
       setActiveProject(activeIndex + 1);

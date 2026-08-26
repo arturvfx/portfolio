@@ -1586,12 +1586,40 @@ body.portfolio-overview .page-container {
 }
 
 .work-section-arrow {
-  font-family: var(--font-title);
-  font-size: 1em;
-  font-weight: 800;
-  line-height: 1;
-  opacity: 0.45;
+  position: relative;
+  display: inline-block;
+  flex: 0 0 auto;
+  width: 0.78em;
+  height: 0.78em;
+  color: inherit;
+  opacity: 0.78;
   transition: opacity 0.12s linear;
+}
+
+.work-section-arrow::before,
+.work-section-arrow::after {
+  content: '';
+  position: absolute;
+  border-radius: 0;
+}
+
+.work-section-arrow::before {
+  top: 50%;
+  left: 0;
+  width: 0.82em;
+  height: 0.08em;
+  background: currentColor;
+  transform: translateY(-50%) rotate(-45deg);
+  transform-origin: center;
+}
+
+.work-section-arrow::after {
+  top: 0;
+  right: 0;
+  width: 0.42em;
+  height: 0.42em;
+  border-top: 0.08em solid currentColor;
+  border-right: 0.08em solid currentColor;
 }
 
 .work-section-link:hover .work-section-title,
@@ -1601,7 +1629,7 @@ body.portfolio-overview .page-container {
 
 .work-section-link:hover .work-section-arrow,
 .work-section-link:focus-visible .work-section-arrow {
-  opacity: 0.85;
+  opacity: 1;
 }
 
 .work-section-link:focus-visible {
