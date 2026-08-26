@@ -138,7 +138,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const targetUrl = getPortfolioOverviewHref();
 
       document.body.classList.add('shutter-click-active');
-      const minimumEffectTime = new Promise(resolve => window.setTimeout(resolve, 340));
+      const minimumEffectTime = new Promise(resolve => window.setTimeout(resolve, 460));
       const boundedPreload = Promise.race([
         entryPreload,
         new Promise(resolve => window.setTimeout(() => resolve(null), 900))
