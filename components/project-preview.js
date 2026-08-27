@@ -11,7 +11,7 @@ function storeProjectPreview(project, options = {}) {
   if (!project || !project.slug) return;
 
   const preview = {
-    version: 4,
+    version: 5,
     slug: project.slug,
     title: project.title || '',
     category: project.category || '',
@@ -31,6 +31,9 @@ function storeProjectPreview(project, options = {}) {
     size: project.size || '16-9',
     coverImage: project.coverImage || '',
     hasYoutubeVideo: Boolean(String(project.youtubeUrl || '').trim()),
+    desktopFocusX: Number.isFinite(Number(project.desktopFocusX)) ? Number(project.desktopFocusX) : 50,
+    desktopFocusY: Number.isFinite(Number(project.desktopFocusY)) ? Number(project.desktopFocusY) : 50,
+    desktopCoverScale: Number.isFinite(Number(project.desktopCoverScale)) ? Number(project.desktopCoverScale) : 100,
     mobileFocusX: Number.isFinite(Number(project.mobileFocusX)) ? Number(project.mobileFocusX) : 50,
     mobileFocusY: Number.isFinite(Number(project.mobileFocusY)) ? Number(project.mobileFocusY) : 50,
     mobileCoverScale: Number.isFinite(Number(project.mobileCoverScale)) ? Number(project.mobileCoverScale) : 100,
@@ -146,6 +149,15 @@ function hydrateStoredProjectPreview() {
   if (media) {
     const detailRatio = preview.hasYoutubeVideo ? '16-9' : (preview.size || '16-9');
     media.className = `project-detail-media detail-ratio-${detailRatio}`;
+    const desktopFocusX = Number.isFinite(Number(preview.desktopFocusX))
+      ? Math.max(0, Math.min(100, Number(preview.desktopFocusX)))
+      : 50;
+    const desktopFocusY = Number.isFinite(Number(preview.desktopFocusY))
+      ? Math.max(0, Math.min(100, Number(preview.desktopFocusY)))
+      : 50;
+    const desktopCoverScale = Number.isFinite(Number(preview.desktopCoverScale))
+      ? Math.max(100, Math.min(200, Number(preview.desktopCoverScale)))
+      : 100;
     const mobileFocusX = Number.isFinite(Number(preview.mobileFocusX))
       ? Math.max(0, Math.min(100, Number(preview.mobileFocusX)))
       : 50;
@@ -155,6 +167,9 @@ function hydrateStoredProjectPreview() {
     const mobileCoverScale = Number.isFinite(Number(preview.mobileCoverScale))
       ? Math.max(100, Math.min(200, Number(preview.mobileCoverScale)))
       : 100;
+    media.style.setProperty('--desktop-focus-x', `${desktopFocusX}%`);
+    media.style.setProperty('--desktop-focus-y', `${desktopFocusY}%`);
+    media.style.setProperty('--desktop-cover-scale', String(desktopCoverScale / 100));
     media.style.setProperty('--mobile-focus-x', `${mobileFocusX}%`);
     media.style.setProperty('--mobile-focus-y', `${mobileFocusY}%`);
     media.style.setProperty('--mobile-cover-scale', String(mobileCoverScale / 100));

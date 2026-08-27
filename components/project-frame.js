@@ -23,6 +23,16 @@ function escapeHtml(str) {
     .replace(/'/g, '&#039;');
 }
 
+function normalizeFrameFocus(value) {
+  const number = Number(value);
+  return Number.isFinite(number) ? Math.max(0, Math.min(100, number)) : 50;
+}
+
+function normalizeFrameScale(value) {
+  const number = Number(value);
+  return Number.isFinite(number) ? Math.max(100, Math.min(200, number)) : 100;
+}
+
 /**
  * Render a single project as a Project Frame article element.
  * Aspect Ratio Standards: '16-9' | '9-16' | '4-3'
@@ -40,6 +50,12 @@ function renderProjectFrame(project, options = {}) {
   frame.setAttribute('data-slug', project.slug);
   frame.setAttribute('data-size', rawSize);
   frame.setAttribute('data-id', project.id || project.slug);
+  frame.style.setProperty('--desktop-focus-x', `${normalizeFrameFocus(project.desktopFocusX)}%`);
+  frame.style.setProperty('--desktop-focus-y', `${normalizeFrameFocus(project.desktopFocusY)}%`);
+  frame.style.setProperty('--desktop-cover-scale', String(normalizeFrameScale(project.desktopCoverScale) / 100));
+  frame.style.setProperty('--mobile-focus-x', `${normalizeFrameFocus(project.mobileFocusX)}%`);
+  frame.style.setProperty('--mobile-focus-y', `${normalizeFrameFocus(project.mobileFocusY)}%`);
+  frame.style.setProperty('--mobile-cover-scale', String(normalizeFrameScale(project.mobileCoverScale) / 100));
 
   const coverImage = project.coverImage || '';
   const previewVideo = project.previewVideo || '';

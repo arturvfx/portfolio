@@ -29,12 +29,12 @@
   const STORAGE_VERSION = 1;
   const SUPPORTED_SIZES = ['16-9', '9-16', '4-3'];
 
-  function normalizeMobileFocus(value) {
+  function normalizeCoverFocus(value) {
     const number = Number(value);
     return Number.isFinite(number) ? Math.max(0, Math.min(100, number)) : 50;
   }
 
-  function normalizeMobileCoverScale(value) {
+  function normalizeCoverScale(value) {
     const number = Number(value);
     return Number.isFinite(number) ? Math.max(100, Math.min(200, number)) : 100;
   }
@@ -54,9 +54,12 @@
     // Remove the retired credit from older local overrides during migration.
     delete clean.agencyStudio;
     clean.projectStills = normalizeProjectStills(clean.projectStills);
-    clean.mobileFocusX = normalizeMobileFocus(clean.mobileFocusX);
-    clean.mobileFocusY = normalizeMobileFocus(clean.mobileFocusY);
-    clean.mobileCoverScale = normalizeMobileCoverScale(clean.mobileCoverScale);
+    clean.desktopFocusX = normalizeCoverFocus(clean.desktopFocusX);
+    clean.desktopFocusY = normalizeCoverFocus(clean.desktopFocusY);
+    clean.desktopCoverScale = normalizeCoverScale(clean.desktopCoverScale);
+    clean.mobileFocusX = normalizeCoverFocus(clean.mobileFocusX);
+    clean.mobileFocusY = normalizeCoverFocus(clean.mobileFocusY);
+    clean.mobileCoverScale = normalizeCoverScale(clean.mobileCoverScale);
     return clean;
   }
 
@@ -366,19 +369,21 @@
       if (p.coverImage != null && typeof p.coverImage !== 'string') {
         errors.push(`${ref}: "coverImage" must be a string.`);
       }
-      ['mobileFocusX', 'mobileFocusY'].forEach(field => {
+      ['desktopFocusX', 'desktopFocusY', 'mobileFocusX', 'mobileFocusY'].forEach(field => {
         if (p[field] != null && (typeof p[field] !== 'number' || !Number.isFinite(p[field]) || p[field] < 0 || p[field] > 100)) {
           errors.push(`${ref}: "${field}" must be a number from 0 to 100.`);
         }
       });
-      if (p.mobileCoverScale != null && (
-        typeof p.mobileCoverScale !== 'number' ||
-        !Number.isFinite(p.mobileCoverScale) ||
-        p.mobileCoverScale < 100 ||
-        p.mobileCoverScale > 200
-      )) {
-        errors.push(`${ref}: "mobileCoverScale" must be a number from 100 to 200.`);
-      }
+      ['desktopCoverScale', 'mobileCoverScale'].forEach(field => {
+        if (p[field] != null && (
+          typeof p[field] !== 'number' ||
+          !Number.isFinite(p[field]) ||
+          p[field] < 100 ||
+          p[field] > 200
+        )) {
+          errors.push(`${ref}: "${field}" must be a number from 100 to 200.`);
+        }
+      });
       if (p.previewVideo != null && typeof p.previewVideo !== 'string') {
         errors.push(`${ref}: "previewVideo" must be a string.`);
       }

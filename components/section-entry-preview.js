@@ -50,6 +50,9 @@
       size: row.size || '16-9',
       published: row.published !== false,
       order: Number(row.display_order),
+      desktopFocusX: normalizeFocus(row.desktop_focus_x),
+      desktopFocusY: normalizeFocus(row.desktop_focus_y),
+      desktopCoverScale: normalizeScale(row.desktop_cover_scale),
       mobileFocusX: normalizeFocus(row.mobile_focus_x),
       mobileFocusY: normalizeFocus(row.mobile_focus_y),
       mobileCoverScale: normalizeScale(row.mobile_cover_scale)
@@ -146,6 +149,25 @@
     return response.json();
   }
 
+  async function requestPreviewProjects() {
+    const common = {
+      published: 'eq.true',
+      order: 'display_order.asc'
+    };
+    try {
+      return await requestRows('portfolio_projects', {
+        ...common,
+        select: 'id,slug,title,category,client,year,services,project_summary,contribution,director,production_company,watch_now_enabled,watch_now_url,cover_image,preview_video,project_stills,section_id,size,published,display_order,desktop_focus_x,desktop_focus_y,desktop_cover_scale,mobile_focus_x,mobile_focus_y,mobile_cover_scale'
+      });
+    } catch (error) {
+      if (!String(error && error.message || error).includes('(400)')) throw error;
+      return requestRows('portfolio_projects', {
+        ...common,
+        select: 'id,slug,title,category,client,year,services,project_summary,contribution,director,production_company,watch_now_enabled,watch_now_url,cover_image,preview_video,project_stills,section_id,size,published,display_order,mobile_focus_x,mobile_focus_y,mobile_cover_scale'
+      });
+    }
+  }
+
   async function fetchPreview() {
     const [settingsRows, projectRows] = await Promise.all([
       requestRows('portfolio_site_settings', {
@@ -153,11 +175,7 @@
         id: 'eq.global',
         limit: '1'
       }),
-      requestRows('portfolio_projects', {
-        select: 'id,slug,title,category,client,year,services,project_summary,contribution,director,production_company,watch_now_enabled,watch_now_url,cover_image,preview_video,project_stills,section_id,size,published,display_order,mobile_focus_x,mobile_focus_y,mobile_cover_scale',
-        published: 'eq.true',
-        order: 'display_order.asc'
-      })
+      requestPreviewProjects()
     ]);
     const rawSettings = settingsRows[0]?.settings || {};
     const settings = window.siteSettings ? siteSettings.normalize(rawSettings) : rawSettings;

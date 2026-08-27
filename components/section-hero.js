@@ -31,12 +31,12 @@ function getSectionHeroImage(project) {
   return firstStill && firstStill.url ? firstStill.url : '';
 }
 
-function getMobileFocus(value) {
+function getCoverFocus(value) {
   const number = Number(value);
   return Number.isFinite(number) ? Math.max(0, Math.min(100, number)) : 50;
 }
 
-function getMobileCoverScale(value) {
+function getCoverScale(value) {
   const number = Number(value);
   return Number.isFinite(number) ? Math.max(100, Math.min(200, number)) : 100;
 }
@@ -79,9 +79,12 @@ function renderSectionHero(projects, container, options = {}) {
   const mediaItems = projects.map((project, index) => {
     const item = document.createElement('div');
     item.className = `section-hero-media-item${index === 0 ? ' is-active' : ''}`;
-    item.style.setProperty('--mobile-focus-x', `${getMobileFocus(project.mobileFocusX)}%`);
-    item.style.setProperty('--mobile-focus-y', `${getMobileFocus(project.mobileFocusY)}%`);
-    item.style.setProperty('--mobile-cover-scale', String(getMobileCoverScale(project.mobileCoverScale) / 100));
+    item.style.setProperty('--desktop-focus-x', `${getCoverFocus(project.desktopFocusX)}%`);
+    item.style.setProperty('--desktop-focus-y', `${getCoverFocus(project.desktopFocusY)}%`);
+    item.style.setProperty('--desktop-cover-scale', String(getCoverScale(project.desktopCoverScale) / 100));
+    item.style.setProperty('--mobile-focus-x', `${getCoverFocus(project.mobileFocusX)}%`);
+    item.style.setProperty('--mobile-focus-y', `${getCoverFocus(project.mobileFocusY)}%`);
+    item.style.setProperty('--mobile-cover-scale', String(getCoverScale(project.mobileCoverScale) / 100));
     const imageUrl = getSectionHeroImage(project);
     if (imageUrl) {
       const image = document.createElement('img');

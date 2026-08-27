@@ -101,6 +101,15 @@ function renderProjectDetailMedia(project) {
   if (!container) return;
   container.innerHTML = '';
   container.className = `project-detail-media detail-ratio-${project.size || '16-9'}`;
+  const desktopFocusX = Number.isFinite(Number(project.desktopFocusX))
+    ? Math.max(0, Math.min(100, Number(project.desktopFocusX)))
+    : 50;
+  const desktopFocusY = Number.isFinite(Number(project.desktopFocusY))
+    ? Math.max(0, Math.min(100, Number(project.desktopFocusY)))
+    : 50;
+  const desktopCoverScale = Number.isFinite(Number(project.desktopCoverScale))
+    ? Math.max(100, Math.min(200, Number(project.desktopCoverScale)))
+    : 100;
   const mobileFocusX = Number.isFinite(Number(project.mobileFocusX))
     ? Math.max(0, Math.min(100, Number(project.mobileFocusX)))
     : 50;
@@ -110,6 +119,9 @@ function renderProjectDetailMedia(project) {
   const mobileCoverScale = Number.isFinite(Number(project.mobileCoverScale))
     ? Math.max(100, Math.min(200, Number(project.mobileCoverScale)))
     : 100;
+  container.style.setProperty('--desktop-focus-x', `${desktopFocusX}%`);
+  container.style.setProperty('--desktop-focus-y', `${desktopFocusY}%`);
+  container.style.setProperty('--desktop-cover-scale', String(desktopCoverScale / 100));
   container.style.setProperty('--mobile-focus-x', `${mobileFocusX}%`);
   container.style.setProperty('--mobile-focus-y', `${mobileFocusY}%`);
   container.style.setProperty('--mobile-cover-scale', String(mobileCoverScale / 100));

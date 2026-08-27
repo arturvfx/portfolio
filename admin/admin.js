@@ -583,35 +583,37 @@
     }
   }
 
-  function normalizeMobileFocus(value) {
+  function normalizeCoverFocus(value) {
     const number = Number(value);
     return Number.isFinite(number) ? Math.max(0, Math.min(100, number)) : 50;
   }
 
-  function normalizeMobileCoverScale(value) {
+  function normalizeCoverScale(value) {
     const number = Number(value);
     return Number.isFinite(number) ? Math.max(100, Math.min(200, number)) : 100;
   }
 
-  function bindMobileFocusControls() {
-    const preview = document.getElementById('mobile-focus-preview');
-    const mediaHost = document.getElementById('mobile-focus-media');
-    const marker = document.getElementById('mobile-focus-marker');
-    const xInput = document.getElementById('field-mobileFocusX');
-    const yInput = document.getElementById('field-mobileFocusY');
-    const scaleInput = document.getElementById('field-mobileCoverScale');
-    const xOutput = document.getElementById('mobile-focus-x-value');
-    const yOutput = document.getElementById('mobile-focus-y-value');
-    const scaleOutput = document.getElementById('mobile-cover-scale-value');
-    const resetButton = document.getElementById('btn-reset-mobile-focus');
+  function bindCoverFocusControls(mode) {
+    const fieldPrefix = mode === 'desktop' ? 'desktop' : 'mobile';
+    const preview = document.getElementById(`${fieldPrefix}-focus-preview`);
+    const mediaHost = document.getElementById(`${fieldPrefix}-focus-media`);
+    const marker = document.getElementById(`${fieldPrefix}-focus-marker`);
+    const xInput = document.getElementById(`field-${fieldPrefix}FocusX`);
+    const yInput = document.getElementById(`field-${fieldPrefix}FocusY`);
+    const scaleInput = document.getElementById(`field-${fieldPrefix}CoverScale`);
+    const xOutput = document.getElementById(`${fieldPrefix}-focus-x-value`);
+    const yOutput = document.getElementById(`${fieldPrefix}-focus-y-value`);
+    const scaleOutput = document.getElementById(`${fieldPrefix}-cover-scale-value`);
+    const resetButton = document.getElementById(`btn-reset-${fieldPrefix}-focus`);
     const coverInput = document.getElementById('field-coverImage');
     const videoInput = document.getElementById('field-previewVideo');
+    const sizeInput = document.getElementById('field-size');
     if (!preview || !mediaHost || !marker || !xInput || !yInput || !scaleInput) return;
 
     const updatePosition = () => {
-      const x = normalizeMobileFocus(xInput.value);
-      const y = normalizeMobileFocus(yInput.value);
-      const scale = normalizeMobileCoverScale(scaleInput.value);
+      const x = normalizeCoverFocus(xInput.value);
+      const y = normalizeCoverFocus(yInput.value);
+      const scale = normalizeCoverScale(scaleInput.value);
       const media = mediaHost.querySelector('img, video');
       if (media) {
         media.style.objectPosition = `${x}% ${y}%`;
@@ -642,11 +644,17 @@
         mediaHost.replaceChildren(video);
       } else {
         const empty = document.createElement('span');
-        empty.className = 'mobile-focus-empty';
+        empty.className = 'cover-focus-empty';
         empty.textContent = 'Add cover media to preview';
         mediaHost.replaceChildren(empty);
       }
       updatePosition();
+    };
+
+    const updatePreviewRatio = () => {
+      if (fieldPrefix !== 'desktop' || !sizeInput) return;
+      preview.classList.remove('ratio-16-9', 'ratio-4-3', 'ratio-9-16');
+      preview.classList.add(`ratio-${SUPPORTED_SIZES.includes(sizeInput.value) ? sizeInput.value : '16-9'}`);
     };
 
     const setFromPointer = event => {
@@ -673,6 +681,7 @@
     }
     if (coverInput) coverInput.addEventListener('input', renderMedia);
     if (videoInput) videoInput.addEventListener('input', renderMedia);
+    if (sizeInput && fieldPrefix === 'desktop') sizeInput.addEventListener('change', updatePreviewRatio);
     preview.addEventListener('pointerdown', event => {
       preview.setPointerCapture(event.pointerId);
       setFromPointer(event);
@@ -680,6 +689,7 @@
     preview.addEventListener('pointermove', event => {
       if (preview.hasPointerCapture(event.pointerId)) setFromPointer(event);
     });
+    updatePreviewRatio();
     renderMedia();
   }
 
@@ -695,9 +705,12 @@
     if (!form) return;
     formRevision += 1;
 
-    const mobileFocusX = normalizeMobileFocus(project.mobileFocusX);
-    const mobileFocusY = normalizeMobileFocus(project.mobileFocusY);
-    const mobileCoverScale = normalizeMobileCoverScale(project.mobileCoverScale);
+    const desktopFocusX = normalizeCoverFocus(project.desktopFocusX);
+    const desktopFocusY = normalizeCoverFocus(project.desktopFocusY);
+    const desktopCoverScale = normalizeCoverScale(project.desktopCoverScale);
+    const mobileFocusX = normalizeCoverFocus(project.mobileFocusX);
+    const mobileFocusY = normalizeCoverFocus(project.mobileFocusY);
+    const mobileCoverScale = normalizeCoverScale(project.mobileCoverScale);
 
     form.innerHTML = `
       <div class="form-header">
@@ -831,24 +844,48 @@
             </div>
           </div>
 
-          <div class="mobile-focus-panel">
-            <div class="mobile-focus-header">
-              <span class="form-subsection-heading">Mobile Cover Framing</span>
-              <button id="btn-reset-mobile-focus" class="btn btn-secondary mobile-focus-reset" type="button">Reset</button>
-            </div>
-            <div class="mobile-focus-editor">
-              <div id="mobile-focus-preview" class="mobile-focus-preview" aria-label="Drag to choose the mobile cover focal point">
-                <div id="mobile-focus-media" class="mobile-focus-media"></div>
-                <span id="mobile-focus-marker" class="mobile-focus-marker" aria-hidden="true"></span>
+          <div class="cover-focus-panels">
+            <div class="cover-focus-panel desktop-cover-focus">
+              <div class="cover-focus-header">
+                <span class="form-subsection-heading">Desktop Cover Framing</span>
+                <button id="btn-reset-desktop-focus" class="btn btn-secondary cover-focus-reset" type="button">Reset</button>
               </div>
-              <div class="mobile-focus-controls">
+              <div class="cover-focus-editor">
+                <div id="desktop-focus-preview" class="cover-focus-preview desktop-cover-preview ratio-${SUPPORTED_SIZES.includes(project.size) ? project.size : '16-9'}" aria-label="Drag to choose the desktop cover focal point">
+                  <div id="desktop-focus-media" class="cover-focus-media"></div>
+                  <span id="desktop-focus-marker" class="cover-focus-marker" aria-hidden="true"></span>
+                </div>
+                <div class="cover-focus-controls">
+                  <label for="field-desktopFocusX">Horizontal <output id="desktop-focus-x-value">${Math.round(desktopFocusX)}%</output></label>
+                  <input id="field-desktopFocusX" type="range" min="0" max="100" step="1" value="${desktopFocusX}" data-field="desktopFocusX" />
+                  <label for="field-desktopFocusY">Vertical <output id="desktop-focus-y-value">${Math.round(desktopFocusY)}%</output></label>
+                  <input id="field-desktopFocusY" type="range" min="0" max="100" step="1" value="${desktopFocusY}" data-field="desktopFocusY" />
+                  <label for="field-desktopCoverScale">Scale <output id="desktop-cover-scale-value">${Math.round(desktopCoverScale)}%</output></label>
+                  <input id="field-desktopCoverScale" type="range" min="100" max="200" step="1" value="${desktopCoverScale}" data-field="desktopCoverScale" />
+                  <span class="media-upload-note">Preview follows the selected aspect ratio. Applied to gallery thumbnails, the desktop opening highlight and the desktop project page.</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="cover-focus-panel mobile-cover-focus">
+              <div class="cover-focus-header">
+                <span class="form-subsection-heading">Mobile Cover Framing</span>
+                <button id="btn-reset-mobile-focus" class="btn btn-secondary cover-focus-reset" type="button">Reset</button>
+              </div>
+              <div class="cover-focus-editor">
+                <div id="mobile-focus-preview" class="cover-focus-preview mobile-cover-preview" aria-label="Drag to choose the mobile cover focal point">
+                  <div id="mobile-focus-media" class="cover-focus-media"></div>
+                  <span id="mobile-focus-marker" class="cover-focus-marker" aria-hidden="true"></span>
+                </div>
+                <div class="cover-focus-controls">
                 <label for="field-mobileFocusX">Horizontal <output id="mobile-focus-x-value">${Math.round(mobileFocusX)}%</output></label>
                 <input id="field-mobileFocusX" type="range" min="0" max="100" step="1" value="${mobileFocusX}" data-field="mobileFocusX" />
                 <label for="field-mobileFocusY">Vertical <output id="mobile-focus-y-value">${Math.round(mobileFocusY)}%</output></label>
                 <input id="field-mobileFocusY" type="range" min="0" max="100" step="1" value="${mobileFocusY}" data-field="mobileFocusY" />
                 <label for="field-mobileCoverScale">Scale <output id="mobile-cover-scale-value">${Math.round(mobileCoverScale)}%</output></label>
                 <input id="field-mobileCoverScale" type="range" min="100" max="200" step="1" value="${mobileCoverScale}" data-field="mobileCoverScale" />
-                <span class="media-upload-note">Drag the marker or use the compact controls. Applied to the mobile opening highlight and project page.</span>
+                  <span class="media-upload-note">Applied to gallery thumbnails, the mobile opening highlight and the mobile project page.</span>
+                </div>
               </div>
             </div>
           </div>
@@ -937,7 +974,8 @@
 
     bindMediaUpload(project.id, 'coverImage');
     bindMediaUpload(project.id, 'previewVideo');
-    bindMobileFocusControls();
+    bindCoverFocusControls('desktop');
+    bindCoverFocusControls('mobile');
     [0, 1, 2].forEach(index => bindProjectStillControls(project.id, index));
   }
 
@@ -1094,6 +1132,9 @@
       category: '',
       year: String(new Date().getFullYear()),
       coverImage: '',
+      desktopFocusX: 50,
+      desktopFocusY: 50,
+      desktopCoverScale: 100,
       mobileFocusX: 50,
       mobileFocusY: 50,
       mobileCoverScale: 100,
@@ -1200,10 +1241,13 @@
 
       if (field === 'order') {
         updated[field] = parseInt(raw, 10) || updated[field];
-      } else if (field === 'mobileFocusX' || field === 'mobileFocusY') {
+      } else if (
+        field === 'desktopFocusX' || field === 'desktopFocusY' ||
+        field === 'mobileFocusX' || field === 'mobileFocusY'
+      ) {
         updated[field] = Math.max(0, Math.min(100, Number(raw) || 0));
-      } else if (field === 'mobileCoverScale') {
-        updated[field] = normalizeMobileCoverScale(raw);
+      } else if (field === 'desktopCoverScale' || field === 'mobileCoverScale') {
+        updated[field] = normalizeCoverScale(raw);
       } else if (field === 'published' || field === 'watchNowEnabled') {
         updated[field] = raw === 'true';
       } else if (field === 'services') {

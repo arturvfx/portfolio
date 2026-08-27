@@ -58,6 +58,10 @@ To add the mobile cover scale/zoom control, run:
 
 `supabase/migrations/013_mobile_cover_scale.sql`
 
+To add the independent desktop cover focal point and scale controls, run:
+
+`supabase/migrations/014_desktop_cover_framing.sql`
+
 Then configure and deploy the Edge Function. The destination address remains
 server-side and is never included in the public site:
 

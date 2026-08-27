@@ -4,12 +4,12 @@
   let client = null;
   const PROJECT_STILL_SIZES = ['16-9', '9-16', '4-3'];
 
-  function normalizeMobileFocus(value) {
+  function normalizeCoverFocus(value) {
     const number = Number(value);
     return Number.isFinite(number) ? Math.max(0, Math.min(100, number)) : 50;
   }
 
-  function normalizeMobileCoverScale(value) {
+  function normalizeCoverScale(value) {
     const number = Number(value);
     return Number.isFinite(number) ? Math.max(100, Math.min(200, number)) : 100;
   }
@@ -96,9 +96,12 @@
       watchNowEnabled: row.watch_now_enabled === true,
       watchNowUrl: row.watch_now_url || '',
       coverImage: row.cover_image || '',
-      mobileFocusX: normalizeMobileFocus(row.mobile_focus_x),
-      mobileFocusY: normalizeMobileFocus(row.mobile_focus_y),
-      mobileCoverScale: normalizeMobileCoverScale(row.mobile_cover_scale),
+      desktopFocusX: normalizeCoverFocus(row.desktop_focus_x),
+      desktopFocusY: normalizeCoverFocus(row.desktop_focus_y),
+      desktopCoverScale: normalizeCoverScale(row.desktop_cover_scale),
+      mobileFocusX: normalizeCoverFocus(row.mobile_focus_x),
+      mobileFocusY: normalizeCoverFocus(row.mobile_focus_y),
+      mobileCoverScale: normalizeCoverScale(row.mobile_cover_scale),
       previewVideo: row.preview_video || '',
       youtubeUrl: row.youtube_url || '',
       projectStills: normalizeProjectStills(row.project_stills),
@@ -125,9 +128,12 @@
       watch_now_enabled: project.watchNowEnabled === true,
       watch_now_url: project.watchNowUrl || '',
       cover_image: project.coverImage || '',
-      mobile_focus_x: normalizeMobileFocus(project.mobileFocusX),
-      mobile_focus_y: normalizeMobileFocus(project.mobileFocusY),
-      mobile_cover_scale: normalizeMobileCoverScale(project.mobileCoverScale),
+      desktop_focus_x: normalizeCoverFocus(project.desktopFocusX),
+      desktop_focus_y: normalizeCoverFocus(project.desktopFocusY),
+      desktop_cover_scale: normalizeCoverScale(project.desktopCoverScale),
+      mobile_focus_x: normalizeCoverFocus(project.mobileFocusX),
+      mobile_focus_y: normalizeCoverFocus(project.mobileFocusY),
+      mobile_cover_scale: normalizeCoverScale(project.mobileCoverScale),
       preview_video: project.previewVideo || '',
       youtube_url: project.youtubeUrl || '',
       project_stills: normalizeProjectStills(project.projectStills),
