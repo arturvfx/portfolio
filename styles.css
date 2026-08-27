@@ -866,6 +866,36 @@ body.portfolio-ready .page-container {
   position: relative;
 }
 
+.site-language-toggle {
+  min-width: 2.2rem;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--text-secondary);
+  font-family: var(--font-title);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  opacity: 0.48;
+  cursor: pointer;
+}
+
+.site-language-toggle:is(:hover, :focus-visible) {
+  color: var(--text-primary);
+  opacity: 1;
+  outline: none;
+}
+
+.site-language-toggle-landing {
+  position: fixed;
+  top: clamp(1.1rem, 2vw, 2rem);
+  right: clamp(1.1rem, 2.5vw, 2.5rem);
+  z-index: 30;
+}
+
 .nav-overview-item {
   display: flex;
   align-items: center;
@@ -3066,6 +3096,12 @@ body.contact-page {
 
   .nav-menu .nav-link.active {
     opacity: 1;
+  }
+
+  .nav-menu .site-language-toggle {
+    min-width: 44px;
+    font-size: 1rem;
+    opacity: 0.65;
   }
 
   .nav-menu .nav-link-label {

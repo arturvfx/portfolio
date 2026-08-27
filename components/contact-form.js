@@ -1,6 +1,8 @@
 (function () {
   'use strict';
 
+  const tr = key => window.portfolioI18n?.t(key) || key;
+
   function initContactForm() {
     const form = document.getElementById('contact-form');
     const status = document.getElementById('contact-form-status');
@@ -27,14 +29,14 @@
 
       const config = window.SUPABASE_CONFIG || {};
       if (!config.url || !config.publishableKey) {
-        showStatus(status, 'The contact service is unavailable. Please try again later.', 'error');
+        showStatus(status, tr('unavailable'), 'error');
         return;
       }
 
       const originalLabel = submit.textContent;
       submit.disabled = true;
-      submit.textContent = 'SENDING…';
-      showStatus(status, 'SENDING MESSAGE…', 'pending');
+      submit.textContent = tr('sending');
+      showStatus(status, tr('sendingMessage'), 'pending');
 
       const controller = new AbortController();
       const timeoutId = window.setTimeout(() => controller.abort(), 15000);
@@ -62,11 +64,11 @@
 
         form.reset();
         syncOtherCategory();
-        showStatus(status, 'MESSAGE SENT. THANK YOU FOR GETTING IN TOUCH.', 'success');
+        showStatus(status, tr('sent'), 'success');
       } catch (error) {
         const message = error.name === 'AbortError'
-          ? 'THE REQUEST TOOK TOO LONG. PLEASE TRY AGAIN.'
-          : String(error.message || 'THE MESSAGE COULD NOT BE SENT.').toUpperCase();
+          ? tr('requestTimeout')
+          : String(error.message || tr('sendFailed')).toUpperCase();
         showStatus(status, message, 'error');
       } finally {
         window.clearTimeout(timeoutId);

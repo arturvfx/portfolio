@@ -16,9 +16,9 @@
  */
 
 const GALLERIES_DATA = [
-  { id: 'featured-work', title: 'FEATURED WORK', description: '', published: true, order: 1, backgroundEnabled: true, backgroundSource: 'default', backgroundVideo: '' },
-  { id: 'content-editing', title: 'CONTENT EDITING', description: '', published: true, order: 2, backgroundEnabled: true, backgroundSource: 'default', backgroundVideo: '' },
-  { id: 'digital-alchemy', title: 'DIGITAL ALCHEMY', description: '', published: true, order: 3, backgroundEnabled: true, backgroundSource: 'default', backgroundVideo: '' }
+  { id: 'featured-work', title: 'FEATURED WORK', description: '', published: true, order: 1, backgroundEnabled: true, backgroundSource: 'default', backgroundVideo: '', translations: { en: {} } },
+  { id: 'content-editing', title: 'CONTENT EDITING', description: '', published: true, order: 2, backgroundEnabled: true, backgroundSource: 'default', backgroundVideo: '', translations: { en: {} } },
+  { id: 'digital-alchemy', title: 'DIGITAL ALCHEMY', description: '', published: true, order: 3, backgroundEnabled: true, backgroundSource: 'default', backgroundVideo: '', translations: { en: {} } }
 ];
 
 function galleryToPageConfig(gallery) {

@@ -12,6 +12,7 @@ function storeProjectPreview(project, options = {}) {
 
   const preview = {
     version: 5,
+    locale: window.portfolioI18n?.getLocale() || 'pt-BR',
     slug: project.slug,
     title: project.title || '',
     category: project.category || '',
@@ -53,7 +54,8 @@ function readProjectPreview(slug) {
     if (!raw) return null;
     const preview = JSON.parse(raw);
     const isFresh = Number(preview.savedAt) > Date.now() - PROJECT_PREVIEW_MAX_AGE;
-    return preview.slug === slug && isFresh ? preview : null;
+    const locale = window.portfolioI18n?.getLocale() || 'pt-BR';
+    return preview.slug === slug && isFresh && (preview.locale || 'pt-BR') === locale ? preview : null;
   } catch (error) {
     return null;
   }
@@ -142,7 +144,7 @@ function hydrateStoredProjectPreview() {
   const backLink = document.getElementById('project-back-link');
   if (backLink) {
     backLink.href = preview.sourceHref || getGalleryHref(preview.section);
-    backLink.textContent = `← ${preview.sourceLabel || preview.galleryTitle || (gallery ? gallery.title : 'BACK TO GALLERY')}`;
+    backLink.textContent = `← ${preview.sourceLabel || preview.galleryTitle || (gallery ? gallery.title : (window.portfolioI18n?.t('backToGallery') || 'VOLTAR À GALERIA'))}`;
   }
 
   const media = document.getElementById('project-detail-media');

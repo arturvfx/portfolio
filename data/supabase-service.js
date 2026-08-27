@@ -58,7 +58,8 @@
       order: row.display_order,
       backgroundEnabled: row.background_enabled !== false,
       backgroundSource,
-      backgroundVideo: row.background_video || ''
+      backgroundVideo: row.background_video || '',
+      translations: row.translations && typeof row.translations === 'object' ? row.translations : { en: {} }
     };
   }
 
@@ -74,6 +75,7 @@
         ? gallery.backgroundSource
         : 'default',
       background_video: gallery.backgroundVideo || '',
+      translations: gallery.translations && typeof gallery.translations === 'object' ? gallery.translations : { en: {} },
       // Kept in the row for compatibility with the existing schema. Section
       // heroes were replaced by the single global Work Overview hero.
       hero_enabled: false
@@ -111,7 +113,8 @@
       section: row.section_id,
       size: row.size,
       published: row.published,
-      order: row.display_order
+      order: row.display_order,
+      translations: row.translations && typeof row.translations === 'object' ? row.translations : { en: {} }
     };
   }
 
@@ -146,7 +149,8 @@
       section_id: project.section,
       size: project.size,
       published: project.published !== false,
-      display_order: Number(project.order)
+      display_order: Number(project.order),
+      translations: project.translations && typeof project.translations === 'object' ? project.translations : { en: {} }
     };
   }
 

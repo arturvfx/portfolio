@@ -58,7 +58,8 @@
       heroCoverScale: normalizeScale(row.hero_cover_scale),
       mobileFocusX: normalizeFocus(row.mobile_focus_x),
       mobileFocusY: normalizeFocus(row.mobile_focus_y),
-      mobileCoverScale: normalizeScale(row.mobile_cover_scale)
+      mobileCoverScale: normalizeScale(row.mobile_cover_scale),
+      translations: row.translations && typeof row.translations === 'object' ? row.translations : { en: {} }
     };
   }
 
@@ -132,7 +133,8 @@
       if (!raw) return null;
       const preview = JSON.parse(raw);
       const fresh = Number(preview.savedAt) > Date.now() - MAX_AGE;
-      return preview.viewId === 'work' && fresh ? preview : null;
+      const locale = window.portfolioI18n?.getLocale() || 'pt-BR';
+      return preview.viewId === 'work' && fresh && (preview.locale || 'pt-BR') === locale ? preview : null;
     } catch (error) {
       return null;
     }
@@ -160,21 +162,29 @@
     try {
       return await requestRows('portfolio_projects', {
         ...common,
-        select: 'id,slug,title,category,client,year,services,project_summary,contribution,director,production_company,watch_now_enabled,watch_now_url,cover_image,preview_video,project_stills,section_id,size,published,display_order,desktop_focus_x,desktop_focus_y,desktop_cover_scale,hero_focus_x,hero_focus_y,hero_cover_scale,mobile_focus_x,mobile_focus_y,mobile_cover_scale'
+        select: 'id,slug,title,category,client,year,services,project_summary,contribution,director,production_company,watch_now_enabled,watch_now_url,cover_image,preview_video,project_stills,section_id,size,published,display_order,desktop_focus_x,desktop_focus_y,desktop_cover_scale,hero_focus_x,hero_focus_y,hero_cover_scale,mobile_focus_x,mobile_focus_y,mobile_cover_scale,translations'
       });
     } catch (error) {
       if (!String(error && error.message || error).includes('(400)')) throw error;
       try {
         return await requestRows('portfolio_projects', {
           ...common,
-          select: 'id,slug,title,category,client,year,services,project_summary,contribution,director,production_company,watch_now_enabled,watch_now_url,cover_image,preview_video,project_stills,section_id,size,published,display_order,desktop_focus_x,desktop_focus_y,desktop_cover_scale,mobile_focus_x,mobile_focus_y,mobile_cover_scale'
+          select: 'id,slug,title,category,client,year,services,project_summary,contribution,director,production_company,watch_now_enabled,watch_now_url,cover_image,preview_video,project_stills,section_id,size,published,display_order,desktop_focus_x,desktop_focus_y,desktop_cover_scale,hero_focus_x,hero_focus_y,hero_cover_scale,mobile_focus_x,mobile_focus_y,mobile_cover_scale'
         });
-      } catch (desktopError) {
-        if (!String(desktopError && desktopError.message || desktopError).includes('(400)')) throw desktopError;
-        return requestRows('portfolio_projects', {
-          ...common,
-          select: 'id,slug,title,category,client,year,services,project_summary,contribution,director,production_company,watch_now_enabled,watch_now_url,cover_image,preview_video,project_stills,section_id,size,published,display_order,mobile_focus_x,mobile_focus_y,mobile_cover_scale'
-        });
+      } catch (heroError) {
+        if (!String(heroError && heroError.message || heroError).includes('(400)')) throw heroError;
+        try {
+          return await requestRows('portfolio_projects', {
+            ...common,
+            select: 'id,slug,title,category,client,year,services,project_summary,contribution,director,production_company,watch_now_enabled,watch_now_url,cover_image,preview_video,project_stills,section_id,size,published,display_order,desktop_focus_x,desktop_focus_y,desktop_cover_scale,mobile_focus_x,mobile_focus_y,mobile_cover_scale'
+          });
+        } catch (desktopError) {
+          if (!String(desktopError && desktopError.message || desktopError).includes('(400)')) throw desktopError;
+          return requestRows('portfolio_projects', {
+            ...common,
+            select: 'id,slug,title,category,client,year,services,project_summary,contribution,director,production_company,watch_now_enabled,watch_now_url,cover_image,preview_video,project_stills,section_id,size,published,display_order,mobile_focus_x,mobile_focus_y,mobile_cover_scale'
+          });
+        }
       }
     }
   }
@@ -189,13 +199,24 @@
       requestPreviewProjects()
     ]);
     const rawSettings = settingsRows[0]?.settings || {};
-    const settings = window.siteSettings ? siteSettings.normalize(rawSettings) : rawSettings;
-    const projects = selectHighlights(projectRows.map(projectFromRow), settings);
+    const rawNormalizedSettings = window.siteSettings ? siteSettings.normalize(rawSettings) : rawSettings;
+    const settings = window.portfolioI18n
+      ? portfolioI18n.localizeSettings(rawNormalizedSettings)
+      : rawNormalizedSettings;
+    const mappedProjects = projectRows.map(projectFromRow);
+    const localizedProjects = window.portfolioI18n
+      ? mappedProjects.map(project => portfolioI18n.localizeProject(project))
+      : mappedProjects;
+    const projects = selectHighlights(localizedProjects, settings);
     if (!projects.length) return null;
 
     const mediaReady = await preloadMedia(getFirstMedia(projects[0]));
     if (!mediaReady) return null;
-    const preview = { viewId: 'work', settings, projects, savedAt: Date.now() };
+    const preview = {
+      viewId: 'work', settings, projects,
+      locale: window.portfolioI18n?.getLocale() || 'pt-BR',
+      savedAt: Date.now()
+    };
     save(preview);
     return preview;
   }

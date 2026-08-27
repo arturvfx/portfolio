@@ -8,36 +8,62 @@
   const STORAGE_KEY = 'portfolio-site-settings-v1';
   const DEFAULTS = Object.freeze({
     landingTitle: 'ARTUR ARAUJO',
-    landingSubtitle: 'VFX GENERALIST',
-    landingEnterLabel: 'ENTER',
-    landingWatchReelLabel: 'WATCH REEL',
+    landingSubtitle: 'GENERALISTA VFX',
+    landingEnterLabel: 'ENTRAR',
+    landingWatchReelLabel: 'ASSISTIR REEL',
     landingBackgroundVideo: 'assets/videos/bg-cinema.mp4',
-    workIntroTitle: 'GENERALIST WORKING ACROSS MOTION, VFX COMPOSITING AND EDITORIAL.',
-    workIntroBody: 'A selection of visual effects, motion and editing projects across film, television and branded work.',
+    workIntroTitle: 'GENERALISTA ATUANDO ENTRE MOTION, COMPOSIÇÃO VFX E EDIÇÃO.',
+    workIntroBody: 'Uma seleção de projetos de efeitos visuais, motion e edição para cinema, televisão e conteúdo de marca.',
     workHeroProjectIds: [],
     galleryBackgroundVideo: 'assets/videos/bg-cinema.mp4',
     contentTheme: 'dark',
-    contactTitle: "LET'S WORK TOGETHER",
-    contactIntro: 'Available for film productions, VFX projects and creative consulting.',
-    contactAvailability: 'AVAILABLE FOR NEW PROJECTS',
-    contactLocation: 'SÃO PAULO / REMOTE WORLDWIDE',
-    contactSubmitLabel: 'SEND MESSAGE',
-    contactCategoryVfx: 'VFX & COMPOSITING',
-    contactCategoryEditing: 'CONTENT EDITING',
-    contactCategoryAlchemy: 'DIGITAL ALCHEMY & 3D SIMULATION',
-    contactCategoryFull: 'POST-PRODUCTION DIRECTION',
-    contactCategoryOther: 'OTHER',
-    footerTitle: "LET'S WORK TOGETHER",
-    footerContactLabel: 'CONTACT',
+    contactTitle: 'VAMOS TRABALHAR JUNTOS',
+    contactIntro: 'Disponível para produções audiovisuais, projetos de VFX e consultoria criativa.',
+    contactAvailability: 'DISPONÍVEL PARA NOVOS PROJETOS',
+    contactLocation: 'SÃO PAULO / REMOTO PARA TODO O MUNDO',
+    contactSubmitLabel: 'ENVIAR MENSAGEM',
+    contactCategoryVfx: 'VFX E COMPOSIÇÃO',
+    contactCategoryEditing: 'EDIÇÃO DE CONTEÚDO',
+    contactCategoryAlchemy: 'ALQUIMIA DIGITAL E SIMULAÇÃO 3D',
+    contactCategoryFull: 'DIREÇÃO DE PÓS-PRODUÇÃO',
+    contactCategoryOther: 'OUTRO',
+    footerTitle: 'VAMOS TRABALHAR JUNTOS',
+    footerContactLabel: 'CONTATO',
     footerInstagramLabel: 'INSTAGRAM',
     footerInstagramUrl: 'https://instagram.com',
     footerCopyright: '© 2026 ARTUR ARAUJO'
   });
+  const LEGACY_EN_DEFAULTS = Object.freeze({
+    landingSubtitle: 'VFX GENERALIST', landingEnterLabel: 'ENTER', landingWatchReelLabel: 'WATCH REEL',
+    workIntroTitle: 'GENERALIST WORKING ACROSS MOTION, VFX COMPOSITING AND EDITORIAL.',
+    workIntroBody: 'A selection of visual effects, motion and editing projects across film, television and branded work.',
+    contactTitle: "LET'S WORK TOGETHER", contactIntro: 'Available for film productions, VFX projects and creative consulting.',
+    contactAvailability: 'AVAILABLE FOR NEW PROJECTS', contactLocation: 'SÃO PAULO / REMOTE WORLDWIDE',
+    contactSubmitLabel: 'SEND MESSAGE', contactCategoryVfx: 'VFX & COMPOSITING',
+    contactCategoryEditing: 'CONTENT EDITING', contactCategoryAlchemy: 'DIGITAL ALCHEMY & 3D SIMULATION',
+    contactCategoryFull: 'POST-PRODUCTION DIRECTION', contactCategoryOther: 'OTHER',
+    footerTitle: "LET'S WORK TOGETHER", footerContactLabel: 'CONTACT'
+  });
   let currentSettings = null;
+
+  function normalizeTranslations(value) {
+    const translations = value && typeof value === 'object' && !Array.isArray(value) ? value : {};
+    const english = translations.en && typeof translations.en === 'object' && !Array.isArray(translations.en)
+      ? translations.en
+      : {};
+    const fields = window.portfolioI18n?.SITE_FIELDS || [];
+    return {
+      en: fields.reduce((result, field) => {
+        if (typeof english[field] === 'string') result[field] = english[field].trim();
+        return result;
+      }, {})
+    };
+  }
 
   function normalize(value) {
     const source = value && typeof value === 'object' ? value : {};
-    return Object.keys(DEFAULTS).reduce((settings, key) => {
+    const migratedEnglish = {};
+    const normalized = Object.keys(DEFAULTS).reduce((settings, key) => {
       if (key === 'workHeroProjectIds') {
         const identities = Array.isArray(source[key]) ? source[key] : DEFAULTS[key];
         settings[key] = [...new Set(identities
@@ -48,17 +74,22 @@
       }
       const hasStringValue = typeof source[key] === 'string';
       const candidate = hasStringValue ? source[key].trim() : '';
+      const isLegacyEnglishDefault = LEGACY_EN_DEFAULTS[key] && candidate === LEGACY_EN_DEFAULTS[key];
+      if (isLegacyEnglishDefault) migratedEnglish[key] = candidate;
       // These fields are intentionally optional; explicit empty strings must
       // survive local and remote normalization.
       if (['landingSubtitle', 'workIntroTitle', 'workIntroBody'].includes(key) && hasStringValue) {
-        settings[key] = candidate;
+        settings[key] = isLegacyEnglishDefault ? DEFAULTS[key] : candidate;
       } else if (key === 'contentTheme') {
         settings[key] = candidate === 'light' ? 'light' : 'dark';
       } else {
-        settings[key] = candidate || DEFAULTS[key];
+        settings[key] = isLegacyEnglishDefault ? DEFAULTS[key] : (candidate || DEFAULTS[key]);
       }
       return settings;
     }, {});
+    normalized.translations = normalizeTranslations(source.translations);
+    normalized.translations.en = { ...migratedEnglish, ...normalized.translations.en };
+    return normalized;
   }
 
   function loadLocal() {
@@ -112,30 +143,33 @@
   function apply(settings) {
     const current = normalize(settings);
     currentSettings = current;
-    setText('[data-site-setting="landing-title"]', current.landingTitle, true);
-    setText('[data-site-setting="landing-subtitle"]', current.landingSubtitle, true);
+    const visible = window.portfolioI18n
+      ? portfolioI18n.localizeSettings(current)
+      : current;
+    setText('[data-site-setting="landing-title"]', visible.landingTitle, true);
+    setText('[data-site-setting="landing-subtitle"]', visible.landingSubtitle, true);
     document.querySelectorAll('.brand-subtitle').forEach(element => {
-      element.hidden = !current.landingSubtitle;
+      element.hidden = !visible.landingSubtitle;
     });
-    document.body.classList.toggle('landing-with-subtitle', Boolean(current.landingSubtitle));
-    document.body.classList.toggle('landing-without-subtitle', !current.landingSubtitle);
+    document.body.classList.toggle('landing-with-subtitle', Boolean(visible.landingSubtitle));
+    document.body.classList.toggle('landing-without-subtitle', !visible.landingSubtitle);
     applyThemeClasses(current);
-    setText('[data-site-setting="landing-enter-label"]', current.landingEnterLabel, true);
-    setText('[data-site-setting="landing-watch-reel-label"]', current.landingWatchReelLabel, true);
-    setText('[data-site-setting="contact-title"]', current.contactTitle, false);
-    setText('[data-site-setting="contact-intro"]', current.contactIntro, false);
-    setText('[data-site-setting="contact-availability"]', current.contactAvailability, false);
-    setText('[data-site-setting="contact-location"]', current.contactLocation, false);
-    setText('[data-site-setting="contact-submit-label"]', current.contactSubmitLabel, false);
-    setText('[data-site-setting="contact-category-vfx"]', current.contactCategoryVfx, false);
-    setText('[data-site-setting="contact-category-editing"]', current.contactCategoryEditing, false);
-    setText('[data-site-setting="contact-category-alchemy"]', current.contactCategoryAlchemy, false);
-    setText('[data-site-setting="contact-category-full"]', current.contactCategoryFull, false);
-    setText('[data-site-setting="contact-category-other"]', current.contactCategoryOther, false);
-    setText('[data-site-setting="footer-title"]', current.footerTitle, false);
-    setText('[data-site-setting="footer-contact-label"]', current.footerContactLabel, false);
-    setText('[data-site-setting="footer-instagram-label"]', current.footerInstagramLabel, false);
-    setText('[data-site-setting="footer-copyright"]', current.footerCopyright, false);
+    setText('[data-site-setting="landing-enter-label"]', visible.landingEnterLabel, true);
+    setText('[data-site-setting="landing-watch-reel-label"]', visible.landingWatchReelLabel, true);
+    setText('[data-site-setting="contact-title"]', visible.contactTitle, false);
+    setText('[data-site-setting="contact-intro"]', visible.contactIntro, false);
+    setText('[data-site-setting="contact-availability"]', visible.contactAvailability, false);
+    setText('[data-site-setting="contact-location"]', visible.contactLocation, false);
+    setText('[data-site-setting="contact-submit-label"]', visible.contactSubmitLabel, false);
+    setText('[data-site-setting="contact-category-vfx"]', visible.contactCategoryVfx, false);
+    setText('[data-site-setting="contact-category-editing"]', visible.contactCategoryEditing, false);
+    setText('[data-site-setting="contact-category-alchemy"]', visible.contactCategoryAlchemy, false);
+    setText('[data-site-setting="contact-category-full"]', visible.contactCategoryFull, false);
+    setText('[data-site-setting="contact-category-other"]', visible.contactCategoryOther, false);
+    setText('[data-site-setting="footer-title"]', visible.footerTitle, false);
+    setText('[data-site-setting="footer-contact-label"]', visible.footerContactLabel, false);
+    setText('[data-site-setting="footer-instagram-label"]', visible.footerInstagramLabel, false);
+    setText('[data-site-setting="footer-copyright"]', visible.footerCopyright, false);
 
     document.querySelectorAll('[data-site-setting="footer-instagram-url"]').forEach(link => {
       link.href = safeExternalUrl(current.footerInstagramUrl);
@@ -147,13 +181,13 @@
     }
 
     if (document.querySelector('[data-site-setting="landing-title"]')) {
-      document.title = `${current.landingTitle} | Portfolio`;
+      document.title = `${visible.landingTitle} | Portfolio`;
     }
 
     window.dispatchEvent(new CustomEvent('portfolio-site-settings-applied', {
-      detail: { ...current }
+      detail: { ...visible }
     }));
-    return current;
+    return visible;
   }
 
   function applyVideoSource(settingName, value) {
@@ -203,7 +237,10 @@
     STORAGE_KEY,
     normalize,
     loadLocal,
-    getCurrent: () => currentSettings ? { ...currentSettings } : loadLocal(),
+    getCurrent: () => {
+      const raw = currentSettings ? { ...currentSettings } : loadLocal();
+      return window.portfolioI18n ? portfolioI18n.localizeSettings(raw) : raw;
+    },
     saveLocal,
     clearLocal,
     apply,

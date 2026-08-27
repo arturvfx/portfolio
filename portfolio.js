@@ -90,9 +90,11 @@ function getCurrentWorkSettings() {
 }
 
 function updatePortfolioOverviewMetadata(settings) {
-  const title = 'ARTUR ARAUJO | Selected Work';
+  const title = `ARTUR ARAUJO | ${window.portfolioI18n?.t('selectedWork') || 'TRABALHOS SELECIONADOS'}`;
   const description = settings.workIntroBody || settings.workIntroTitle ||
-    'Selected VFX, motion and editorial work by Artur Araujo.';
+    (window.portfolioI18n?.getLocale() === 'en'
+      ? 'Selected VFX, motion and editorial work by Artur Araujo.'
+      : 'Seleção de trabalhos de VFX, motion e edição de Artur Araujo.');
   document.title = title;
   setPortfolioMeta('meta[name="description"]', description);
   setPortfolioMeta('meta[property="og:title"]', title);
@@ -103,9 +105,12 @@ function updatePortfolioOverviewMetadata(settings) {
 }
 
 function renderPortfolioOverview(settings, projects, galleries) {
-  const normalizedSettings = window.siteSettings
+  const normalizedRawSettings = window.siteSettings
     ? siteSettings.normalize(settings)
     : settings || {};
+  const normalizedSettings = window.portfolioI18n
+    ? portfolioI18n.localizeSettings(normalizedRawSettings)
+    : normalizedRawSettings;
   const sectionView = document.getElementById('portfolio-section-view');
   const overviewView = document.getElementById('portfolio-overview-view');
   const container = document.getElementById('project-gallery');
@@ -127,11 +132,11 @@ function renderPortfolioOverview(settings, projects, galleries) {
     : [];
   if (typeof renderSectionHero === 'function') {
     renderSectionHero(heroProjects, heroContainer, {
-      galleryTitle: 'SELECTED WORK',
+      galleryTitle: window.portfolioI18n?.t('selectedWork') || 'TRABALHOS SELECIONADOS',
       hasRemainingProjects: true,
-      downLabel: 'View portfolio introduction and sections',
+      downLabel: window.portfolioI18n?.t('viewWorkSections') || 'Ver apresentação e categorias do portfólio',
       previewSourceHref: getPortfolioOverviewHref(),
-      previewSourceLabel: 'WORK'
+      previewSourceLabel: window.portfolioI18n?.getLocale() === 'en' ? 'WORK' : 'TRABALHOS'
     });
   }
 
@@ -243,7 +248,9 @@ function setPortfolioMeta(selector, value) {
 function updateGalleryMetadata(gallery) {
   const title = `ARTUR ARAUJO | ${gallery.title}`;
   const description = gallery.description ||
-    `Selected ${gallery.title.toLowerCase()} projects by VFX generalist Artur Araujo.`;
+    (window.portfolioI18n?.getLocale() === 'en'
+      ? `Selected ${gallery.title.toLowerCase()} projects by VFX generalist Artur Araujo.`
+      : `Projetos selecionados de ${gallery.title.toLowerCase()} por Artur Araujo.`);
   document.title = title;
   setPortfolioMeta('meta[name="description"]', description);
   setPortfolioMeta('meta[property="og:title"]', title);
@@ -322,7 +329,7 @@ window.addEventListener('portfolio-site-settings-applied', event => {
 function getLocalPortfolioData() {
   const projectSource = typeof PROJECTS_DATA !== 'undefined' ? PROJECTS_DATA : [];
   const gallerySource = typeof GALLERIES_DATA !== 'undefined' ? GALLERIES_DATA : [];
-  return {
+  const data = {
     projects: typeof adminStorage !== 'undefined'
       ? adminStorage.getEffective(projectSource)
       : projectSource.map(project => ({ ...project })),
@@ -330,6 +337,7 @@ function getLocalPortfolioData() {
       ? adminStorage.getEffectiveGalleries(gallerySource)
       : gallerySource.map(gallery => ({ ...gallery }))
   };
+  return window.portfolioI18n ? portfolioI18n.localizePortfolio(data) : data;
 }
 
 async function getPublicPortfolioData() {
@@ -350,7 +358,9 @@ async function getPublicPortfolioData() {
       portfolioBackend.loadPortfolio({ includeDrafts: false }),
       timeout
     ]);
-    return remote || localFallback;
+    return remote
+      ? (window.portfolioI18n ? portfolioI18n.localizePortfolio(remote) : remote)
+      : localFallback;
   } catch (error) {
     console.warn('Could not load Supabase portfolio; using local fallback.', error);
     return localFallback;
@@ -370,8 +380,9 @@ function renderGalleryNavigation(galleries, activeId) {
   overviewLink.href = getPortfolioOverviewHref();
   overviewLink.className = 'nav-link nav-overview-link' + (activeId === 'work' ? ' active' : '');
   overviewLink.setAttribute('data-view', 'overview');
-  overviewLink.setAttribute('aria-label', 'Work overview');
-  overviewLink.title = 'Work overview';
+  const overviewLabel = window.portfolioI18n?.t('workOverview') || 'Visão geral do portfólio';
+  overviewLink.setAttribute('aria-label', overviewLabel);
+  overviewLink.title = overviewLabel;
   if (activeId === 'work') overviewLink.setAttribute('aria-current', 'page');
   const overviewSymbol = document.createElement('span');
   overviewSymbol.className = 'nav-overview-symbol';
@@ -408,6 +419,8 @@ function renderGalleryNavigation(galleries, activeId) {
       item.appendChild(link);
       menu.appendChild(item);
     });
+
+  window.portfolioI18n?.mountToggle();
 
 }
 

@@ -65,7 +65,7 @@ function openYouTubeModal(project) {
   const closeButton = document.createElement('button');
   closeButton.className = 'project-video-modal-close';
   closeButton.type = 'button';
-  closeButton.setAttribute('aria-label', 'Close video');
+  closeButton.setAttribute('aria-label', window.portfolioI18n?.t('closeVideo') || 'Fechar vídeo');
   closeButton.innerHTML = '<span aria-hidden="true"></span>';
 
   const closeModal = () => {
@@ -132,7 +132,7 @@ function renderProjectDetailMedia(project) {
     const link = document.createElement('button');
     link.className = 'project-youtube-cover';
     link.type = 'button';
-    link.setAttribute('aria-label', `Play ${project.title || 'project'} video`);
+    link.setAttribute('aria-label', `${window.portfolioI18n?.t('playVideo') || 'Reproduzir vídeo'} — ${project.title || ''}`);
     link.addEventListener('click', () => openYouTubeModal(project));
 
     if (project.coverImage) {
@@ -193,7 +193,7 @@ function renderProjectDetailMedia(project) {
 
   const empty = document.createElement('div');
   empty.className = 'project-detail-media-empty';
-  empty.textContent = 'NO MEDIA';
+  empty.textContent = window.portfolioI18n?.t('noMedia') || 'SEM MÍDIA';
   container.appendChild(empty);
 }
 
@@ -202,7 +202,7 @@ function renderProjectNotFound() {
   const error = document.getElementById('project-detail-error');
   if (content) content.hidden = true;
   if (error) error.hidden = false;
-  document.title = 'ARTUR ARAUJO | Project not found';
+  document.title = `ARTUR ARAUJO | ${window.portfolioI18n?.t('projectNotFound') || 'PROJETO NÃO ENCONTRADO'}`;
   document.querySelector('meta[name="robots"]')?.setAttribute('content', 'noindex, follow');
   markProjectDataReady();
 }
@@ -258,17 +258,19 @@ function openProjectStill(still, project, index) {
   modal.className = 'project-still-modal';
   modal.setAttribute('role', 'dialog');
   modal.setAttribute('aria-modal', 'true');
-  modal.setAttribute('aria-label', `${project.title || 'Project'} — still ${index + 1}`);
+  const projectLabel = window.portfolioI18n?.t('project') || 'Projeto';
+  const stillLabel = window.portfolioI18n?.t('still') || 'imagem';
+  modal.setAttribute('aria-label', `${project.title || projectLabel} — ${stillLabel} ${index + 1}`);
 
   const image = document.createElement('img');
   image.className = 'project-still-modal-image';
   image.src = still.url;
-  image.alt = `${project.title || 'Project'} — still ${index + 1}`;
+  image.alt = `${project.title || projectLabel} — ${stillLabel} ${index + 1}`;
 
   const closeButton = document.createElement('button');
   closeButton.className = 'project-video-modal-close project-still-modal-close';
   closeButton.type = 'button';
-  closeButton.setAttribute('aria-label', 'Close image');
+  closeButton.setAttribute('aria-label', window.portfolioI18n?.t('closeImage') || 'Fechar imagem');
   closeButton.innerHTML = '<span aria-hidden="true"></span>';
 
   const closeModal = () => {
@@ -311,12 +313,12 @@ function renderProjectStills(project) {
     const frame = document.createElement('button');
     frame.className = `project-detail-still project-detail-still-${still.size}`;
     frame.type = 'button';
-    frame.setAttribute('aria-label', `Open ${project.title || 'project'} still ${index + 1}`);
+    frame.setAttribute('aria-label', `${window.portfolioI18n?.t('openStill') || 'Abrir imagem do projeto'} ${project.title || ''} ${index + 1}`.trim());
     frame.addEventListener('click', () => openProjectStill(still, project, index));
 
     const image = document.createElement('img');
     image.src = still.url;
-    image.alt = `${project.title || 'Project'} — still ${index + 1}`;
+    image.alt = `${project.title || window.portfolioI18n?.t('project') || 'Projeto'} — ${window.portfolioI18n?.t('still') || 'imagem'} ${index + 1}`;
     image.loading = 'lazy';
     image.decoding = 'async';
     frame.appendChild(image);
@@ -359,7 +361,7 @@ async function initProjectDetail() {
       ? readProjectPreview(project.slug)
       : null;
     backLink.href = storedPreview?.sourceHref || getGalleryHref(project.section);
-    backLink.textContent = `← ${storedPreview?.sourceLabel || (gallery ? gallery.title : 'BACK TO GALLERY')}`;
+    backLink.textContent = `← ${storedPreview?.sourceLabel || (gallery ? gallery.title : (window.portfolioI18n?.t('backToGallery') || 'VOLTAR À GALERIA'))}`;
   }
 
   renderProjectDetailMedia(project);

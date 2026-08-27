@@ -62,6 +62,11 @@ To add the independent desktop cover focal point and scale controls, run:
 
 `supabase/migrations/014_desktop_cover_framing.sql`
 
+To add optional English project and section content while keeping the existing
+fields as the canonical PT-BR version, run:
+
+`supabase/migrations/015_bilingual_content.sql`
+
 Then configure and deploy the Edge Function. The destination address remains
 server-side and is never included in the public site:
 

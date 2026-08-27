@@ -35,6 +35,52 @@
   let remoteWriteQueue = Promise.resolve();
   let draggedProjectId = null;
   let suppressProjectClick = false;
+  let projectEditingLocale = 'pt-BR';
+  let settingsEditingLocale = 'pt-BR';
+  let galleryEditingLocale = 'pt-BR';
+  const PROJECT_I18N_FIELDS = ['title', 'category', 'services', 'projectSummary', 'contribution'];
+  const GALLERY_I18N_FIELDS = ['title', 'description'];
+  const SITE_I18N_FIELDS = window.portfolioI18n?.SITE_FIELDS || [];
+
+  function translationValue(source, locale, field) {
+    if (locale !== 'en') return source?.[field] ?? '';
+    return source?.translations?.en?.[field] ?? '';
+  }
+
+  function translationPlaceholder(source, locale, field) {
+    if (locale !== 'en') return '';
+    const fallback = Array.isArray(source?.[field]) ? source[field].join(', ') : String(source?.[field] || '');
+    return fallback ? `Fallback PT-BR: ${fallback}` : 'Optional — falls back to PT-BR';
+  }
+
+  function localeSwitcher(scope, locale) {
+    return `<div class="admin-locale-switcher" role="group" aria-label="Editing language">
+      <button type="button" data-admin-locale-scope="${scope}" data-admin-locale="pt-BR" class="${locale === 'pt-BR' ? 'active' : ''}">PT-BR</button>
+      <button type="button" data-admin-locale-scope="${scope}" data-admin-locale="en" class="${locale === 'en' ? 'active' : ''}">EN</button>
+      <span>${locale === 'pt-BR' ? 'Primary language' : 'English translation · empty fields fall back to PT-BR'}</span>
+    </div>`;
+  }
+
+  function setEnglishTranslation(target, field, value) {
+    target.translations = { ...(target.translations || {}) };
+    target.translations.en = { ...(target.translations.en || {}), [field]: value };
+  }
+
+  function bindLocaleSwitcher(scope, handler) {
+    document.querySelectorAll(`[data-admin-locale-scope="${scope}"]`).forEach(button => {
+      button.addEventListener('click', () => handler(button.getAttribute('data-admin-locale')));
+    });
+  }
+
+  function updateLocaleSwitcher(scope, locale) {
+    document.querySelectorAll(`[data-admin-locale-scope="${scope}"]`).forEach(button => {
+      button.classList.toggle('active', button.getAttribute('data-admin-locale') === locale);
+    });
+    const note = document.querySelector(`[data-admin-locale-scope="${scope}"]`)?.parentElement?.querySelector('span');
+    if (note) note.textContent = locale === 'pt-BR'
+      ? 'Primary language'
+      : 'English translation · empty fields fall back to PT-BR';
+  }
 
   // ─── DOM References ──────────────────────────────────────────
 
@@ -714,10 +760,13 @@
     const mobileFocusX = normalizeCoverFocus(project.mobileFocusX);
     const mobileFocusY = normalizeCoverFocus(project.mobileFocusY);
     const mobileCoverScale = normalizeCoverScale(project.mobileCoverScale);
+    const projectText = field => translationValue(project, projectEditingLocale, field);
+    const projectPlaceholder = field => translationPlaceholder(project, projectEditingLocale, field);
 
     form.innerHTML = `
       <div class="form-header">
         <h2 class="form-title" id="form-heading">Editing: <span>${escAdm(project.title)}</span></h2>
+        ${localeSwitcher('project', projectEditingLocale)}
       </div>
 
       <div class="form-grid">
@@ -729,7 +778,7 @@
           <div class="form-card-grid">
         <div class="form-group">
           <label for="field-title">Title</label>
-          <input id="field-title" type="text" value="${escAdm(project.title)}" data-field="title" />
+          <input id="field-title" type="text" value="${escAdm(projectText('title'))}" data-field="title" data-project-i18n-field="title" placeholder="${escAdm(projectPlaceholder('title'))}" />
         </div>
 
         <div class="form-group">
@@ -739,7 +788,7 @@
 
         <div class="form-group">
           <label for="field-category">Category</label>
-          <input id="field-category" type="text" value="${escAdm(project.category || '')}" data-field="category" />
+          <input id="field-category" type="text" value="${escAdm(projectText('category'))}" data-field="category" data-project-i18n-field="category" placeholder="${escAdm(projectPlaceholder('category'))}" />
         </div>
 
         <div class="form-group">
@@ -749,18 +798,18 @@
 
         <div class="form-group span-2">
           <label for="field-services">Areas of Work</label>
-          <input id="field-services" type="text" value="${escAdm((project.services || []).join(', '))}" data-field="services" placeholder="Editing, VFX Compositing, Motion Design" />
+          <input id="field-services" type="text" value="${escAdm(Array.isArray(projectText('services')) ? projectText('services').join(', ') : '')}" data-field="services" data-project-i18n-field="services" placeholder="${escAdm(projectPlaceholder('services') || 'Editing, VFX Compositing, Motion Design')}" />
           <span class="media-upload-note">Separate each area with a comma. These appear as tags on the project page.</span>
         </div>
 
         <div class="form-group span-2">
           <label for="field-projectSummary">Project Context</label>
-          <textarea id="field-projectSummary" rows="3" data-field="projectSummary" placeholder="A short description of the series, film or campaign.">${escAdm(project.projectSummary || '')}</textarea>
+          <textarea id="field-projectSummary" rows="3" data-field="projectSummary" data-project-i18n-field="projectSummary" placeholder="${escAdm(projectPlaceholder('projectSummary') || 'A short description of the series, film or campaign.')}">${escAdm(projectText('projectSummary'))}</textarea>
         </div>
 
         <div class="form-group span-2">
           <label for="field-contribution">My Contribution</label>
-          <textarea id="field-contribution" rows="4" data-field="contribution" placeholder="Describe exactly what you handled on this project.">${escAdm(project.contribution || '')}</textarea>
+          <textarea id="field-contribution" rows="4" data-field="contribution" data-project-i18n-field="contribution" placeholder="${escAdm(projectPlaceholder('contribution') || 'Describe exactly what you handled on this project.')}">${escAdm(projectText('contribution'))}</textarea>
         </div>
 
         <div class="form-group">
@@ -999,6 +1048,33 @@
 
     bindMediaUpload(project.id, 'coverImage');
     bindMediaUpload(project.id, 'previewVideo');
+    bindLocaleSwitcher('project', locale => {
+      if (locale === projectEditingLocale) return;
+      const currentIndex = workingProjects.findIndex(item => item.id === project.id);
+      if (currentIndex === -1) return;
+      const current = { ...workingProjects[currentIndex] };
+      let changed = false;
+      dom.form.querySelectorAll('[data-project-i18n-field]').forEach(input => {
+        const field = input.getAttribute('data-project-i18n-field');
+        const value = field === 'services'
+          ? [...new Set(input.value.split(',').map(item => item.trim()).filter(Boolean))]
+          : input.value.trim();
+        const previous = translationValue(current, projectEditingLocale, field);
+        if (JSON.stringify(previous) !== JSON.stringify(value)) changed = true;
+        if (projectEditingLocale === 'en') setEnglishTranslation(current, field, value);
+        else current[field] = value;
+      });
+      workingProjects[currentIndex] = current;
+      projectEditingLocale = locale;
+      if (changed) markProjectFormDirty();
+      dom.form.querySelectorAll('[data-project-i18n-field]').forEach(input => {
+        const field = input.getAttribute('data-project-i18n-field');
+        const value = translationValue(current, locale, field);
+        input.value = Array.isArray(value) ? value.join(', ') : value;
+        input.placeholder = translationPlaceholder(current, locale, field) || input.placeholder;
+      });
+      updateLocaleSwitcher('project', locale);
+    });
     bindCoverFocusControls('desktop');
     bindCoverFocusControls('hero');
     bindCoverFocusControls('mobile');
@@ -1167,6 +1243,7 @@
       mobileFocusX: 50,
       mobileFocusY: 50,
       mobileCoverScale: 100,
+      translations: { en: {} },
       previewVideo: '',
       youtubeUrl: '',
       projectStills: [],
@@ -1283,6 +1360,11 @@
         updated[field] = normalizeCoverScale(raw);
       } else if (field === 'published' || field === 'watchNowEnabled') {
         updated[field] = raw === 'true';
+      } else if (PROJECT_I18N_FIELDS.includes(field) && projectEditingLocale === 'en') {
+        const value = field === 'services'
+          ? [...new Set(raw.split(',').map(item => item.trim()).filter(Boolean))]
+          : raw;
+        setEnglishTranslation(updated, field, value);
       } else if (field === 'services') {
         updated[field] = [...new Set(raw.split(',').map(item => item.trim()).filter(Boolean))];
       } else {
@@ -1551,16 +1633,18 @@
 
   // ─── Helpers ─────────────────────────────────────────────────
 
-  function renderSiteSettingsForm() {
-    if (formDirty && !confirm('You have unsaved changes. Discard them?')) return;
+  function renderSiteSettingsForm(options = {}) {
+    if (!options.preserveDirty && formDirty && !confirm('You have unsaved changes. Discard them?')) return;
     selectedId = null;
-    formDirty = false;
+    if (!options.preserveDirty) formDirty = false;
     renderProjectList();
     if (!dom.form || !dom.formWrap || !dom.emptyState) return;
     dom.formWrap.style.display = 'block';
     dom.emptyState.style.display = 'none';
     formRevision += 1;
     const settings = siteSettings.normalize(workingSettings);
+    const siteText = field => translationValue(settings, settingsEditingLocale, field);
+    const sitePlaceholder = field => translationPlaceholder(settings, settingsEditingLocale, field);
     const galleryTitles = new Map(workingGalleries.map(gallery => [gallery.id, gallery.title]));
     const selectableHeroProjects = workingProjects
       .filter(project => project.published !== false)
@@ -1597,25 +1681,26 @@
     dom.form.innerHTML = `
       <div class="form-header">
         <h2 class="form-title" id="form-heading">Editing: <span>Global Site Settings</span></h2>
+        ${localeSwitcher('settings', settingsEditingLocale)}
       </div>
       <div class="form-grid">
         <h3 class="form-section-heading">Landing Page</h3>
         <div class="form-group">
           <label for="setting-landingTitle">Main Title</label>
-          <input id="setting-landingTitle" type="text" value="${escAdm(settings.landingTitle)}" data-site-field="landingTitle" />
+          <input id="setting-landingTitle" type="text" value="${escAdm(siteText('landingTitle'))}" data-site-field="landingTitle" data-site-i18n-field="landingTitle" placeholder="${escAdm(sitePlaceholder('landingTitle'))}" />
         </div>
         <div class="form-group">
           <label for="setting-landingSubtitle">Subtitle — Optional</label>
-          <input id="setting-landingSubtitle" type="text" value="${escAdm(settings.landingSubtitle)}" data-site-field="landingSubtitle" />
+          <input id="setting-landingSubtitle" type="text" value="${escAdm(siteText('landingSubtitle'))}" data-site-field="landingSubtitle" data-site-i18n-field="landingSubtitle" placeholder="${escAdm(sitePlaceholder('landingSubtitle'))}" />
           <span class="media-upload-note">Leave empty to hide the subtitle and move the buttons closer to the title.</span>
         </div>
         <div class="form-group">
           <label for="setting-landingEnterLabel">Enter Button Label</label>
-          <input id="setting-landingEnterLabel" type="text" value="${escAdm(settings.landingEnterLabel)}" data-site-field="landingEnterLabel" />
+          <input id="setting-landingEnterLabel" type="text" value="${escAdm(siteText('landingEnterLabel'))}" data-site-field="landingEnterLabel" data-site-i18n-field="landingEnterLabel" placeholder="${escAdm(sitePlaceholder('landingEnterLabel'))}" />
         </div>
         <div class="form-group">
           <label for="setting-landingWatchReelLabel">Watch Reel Button Label</label>
-          <input id="setting-landingWatchReelLabel" type="text" value="${escAdm(settings.landingWatchReelLabel)}" data-site-field="landingWatchReelLabel" />
+          <input id="setting-landingWatchReelLabel" type="text" value="${escAdm(siteText('landingWatchReelLabel'))}" data-site-field="landingWatchReelLabel" data-site-i18n-field="landingWatchReelLabel" placeholder="${escAdm(sitePlaceholder('landingWatchReelLabel'))}" />
         </div>
         <div class="form-group span-2">
           <label for="setting-landingBackgroundVideo">Landing Background Video Path / URL</label>
@@ -1630,11 +1715,11 @@
         <h3 class="form-section-heading">Work Overview</h3>
         <div class="form-group span-2">
           <label for="setting-workIntroTitle">Presentation Title — Optional</label>
-          <textarea id="setting-workIntroTitle" rows="3" data-site-field="workIntroTitle">${escAdm(settings.workIntroTitle)}</textarea>
+          <textarea id="setting-workIntroTitle" rows="3" data-site-field="workIntroTitle" data-site-i18n-field="workIntroTitle" placeholder="${escAdm(sitePlaceholder('workIntroTitle'))}">${escAdm(siteText('workIntroTitle'))}</textarea>
         </div>
         <div class="form-group span-2">
           <label for="setting-workIntroBody">Presentation Text — Optional</label>
-          <textarea id="setting-workIntroBody" rows="4" data-site-field="workIntroBody">${escAdm(settings.workIntroBody)}</textarea>
+          <textarea id="setting-workIntroBody" rows="4" data-site-field="workIntroBody" data-site-i18n-field="workIntroBody" placeholder="${escAdm(sitePlaceholder('workIntroBody'))}">${escAdm(siteText('workIntroBody'))}</textarea>
           <span class="media-upload-note">Leave both presentation fields empty to show only the highlights and section index.</span>
         </div>
         <div class="form-group">
@@ -1677,59 +1762,59 @@
         <h3 class="form-section-heading">Contact Page</h3>
         <div class="form-group span-2">
           <label for="setting-contactTitle">Contact Title</label>
-          <input id="setting-contactTitle" type="text" value="${escAdm(settings.contactTitle)}" data-site-field="contactTitle" />
+          <input id="setting-contactTitle" type="text" value="${escAdm(siteText('contactTitle'))}" data-site-field="contactTitle" data-site-i18n-field="contactTitle" placeholder="${escAdm(sitePlaceholder('contactTitle'))}" />
         </div>
         <div class="form-group span-2">
           <label for="setting-contactIntro">Intro Text</label>
-          <textarea id="setting-contactIntro" rows="3" data-site-field="contactIntro">${escAdm(settings.contactIntro)}</textarea>
+          <textarea id="setting-contactIntro" rows="3" data-site-field="contactIntro" data-site-i18n-field="contactIntro" placeholder="${escAdm(sitePlaceholder('contactIntro'))}">${escAdm(siteText('contactIntro'))}</textarea>
         </div>
         <div class="form-group">
           <label for="setting-contactAvailability">Availability</label>
-          <input id="setting-contactAvailability" type="text" value="${escAdm(settings.contactAvailability)}" data-site-field="contactAvailability" />
+          <input id="setting-contactAvailability" type="text" value="${escAdm(siteText('contactAvailability'))}" data-site-field="contactAvailability" data-site-i18n-field="contactAvailability" placeholder="${escAdm(sitePlaceholder('contactAvailability'))}" />
         </div>
         <div class="form-group">
           <label for="setting-contactLocation">Location</label>
-          <input id="setting-contactLocation" type="text" value="${escAdm(settings.contactLocation)}" data-site-field="contactLocation" />
+          <input id="setting-contactLocation" type="text" value="${escAdm(siteText('contactLocation'))}" data-site-field="contactLocation" data-site-i18n-field="contactLocation" placeholder="${escAdm(sitePlaceholder('contactLocation'))}" />
         </div>
         <div class="form-group span-2">
           <label for="setting-contactSubmitLabel">Submit Button Label</label>
-          <input id="setting-contactSubmitLabel" type="text" value="${escAdm(settings.contactSubmitLabel)}" data-site-field="contactSubmitLabel" />
+          <input id="setting-contactSubmitLabel" type="text" value="${escAdm(siteText('contactSubmitLabel'))}" data-site-field="contactSubmitLabel" data-site-i18n-field="contactSubmitLabel" placeholder="${escAdm(sitePlaceholder('contactSubmitLabel'))}" />
         </div>
         <h4 class="form-subsection-heading span-2">Project Categories</h4>
         <div class="form-group">
           <label for="setting-contactCategoryVfx">Category 1</label>
-          <input id="setting-contactCategoryVfx" type="text" value="${escAdm(settings.contactCategoryVfx)}" data-site-field="contactCategoryVfx" />
+          <input id="setting-contactCategoryVfx" type="text" value="${escAdm(siteText('contactCategoryVfx'))}" data-site-field="contactCategoryVfx" data-site-i18n-field="contactCategoryVfx" placeholder="${escAdm(sitePlaceholder('contactCategoryVfx'))}" />
         </div>
         <div class="form-group">
           <label for="setting-contactCategoryEditing">Category 2</label>
-          <input id="setting-contactCategoryEditing" type="text" value="${escAdm(settings.contactCategoryEditing)}" data-site-field="contactCategoryEditing" />
+          <input id="setting-contactCategoryEditing" type="text" value="${escAdm(siteText('contactCategoryEditing'))}" data-site-field="contactCategoryEditing" data-site-i18n-field="contactCategoryEditing" placeholder="${escAdm(sitePlaceholder('contactCategoryEditing'))}" />
         </div>
         <div class="form-group">
           <label for="setting-contactCategoryAlchemy">Category 3</label>
-          <input id="setting-contactCategoryAlchemy" type="text" value="${escAdm(settings.contactCategoryAlchemy)}" data-site-field="contactCategoryAlchemy" />
+          <input id="setting-contactCategoryAlchemy" type="text" value="${escAdm(siteText('contactCategoryAlchemy'))}" data-site-field="contactCategoryAlchemy" data-site-i18n-field="contactCategoryAlchemy" placeholder="${escAdm(sitePlaceholder('contactCategoryAlchemy'))}" />
         </div>
         <div class="form-group">
           <label for="setting-contactCategoryFull">Category 4</label>
-          <input id="setting-contactCategoryFull" type="text" value="${escAdm(settings.contactCategoryFull)}" data-site-field="contactCategoryFull" />
+          <input id="setting-contactCategoryFull" type="text" value="${escAdm(siteText('contactCategoryFull'))}" data-site-field="contactCategoryFull" data-site-i18n-field="contactCategoryFull" placeholder="${escAdm(sitePlaceholder('contactCategoryFull'))}" />
         </div>
         <div class="form-group span-2">
           <label for="setting-contactCategoryOther">Other Category Label</label>
-          <input id="setting-contactCategoryOther" type="text" value="${escAdm(settings.contactCategoryOther)}" data-site-field="contactCategoryOther" />
+          <input id="setting-contactCategoryOther" type="text" value="${escAdm(siteText('contactCategoryOther'))}" data-site-field="contactCategoryOther" data-site-i18n-field="contactCategoryOther" placeholder="${escAdm(sitePlaceholder('contactCategoryOther'))}" />
           <span class="media-upload-note">Selecting this option opens a free-text field for the visitor.</span>
         </div>
 
         <h3 class="form-section-heading">Footer</h3>
         <div class="form-group span-2">
           <label for="setting-footerTitle">Footer Title</label>
-          <input id="setting-footerTitle" type="text" value="${escAdm(settings.footerTitle)}" data-site-field="footerTitle" />
+          <input id="setting-footerTitle" type="text" value="${escAdm(siteText('footerTitle'))}" data-site-field="footerTitle" data-site-i18n-field="footerTitle" placeholder="${escAdm(sitePlaceholder('footerTitle'))}" />
         </div>
         <div class="form-group">
           <label for="setting-footerContactLabel">Contact Button Label</label>
-          <input id="setting-footerContactLabel" type="text" value="${escAdm(settings.footerContactLabel)}" data-site-field="footerContactLabel" />
+          <input id="setting-footerContactLabel" type="text" value="${escAdm(siteText('footerContactLabel'))}" data-site-field="footerContactLabel" data-site-i18n-field="footerContactLabel" placeholder="${escAdm(sitePlaceholder('footerContactLabel'))}" />
         </div>
         <div class="form-group">
           <label for="setting-footerInstagramLabel">Instagram Button Label</label>
-          <input id="setting-footerInstagramLabel" type="text" value="${escAdm(settings.footerInstagramLabel)}" data-site-field="footerInstagramLabel" />
+          <input id="setting-footerInstagramLabel" type="text" value="${escAdm(siteText('footerInstagramLabel'))}" data-site-field="footerInstagramLabel" data-site-i18n-field="footerInstagramLabel" placeholder="${escAdm(sitePlaceholder('footerInstagramLabel'))}" />
         </div>
         <div class="form-group span-2">
           <label for="setting-footerInstagramUrl">Instagram Profile URL</label>
@@ -1737,7 +1822,7 @@
         </div>
         <div class="form-group span-2">
           <label for="setting-footerCopyright">Copyright</label>
-          <input id="setting-footerCopyright" type="text" value="${escAdm(settings.footerCopyright)}" data-site-field="footerCopyright" />
+          <input id="setting-footerCopyright" type="text" value="${escAdm(siteText('footerCopyright'))}" data-site-field="footerCopyright" data-site-i18n-field="footerCopyright" placeholder="${escAdm(sitePlaceholder('footerCopyright'))}" />
         </div>
       </div>
       <div class="form-actions">
@@ -1754,6 +1839,27 @@
     });
     dom.form.querySelectorAll('[data-work-hero-slot]').forEach(input => {
       input.addEventListener('change', markFormDirty);
+    });
+    bindLocaleSwitcher('settings', locale => {
+      if (locale === settingsEditingLocale) return;
+      const current = siteSettings.normalize(workingSettings);
+      let changed = false;
+      dom.form.querySelectorAll('[data-site-i18n-field]').forEach(input => {
+        const field = input.getAttribute('data-site-i18n-field');
+        const value = input.value.trim();
+        if (translationValue(current, settingsEditingLocale, field) !== value) changed = true;
+        if (settingsEditingLocale === 'en') setEnglishTranslation(current, field, value);
+        else current[field] = value;
+      });
+      workingSettings = current;
+      settingsEditingLocale = locale;
+      if (changed) markFormDirty();
+      dom.form.querySelectorAll('[data-site-i18n-field]').forEach(input => {
+        const field = input.getAttribute('data-site-i18n-field');
+        input.value = translationValue(current, locale, field);
+        input.placeholder = translationPlaceholder(current, locale, field);
+      });
+      updateLocaleSwitcher('settings', locale);
     });
     document.getElementById('btn-save-site-settings').addEventListener('click', saveSiteSettings);
     document.getElementById('btn-preview-landing').addEventListener('click', () => openPreview('/'));
@@ -1837,7 +1943,13 @@
   async function saveSiteSettings() {
     const updated = { ...workingSettings };
     dom.form.querySelectorAll('[data-site-field]').forEach(input => {
-      updated[input.getAttribute('data-site-field')] = input.value.trim();
+      const field = input.getAttribute('data-site-field');
+      const value = input.value.trim();
+      if (SITE_I18N_FIELDS.includes(field) && settingsEditingLocale === 'en') {
+        setEnglishTranslation(updated, field, value);
+      } else {
+        updated[field] = value;
+      }
     });
     updated.workHeroProjectIds = [...dom.form.querySelectorAll('[data-work-hero-slot]')]
       .map(input => input.value.trim())
@@ -1920,7 +2032,8 @@
       order: workingGalleries.length + 1,
       backgroundEnabled: true,
       backgroundSource: 'default',
-      backgroundVideo: ''
+      backgroundVideo: '',
+      translations: { en: {} }
     };
     workingGalleries.push(gallery);
     adminStorage.saveGalleries(workingGalleries);
@@ -1961,9 +2074,9 @@
     return videos;
   }
 
-  function renderGalleryForm(gallery) {
+  function renderGalleryForm(gallery, renderOptions = {}) {
     selectedId = null;
-    formDirty = false;
+    if (!renderOptions.preserveDirty) formDirty = false;
     renderProjectList();
     if (!dom.form || !dom.formWrap || !dom.emptyState) return;
     dom.formWrap.style.display = 'block';
@@ -1979,12 +2092,14 @@
     const reuseOptions = reusableVideos.map(item =>
       `<option value="${escAdm(item.url)}">${escAdm(item.label)}</option>`
     ).join('');
+    const galleryText = field => translationValue(gallery, galleryEditingLocale, field);
+    const galleryPlaceholder = field => translationPlaceholder(gallery, galleryEditingLocale, field);
     dom.form.innerHTML = `
-      <div class="form-header"><h2 class="form-title">Editing section: <span>${escAdm(gallery.title)}</span></h2></div>
+      <div class="form-header"><h2 class="form-title">Editing section: <span>${escAdm(gallery.title)}</span></h2>${localeSwitcher('gallery', galleryEditingLocale)}</div>
       <div class="form-grid">
         <div class="form-group">
           <label for="gallery-title">Section Title</label>
-          <input id="gallery-title" type="text" value="${escAdm(gallery.title)}" data-gallery-field="title" />
+          <input id="gallery-title" type="text" value="${escAdm(galleryText('title'))}" data-gallery-field="title" data-gallery-i18n-field="title" placeholder="${escAdm(galleryPlaceholder('title'))}" />
         </div>
         <div class="form-group">
           <label for="gallery-id">Section ID</label>
@@ -1992,7 +2107,7 @@
         </div>
         <div class="form-group span-2">
           <label for="gallery-description">Description</label>
-          <input id="gallery-description" type="text" value="${escAdm(gallery.description || '')}" data-gallery-field="description" />
+          <input id="gallery-description" type="text" value="${escAdm(galleryText('description'))}" data-gallery-field="description" data-gallery-i18n-field="description" placeholder="${escAdm(galleryPlaceholder('description'))}" />
         </div>
         <div class="form-group">
           <label for="gallery-order">Menu Order</label>
@@ -2046,6 +2161,29 @@
     dom.form.querySelectorAll('[data-gallery-field]').forEach(input => {
       input.addEventListener('input', markFormDirty);
     });
+    bindLocaleSwitcher('gallery', locale => {
+      if (locale === galleryEditingLocale) return;
+      const currentIndex = workingGalleries.findIndex(item => item.id === gallery.id);
+      if (currentIndex === -1) return;
+      const current = { ...workingGalleries[currentIndex] };
+      let changed = false;
+      dom.form.querySelectorAll('[data-gallery-i18n-field]').forEach(input => {
+        const field = input.getAttribute('data-gallery-i18n-field');
+        const value = input.value.trim();
+        if (translationValue(current, galleryEditingLocale, field) !== value) changed = true;
+        if (galleryEditingLocale === 'en') setEnglishTranslation(current, field, value);
+        else current[field] = value;
+      });
+      workingGalleries[currentIndex] = current;
+      galleryEditingLocale = locale;
+      if (changed) markFormDirty();
+      dom.form.querySelectorAll('[data-gallery-i18n-field]').forEach(input => {
+        const field = input.getAttribute('data-gallery-i18n-field');
+        input.value = translationValue(current, locale, field);
+        input.placeholder = translationPlaceholder(current, locale, field);
+      });
+      updateLocaleSwitcher('gallery', locale);
+    });
     document.getElementById('btn-save-gallery').addEventListener('click', () => saveGallery(gallery.id));
     document.getElementById('btn-preview').addEventListener('click', previewGallery);
     const enabledSelect = document.getElementById('gallery-background-enabled');
@@ -2074,7 +2212,10 @@
     const updated = { ...workingGalleries[index] };
     dom.form.querySelectorAll('[data-gallery-field]').forEach(input => {
       const field = input.getAttribute('data-gallery-field');
-      if (field === 'published' || field === 'backgroundEnabled') {
+      if (GALLERY_I18N_FIELDS.includes(field) && galleryEditingLocale === 'en') {
+        setEnglishTranslation(updated, field, input.value.trim());
+      }
+      else if (field === 'published' || field === 'backgroundEnabled') {
         updated[field] = input.value === 'true';
       }
       else if (field === 'order') updated[field] = Number.parseInt(input.value, 10);

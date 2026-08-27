@@ -69,7 +69,7 @@ function renderSectionHero(projects, container, options = {}) {
   const galleryTitle = options.galleryTitle || '';
   const previewSourceHref = options.previewSourceHref || '';
   const previewSourceLabel = options.previewSourceLabel || '';
-  container.setAttribute('aria-label', `${galleryTitle || 'Section'} featured projects`);
+  container.setAttribute('aria-label', `${galleryTitle || ''} ${window.portfolioI18n?.t('featuredProjects') || 'projetos em destaque'}`.trim());
   const root = document.createElement('div');
   root.className = 'section-hero-inner';
 
@@ -123,7 +123,7 @@ function renderSectionHero(projects, container, options = {}) {
 
   const desktopNav = document.createElement('nav');
   desktopNav.className = 'section-hero-desktop';
-  desktopNav.setAttribute('aria-label', 'Featured projects');
+  desktopNav.setAttribute('aria-label', window.portfolioI18n?.t('featuredProjects') || 'projetos em destaque');
   const list = document.createElement('ol');
   list.className = 'section-hero-list';
   const desktopLinks = [];
@@ -264,7 +264,10 @@ function renderSectionHero(projects, container, options = {}) {
     counter.style.setProperty('--section-hero-line-top', `${lineTop}rem`);
     counter.style.setProperty('--section-hero-line-height', `${Math.max(0, lineEnd - lineTop)}rem`);
     counter.classList.toggle('is-complete', activeIndex === projects.length - 1);
-    counter.setAttribute('aria-label', `Project ${activeIndex + 1} of ${projects.length}`);
+    const counterLabel = window.portfolioI18n?.t('projectCounter') || 'Projeto {current} de {total}';
+    counter.setAttribute('aria-label', counterLabel
+      .replace('{current}', String(activeIndex + 1))
+      .replace('{total}', String(projects.length)));
     scheduleMobileTitleFit();
     scheduleMobileReset();
   }

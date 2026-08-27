@@ -49,6 +49,24 @@
     }).filter(item => item.url);
   }
 
+  function normalizeTranslations(value, allowedFields) {
+    const translations = value && typeof value === 'object' && !Array.isArray(value) ? value : {};
+    const english = translations.en && typeof translations.en === 'object' && !Array.isArray(translations.en)
+      ? translations.en
+      : {};
+    return {
+      en: allowedFields.reduce((result, field) => {
+        const candidate = english[field];
+        if (field === 'services') {
+          if (Array.isArray(candidate)) result[field] = candidate.map(item => String(item).trim()).filter(Boolean);
+        } else if (typeof candidate === 'string') {
+          result[field] = candidate.trim();
+        }
+        return result;
+      }, {})
+    };
+  }
+
   function sanitizeProject(project) {
     const clean = { ...project };
     // Remove the retired credit from older local overrides during migration.
@@ -63,6 +81,9 @@
     clean.mobileFocusX = normalizeCoverFocus(clean.mobileFocusX);
     clean.mobileFocusY = normalizeCoverFocus(clean.mobileFocusY);
     clean.mobileCoverScale = normalizeCoverScale(clean.mobileCoverScale);
+    clean.translations = normalizeTranslations(clean.translations, [
+      'title', 'category', 'services', 'projectSummary', 'contribution'
+    ]);
     return clean;
   }
 
@@ -142,7 +163,10 @@
     const payload = {
       version: STORAGE_VERSION,
       updatedAt: new Date().toISOString(),
-      galleries,
+      galleries: galleries.map(gallery => ({
+        ...gallery,
+        translations: normalizeTranslations(gallery.translations, ['title', 'description'])
+      })),
       deleted: requestedDeleted.filter(id => !activeIds.has(id))
     };
     localStorage.setItem(GALLERY_STORAGE_KEY, JSON.stringify(payload));
@@ -395,6 +419,9 @@
       }
       if (p.services != null && (!Array.isArray(p.services) || p.services.some(item => typeof item !== 'string'))) {
         errors.push(`${ref}: "services" must be an array of strings.`);
+      }
+      if (p.translations != null && (typeof p.translations !== 'object' || Array.isArray(p.translations))) {
+        errors.push(`${ref}: "translations" must be an object.`);
       }
       if (p.projectStills != null) {
         if (!Array.isArray(p.projectStills)) {

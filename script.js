@@ -169,7 +169,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (!navMenu || !navToggle) return;
     navMenu.classList.toggle('open', open);
     navToggle.setAttribute('aria-expanded', String(open));
-    navToggle.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+    navToggle.setAttribute('aria-label', window.portfolioI18n?.t(open ? 'closeMenu' : 'openMenu') || (open ? 'Fechar menu' : 'Abrir menu'));
     document.documentElement.classList.toggle('mobile-menu-open', open);
     document.body.classList.toggle('mobile-menu-open', open);
     if (open) {

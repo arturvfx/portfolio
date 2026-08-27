@@ -1,16 +1,16 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ARTUR ARAUJO | Portfolio</title>
-  <meta name="description" content="Artur Araujo is a VFX generalist working across compositing, motion, editing and 3D.">
+  <meta name="description" content="Artur Araujo é generalista de VFX, atuando com composição, motion, edição e 3D.">
   <meta name="robots" content="index, follow">
   <meta name="theme-color" content="#030305">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="ARTUR ARAUJO">
   <meta property="og:title" content="ARTUR ARAUJO | VFX Generalist">
-  <meta property="og:description" content="VFX, compositing, motion, editing and 3D portfolio by Artur Araujo.">
+  <meta property="og:description" content="Portfólio de VFX, composição, motion, edição e 3D de Artur Araujo.">
   <meta property="og:url" content="https://arturaraujo.com/">
   <meta name="twitter:card" content="summary">
   <link rel="canonical" href="https://arturaraujo.com/">
@@ -20,8 +20,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@600;700;800;900&family=Inter:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
   
-  <link rel="stylesheet" href="styles.css?v=20260826-two-step-brand-lock">
-  <script src="config/site-settings.js?v=20260826-work-overview"></script>
+  <link rel="stylesheet" href="styles.css?v=20260827-i18n">
+  <script src="components/i18n.js?v=20260827-i18n"></script>
+  <script src="config/site-settings.js?v=20260827-i18n"></script>
 </head>
 <body class="landing-page site-settings-loading">
   <!-- Fullscreen Cinema Looping Video & Overlays -->
@@ -39,15 +40,15 @@
       <h1 class="brand-title" id="main-title" data-text="ARTUR ARAUJO" data-site-setting="landing-title">ARTUR ARAUJO</h1>
       
       <p class="brand-subtitle">
-        <span class="subtitle-text" data-text="VFX GENERALIST" data-site-setting="landing-subtitle">VFX GENERALIST</span>
+        <span class="subtitle-text" data-text="GENERALISTA VFX" data-site-setting="landing-subtitle">GENERALISTA VFX</span>
       </p>
       
       <div class="action-wrapper">
-        <a href="/work" class="enter-btn" id="enter-button" aria-label="Enter portfolio">
-          <span class="btn-text" data-text="ENTER" data-site-setting="landing-enter-label">ENTER</span>
+        <a href="/work" class="enter-btn" id="enter-button" aria-label="Entrar no portfólio" data-i18n-aria-label="enterPortfolio">
+          <span class="btn-text" data-text="ENTRAR" data-site-setting="landing-enter-label">ENTRAR</span>
         </a>
-        <button class="enter-btn watch-reel-btn" id="watch-reel-button" type="button" aria-label="Watch reel" aria-pressed="false">
-          <span class="btn-text" data-text="WATCH REEL" data-site-setting="landing-watch-reel-label">WATCH REEL</span>
+        <button class="enter-btn watch-reel-btn" id="watch-reel-button" type="button" aria-label="Assistir reel" data-i18n-aria-label="watchReel" aria-pressed="false">
+          <span class="btn-text" data-text="ASSISTIR REEL" data-site-setting="landing-watch-reel-label">ASSISTIR REEL</span>
         </button>
       </div>
     </div>
@@ -56,14 +57,14 @@
   <!-- Film texture sits above the complete projection, including typography. -->
   <div class="film-grain-overlay" aria-hidden="true"></div>
   <div class="film-scratches-overlay" aria-hidden="true"></div>
-  <button class="project-video-modal-close landing-reel-close" id="landing-reel-close" type="button" aria-label="Close reel" aria-hidden="true">
+  <button class="project-video-modal-close landing-reel-close" id="landing-reel-close" type="button" aria-label="Fechar reel" data-i18n-aria-label="closeReel" aria-hidden="true">
     <span aria-hidden="true"></span>
   </button>
 
   <script src="config/supabase-config.js?v=20260804-public-db"></script>
-  <script src="components/section-entry-preview.js?v=20260827-hero-framing"></script>
+  <script src="components/section-entry-preview.js?v=20260827-i18n"></script>
   <script>sectionEntryPreview.preload('work'); siteSettings.hydrate();</script>
   <script src="components/routes.js?v=20260826-work-overview"></script>
-  <script src="script.js?v=20260826-two-step-brand-lock"></script>
+  <script src="script.js?v=20260827-i18n"></script>
 </body>
 </html>

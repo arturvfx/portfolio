@@ -447,6 +447,10 @@
 
     /* ── Edit Form ────────────────────────────────────────── */
     .form-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
       margin-bottom: 1.25rem;
       padding-bottom: 0.85rem;
       border-bottom: 1px solid var(--border);
@@ -460,6 +464,38 @@
 
     .form-title span {
       color: var(--text-primary);
+    }
+
+    .admin-locale-switcher {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      margin-left: auto;
+    }
+
+    .admin-locale-switcher button {
+      min-height: 30px;
+      padding: 0.3rem 0.65rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: transparent;
+      color: var(--text-muted);
+      font: inherit;
+      font-size: 10px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .admin-locale-switcher button.active {
+      border-color: var(--accent);
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .admin-locale-switcher span {
+      margin-left: 0.35rem;
+      color: var(--text-muted);
+      font-size: 10px;
     }
 
     .form-grid {
@@ -972,6 +1008,17 @@
         display: block;
       }
 
+      .form-header {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .admin-locale-switcher {
+        width: 100%;
+        margin-left: 0;
+        flex-wrap: wrap;
+      }
+
       .form-card-description {
         margin-top: 0.25rem;
         text-align: left;
@@ -993,7 +1040,7 @@
     }
   </style>
 </head>
-<body>
+<body class="admin-body">
 
 <div id="auth-gate" class="auth-gate" aria-live="polite">
   <form id="auth-form" class="auth-card" novalidate>
@@ -1092,15 +1139,16 @@
 
 <!-- Load order: data → gallery config → storage → admin UI -->
 <script src="../data/projects-data.js?v=20260826-code-audit"></script>
-<script src="../config/page-configs.js?v=20260826-work-overview"></script>
+<script src="../config/page-configs.js?v=20260827-i18n"></script>
 <script src="../components/routes.js?v=20260826-work-overview"></script>
-<script src="../config/site-settings.js?v=20260826-work-overview"></script>
+<script src="../components/i18n.js?v=20260827-i18n"></script>
+<script src="../config/site-settings.js?v=20260827-i18n"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="../config/supabase-config.js?v=20260804-import"></script>
-<script src="../data/supabase-service.js?v=20260827-hero-framing"></script>
-<script src="../admin/admin-storage.js?v=20260827-hero-framing"></script>
+<script src="../data/supabase-service.js?v=20260827-i18n"></script>
+<script src="../admin/admin-storage.js?v=20260827-i18n"></script>
 <script src="../components/youtube-player.js?v=20260804-youtube-cover"></script>
-<script src="../admin/admin.js?v=20260827-hero-framing"></script>
+<script src="../admin/admin.js?v=20260827-i18n"></script>
 
 </body>
 </html>
