@@ -1176,9 +1176,9 @@ body.mobile-menu-open {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: var(--desktop-focus-x, 50%) var(--desktop-focus-y, 50%);
-  transform: scale(var(--desktop-cover-scale, 1));
-  transform-origin: var(--desktop-focus-x, 50%) var(--desktop-focus-y, 50%);
+  object-position: var(--hero-focus-x, 50%) var(--hero-focus-y, 50%);
+  transform: scale(var(--hero-cover-scale, 1));
+  transform-origin: var(--hero-focus-x, 50%) var(--hero-focus-y, 50%);
   filter: none;
 }
 

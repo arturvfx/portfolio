@@ -604,7 +604,8 @@
       gap: 1rem;
     }
 
-    .desktop-cover-focus .cover-focus-editor {
+    .desktop-cover-focus .cover-focus-editor,
+    .hero-cover-focus .cover-focus-editor {
       grid-template-columns: minmax(12rem, 18rem) minmax(12rem, 18rem);
     }
 
@@ -623,6 +624,11 @@
     }
 
     .desktop-cover-preview {
+      width: min(100%, 18rem);
+      aspect-ratio: 16 / 9;
+    }
+
+    .hero-cover-preview {
       width: min(100%, 18rem);
       aspect-ratio: 16 / 9;
     }
@@ -951,7 +957,8 @@
       .project-stills-editor,
       .gallery-media-workspace,
       .cover-focus-editor,
-      .desktop-cover-focus .cover-focus-editor {
+      .desktop-cover-focus .cover-focus-editor,
+      .hero-cover-focus .cover-focus-editor {
         grid-template-columns: 1fr;
       }
 
@@ -1090,10 +1097,10 @@
 <script src="../config/site-settings.js?v=20260826-work-overview"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="../config/supabase-config.js?v=20260804-import"></script>
-<script src="../data/supabase-service.js?v=20260827-desktop-framing"></script>
-<script src="../admin/admin-storage.js?v=20260827-desktop-framing"></script>
+<script src="../data/supabase-service.js?v=20260827-hero-framing"></script>
+<script src="../admin/admin-storage.js?v=20260827-hero-framing"></script>
 <script src="../components/youtube-player.js?v=20260804-youtube-cover"></script>
-<script src="../admin/admin.js?v=20260827-desktop-framing"></script>
+<script src="../admin/admin.js?v=20260827-hero-framing"></script>
 
 </body>
 </html>

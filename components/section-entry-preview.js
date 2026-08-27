@@ -53,6 +53,9 @@
       desktopFocusX: normalizeFocus(row.desktop_focus_x),
       desktopFocusY: normalizeFocus(row.desktop_focus_y),
       desktopCoverScale: normalizeScale(row.desktop_cover_scale),
+      heroFocusX: normalizeFocus(row.hero_focus_x),
+      heroFocusY: normalizeFocus(row.hero_focus_y),
+      heroCoverScale: normalizeScale(row.hero_cover_scale),
       mobileFocusX: normalizeFocus(row.mobile_focus_x),
       mobileFocusY: normalizeFocus(row.mobile_focus_y),
       mobileCoverScale: normalizeScale(row.mobile_cover_scale)
@@ -157,14 +160,22 @@
     try {
       return await requestRows('portfolio_projects', {
         ...common,
-        select: 'id,slug,title,category,client,year,services,project_summary,contribution,director,production_company,watch_now_enabled,watch_now_url,cover_image,preview_video,project_stills,section_id,size,published,display_order,desktop_focus_x,desktop_focus_y,desktop_cover_scale,mobile_focus_x,mobile_focus_y,mobile_cover_scale'
+        select: 'id,slug,title,category,client,year,services,project_summary,contribution,director,production_company,watch_now_enabled,watch_now_url,cover_image,preview_video,project_stills,section_id,size,published,display_order,desktop_focus_x,desktop_focus_y,desktop_cover_scale,hero_focus_x,hero_focus_y,hero_cover_scale,mobile_focus_x,mobile_focus_y,mobile_cover_scale'
       });
     } catch (error) {
       if (!String(error && error.message || error).includes('(400)')) throw error;
-      return requestRows('portfolio_projects', {
-        ...common,
-        select: 'id,slug,title,category,client,year,services,project_summary,contribution,director,production_company,watch_now_enabled,watch_now_url,cover_image,preview_video,project_stills,section_id,size,published,display_order,mobile_focus_x,mobile_focus_y,mobile_cover_scale'
-      });
+      try {
+        return await requestRows('portfolio_projects', {
+          ...common,
+          select: 'id,slug,title,category,client,year,services,project_summary,contribution,director,production_company,watch_now_enabled,watch_now_url,cover_image,preview_video,project_stills,section_id,size,published,display_order,desktop_focus_x,desktop_focus_y,desktop_cover_scale,mobile_focus_x,mobile_focus_y,mobile_cover_scale'
+        });
+      } catch (desktopError) {
+        if (!String(desktopError && desktopError.message || desktopError).includes('(400)')) throw desktopError;
+        return requestRows('portfolio_projects', {
+          ...common,
+          select: 'id,slug,title,category,client,year,services,project_summary,contribution,director,production_company,watch_now_enabled,watch_now_url,cover_image,preview_video,project_stills,section_id,size,published,display_order,mobile_focus_x,mobile_focus_y,mobile_cover_scale'
+        });
+      }
     }
   }
 

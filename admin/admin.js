@@ -594,7 +594,7 @@
   }
 
   function bindCoverFocusControls(mode) {
-    const fieldPrefix = mode === 'desktop' ? 'desktop' : 'mobile';
+    const fieldPrefix = ['desktop', 'hero'].includes(mode) ? mode : 'mobile';
     const preview = document.getElementById(`${fieldPrefix}-focus-preview`);
     const mediaHost = document.getElementById(`${fieldPrefix}-focus-media`);
     const marker = document.getElementById(`${fieldPrefix}-focus-marker`);
@@ -708,6 +708,9 @@
     const desktopFocusX = normalizeCoverFocus(project.desktopFocusX);
     const desktopFocusY = normalizeCoverFocus(project.desktopFocusY);
     const desktopCoverScale = normalizeCoverScale(project.desktopCoverScale);
+    const heroFocusX = normalizeCoverFocus(project.heroFocusX);
+    const heroFocusY = normalizeCoverFocus(project.heroFocusY);
+    const heroCoverScale = normalizeCoverScale(project.heroCoverScale);
     const mobileFocusX = normalizeCoverFocus(project.mobileFocusX);
     const mobileFocusY = normalizeCoverFocus(project.mobileFocusY);
     const mobileCoverScale = normalizeCoverScale(project.mobileCoverScale);
@@ -847,7 +850,7 @@
           <div class="cover-focus-panels">
             <div class="cover-focus-panel desktop-cover-focus">
               <div class="cover-focus-header">
-                <span class="form-subsection-heading">Desktop Cover Framing</span>
+                <span class="form-subsection-heading">Desktop Thumbnail Framing</span>
                 <button id="btn-reset-desktop-focus" class="btn btn-secondary cover-focus-reset" type="button">Reset</button>
               </div>
               <div class="cover-focus-editor">
@@ -862,7 +865,29 @@
                   <input id="field-desktopFocusY" type="range" min="0" max="100" step="1" value="${desktopFocusY}" data-field="desktopFocusY" />
                   <label for="field-desktopCoverScale">Scale <output id="desktop-cover-scale-value">${Math.round(desktopCoverScale)}%</output></label>
                   <input id="field-desktopCoverScale" type="range" min="100" max="200" step="1" value="${desktopCoverScale}" data-field="desktopCoverScale" />
-                  <span class="media-upload-note">Preview follows the selected aspect ratio. Applied to gallery thumbnails, the desktop opening highlight and the desktop project page.</span>
+                  <span class="media-upload-note">Preview follows the selected aspect ratio. Applied to gallery thumbnails and the desktop project page.</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="cover-focus-panel hero-cover-focus">
+              <div class="cover-focus-header">
+                <span class="form-subsection-heading">Featured Hero Framing</span>
+                <button id="btn-reset-hero-focus" class="btn btn-secondary cover-focus-reset" type="button">Reset</button>
+              </div>
+              <div class="cover-focus-editor">
+                <div id="hero-focus-preview" class="cover-focus-preview hero-cover-preview" aria-label="Drag to choose the Featured Hero focal point">
+                  <div id="hero-focus-media" class="cover-focus-media"></div>
+                  <span id="hero-focus-marker" class="cover-focus-marker" aria-hidden="true"></span>
+                </div>
+                <div class="cover-focus-controls">
+                  <label for="field-heroFocusX">Horizontal <output id="hero-focus-x-value">${Math.round(heroFocusX)}%</output></label>
+                  <input id="field-heroFocusX" type="range" min="0" max="100" step="1" value="${heroFocusX}" data-field="heroFocusX" />
+                  <label for="field-heroFocusY">Vertical <output id="hero-focus-y-value">${Math.round(heroFocusY)}%</output></label>
+                  <input id="field-heroFocusY" type="range" min="0" max="100" step="1" value="${heroFocusY}" data-field="heroFocusY" />
+                  <label for="field-heroCoverScale">Scale <output id="hero-cover-scale-value">${Math.round(heroCoverScale)}%</output></label>
+                  <input id="field-heroCoverScale" type="range" min="100" max="200" step="1" value="${heroCoverScale}" data-field="heroCoverScale" />
+                  <span class="media-upload-note">Always previews the horizontal Featured Hero crop and does not change the gallery thumbnail.</span>
                 </div>
               </div>
             </div>
@@ -975,6 +1000,7 @@
     bindMediaUpload(project.id, 'coverImage');
     bindMediaUpload(project.id, 'previewVideo');
     bindCoverFocusControls('desktop');
+    bindCoverFocusControls('hero');
     bindCoverFocusControls('mobile');
     [0, 1, 2].forEach(index => bindProjectStillControls(project.id, index));
   }
@@ -1135,6 +1161,9 @@
       desktopFocusX: 50,
       desktopFocusY: 50,
       desktopCoverScale: 100,
+      heroFocusX: 50,
+      heroFocusY: 50,
+      heroCoverScale: 100,
       mobileFocusX: 50,
       mobileFocusY: 50,
       mobileCoverScale: 100,
@@ -1243,10 +1272,14 @@
         updated[field] = parseInt(raw, 10) || updated[field];
       } else if (
         field === 'desktopFocusX' || field === 'desktopFocusY' ||
+        field === 'heroFocusX' || field === 'heroFocusY' ||
         field === 'mobileFocusX' || field === 'mobileFocusY'
       ) {
         updated[field] = Math.max(0, Math.min(100, Number(raw) || 0));
-      } else if (field === 'desktopCoverScale' || field === 'mobileCoverScale') {
+      } else if (
+        field === 'desktopCoverScale' || field === 'heroCoverScale' ||
+        field === 'mobileCoverScale'
+      ) {
         updated[field] = normalizeCoverScale(raw);
       } else if (field === 'published' || field === 'watchNowEnabled') {
         updated[field] = raw === 'true';

@@ -79,9 +79,9 @@ function renderSectionHero(projects, container, options = {}) {
   const mediaItems = projects.map((project, index) => {
     const item = document.createElement('div');
     item.className = `section-hero-media-item${index === 0 ? ' is-active' : ''}`;
-    item.style.setProperty('--desktop-focus-x', `${getCoverFocus(project.desktopFocusX)}%`);
-    item.style.setProperty('--desktop-focus-y', `${getCoverFocus(project.desktopFocusY)}%`);
-    item.style.setProperty('--desktop-cover-scale', String(getCoverScale(project.desktopCoverScale) / 100));
+    item.style.setProperty('--hero-focus-x', `${getCoverFocus(project.heroFocusX)}%`);
+    item.style.setProperty('--hero-focus-y', `${getCoverFocus(project.heroFocusY)}%`);
+    item.style.setProperty('--hero-cover-scale', String(getCoverScale(project.heroCoverScale) / 100));
     item.style.setProperty('--mobile-focus-x', `${getCoverFocus(project.mobileFocusX)}%`);
     item.style.setProperty('--mobile-focus-y', `${getCoverFocus(project.mobileFocusY)}%`);
     item.style.setProperty('--mobile-cover-scale', String(getCoverScale(project.mobileCoverScale) / 100));

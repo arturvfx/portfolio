@@ -57,6 +57,9 @@
     clean.desktopFocusX = normalizeCoverFocus(clean.desktopFocusX);
     clean.desktopFocusY = normalizeCoverFocus(clean.desktopFocusY);
     clean.desktopCoverScale = normalizeCoverScale(clean.desktopCoverScale);
+    clean.heroFocusX = normalizeCoverFocus(clean.heroFocusX);
+    clean.heroFocusY = normalizeCoverFocus(clean.heroFocusY);
+    clean.heroCoverScale = normalizeCoverScale(clean.heroCoverScale);
     clean.mobileFocusX = normalizeCoverFocus(clean.mobileFocusX);
     clean.mobileFocusY = normalizeCoverFocus(clean.mobileFocusY);
     clean.mobileCoverScale = normalizeCoverScale(clean.mobileCoverScale);
@@ -369,12 +372,12 @@
       if (p.coverImage != null && typeof p.coverImage !== 'string') {
         errors.push(`${ref}: "coverImage" must be a string.`);
       }
-      ['desktopFocusX', 'desktopFocusY', 'mobileFocusX', 'mobileFocusY'].forEach(field => {
+      ['desktopFocusX', 'desktopFocusY', 'heroFocusX', 'heroFocusY', 'mobileFocusX', 'mobileFocusY'].forEach(field => {
         if (p[field] != null && (typeof p[field] !== 'number' || !Number.isFinite(p[field]) || p[field] < 0 || p[field] > 100)) {
           errors.push(`${ref}: "${field}" must be a number from 0 to 100.`);
         }
       });
-      ['desktopCoverScale', 'mobileCoverScale'].forEach(field => {
+      ['desktopCoverScale', 'heroCoverScale', 'mobileCoverScale'].forEach(field => {
         if (p[field] != null && (
           typeof p[field] !== 'number' ||
           !Number.isFinite(p[field]) ||
