@@ -165,7 +165,7 @@
       }
       button.addEventListener('click', () => setLocale(getLocale() === 'en' ? DEFAULT_LOCALE : 'en'));
     }
-    button.textContent = getLocale() === 'en' ? 'PT' : 'EN';
+    button.textContent = getLocale() === 'en' ? 'BR' : 'EN';
     button.setAttribute('aria-label', t('switchLanguage'));
   }
 
