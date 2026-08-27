@@ -3098,12 +3098,6 @@ body.contact-page {
     opacity: 1;
   }
 
-  .nav-menu .site-language-toggle {
-    min-width: 44px;
-    font-size: 1rem;
-    opacity: 0.65;
-  }
-
   .nav-menu .nav-link-label {
     filter: blur(0.2px);
   }

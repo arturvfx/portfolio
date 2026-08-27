@@ -147,22 +147,13 @@
   }
 
   function mountToggle() {
-    if (document.body?.classList.contains('admin-body')) return;
+    if (!document.body?.classList.contains('landing-page')) return;
     let button = document.querySelector('.site-language-toggle');
     if (!button) {
       button = document.createElement('button');
       button.type = 'button';
-      button.className = 'site-language-toggle';
-      const menu = document.getElementById('nav-menu');
-      if (menu) {
-        const item = document.createElement('li');
-        item.className = 'nav-item nav-language-item';
-        item.appendChild(button);
-        menu.appendChild(item);
-      } else {
-        button.classList.add('site-language-toggle-landing');
-        document.body?.appendChild(button);
-      }
+      button.className = 'site-language-toggle site-language-toggle-landing';
+      document.body?.appendChild(button);
       button.addEventListener('click', () => setLocale(getLocale() === 'en' ? DEFAULT_LOCALE : 'en'));
     }
     button.textContent = getLocale() === 'en' ? 'BR' : 'EN';
