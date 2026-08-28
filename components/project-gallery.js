@@ -190,8 +190,15 @@ function renderProjectGallery(projects, container, galleryConfig) {
   const galleryTitle = typeof galleryConfig === 'object' && galleryConfig
     ? galleryConfig.title || ''
     : '';
+  const gallerySlug = typeof galleryConfig === 'object' && galleryConfig
+    ? galleryConfig.slug || galleryConfig.id || targetSection
+    : targetSection;
   filtered.forEach(project => {
-    container.appendChild(renderProjectFrame(project, { galleryTitle }));
+    container.appendChild(renderProjectFrame(project, {
+      galleryTitle,
+      sourceHref: getGalleryHref(gallerySlug),
+      sourceLabel: galleryTitle
+    }));
   });
 
   initProjectGalleryMasonry(container);

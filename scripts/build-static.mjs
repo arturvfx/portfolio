@@ -208,7 +208,7 @@ async function generateSearchEntries() {
 
     for (const section of sections) {
       if (!section.id || !section.title) continue;
-      const route = galleryPath(section.id);
+      const route = galleryPath(section.slug || section.id);
       const sectionCover = absoluteMediaUrl(
         projects.find(project => project.section_id === section.id && project.cover_image)?.cover_image
       ) || firstCover;

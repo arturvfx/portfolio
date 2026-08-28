@@ -367,16 +367,6 @@
     });
   }
 
-  function replaceRemoteGalleryAndSync(previousId) {
-    const galleries = JSON.parse(JSON.stringify(workingGalleries));
-    const projects = JSON.parse(JSON.stringify(workingProjects));
-    return enqueueRemoteWrite(async () => {
-      const result = verifyRemoteImport(await portfolioBackend.importPortfolio(galleries, projects));
-      await portfolioBackend.deleteGallery(previousId);
-      return result;
-    });
-  }
-
   function showLogin(message) {
     if (dom.authGate) dom.authGate.hidden = false;
     if (dom.authError) dom.authError.textContent = message || '';
@@ -1557,7 +1547,8 @@
   }
 
   function previewGallery() {
-    openPreview(getGalleryHref(managedSection));
+    const gallery = workingGalleries.find(item => item.id === managedSection);
+    openPreview(getGalleryHref(gallery?.slug || managedSection));
   }
 
   // ─── Export ──────────────────────────────────────────────────
@@ -1930,7 +1921,10 @@
     document.getElementById('btn-preview-landing').addEventListener('click', () => openPreview('/'));
     document.getElementById('btn-preview-work').addEventListener('click', () => openPreview(getPortfolioOverviewHref()));
     document.getElementById('btn-preview-contact').addEventListener('click', () => openPreview('/contact'));
-    document.getElementById('btn-preview-footer').addEventListener('click', () => openPreview(`${getGalleryHref('featured-work')}#site-footer`));
+    document.getElementById('btn-preview-footer').addEventListener('click', () => {
+      const featured = workingGalleries.find(gallery => gallery.id === 'featured-work');
+      openPreview(`${getGalleryHref(featured?.slug || 'featured-work')}#site-footer`);
+    });
     bindSiteVideoUpload('landing', 'landingBackgroundVideo');
     bindSiteVideoUpload('gallery', 'galleryBackgroundVideo');
   }
@@ -2088,9 +2082,14 @@
 
   async function createGallery() {
     if (formDirty && !confirm('You have unsaved changes. Discard them?')) return;
-    const id = uniqueGalleryId('untitled-section');
+    const idToken = globalThis.crypto?.randomUUID
+      ? globalThis.crypto.randomUUID()
+      : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+    const id = uniqueGalleryId(`section-${idToken}`);
     const gallery = {
       id,
+      slug: uniqueGallerySlug('untitled-section'),
+      previousSlugs: [],
       title: 'UNTITLED SECTION',
       browserTitle: '',
       description: '',
@@ -2148,8 +2147,6 @@
     dom.formWrap.style.display = 'block';
     dom.emptyState.style.display = 'none';
     formRevision += 1;
-    const projectCount = workingProjects.filter(project => project.section === gallery.id).length;
-    const idIsEditable = !GALLERIES_DATA.some(source => source.id === gallery.id) && projectCount === 0;
     const backgroundEnabled = gallery.backgroundEnabled !== false;
     const backgroundSource = ['default', 'homepage', 'custom'].includes(gallery.backgroundSource)
       ? gallery.backgroundSource
@@ -2168,8 +2165,14 @@
           <input id="gallery-title" type="text" value="${escAdm(galleryText('title'))}" data-gallery-field="title" data-gallery-i18n-field="title" placeholder="${escAdm(galleryPlaceholder('title'))}" />
         </div>
         <div class="form-group">
-          <label for="gallery-id">Section ID</label>
-          <input id="gallery-id" type="text" value="${escAdm(gallery.id)}" ${idIsEditable ? 'data-gallery-field="id"' : 'readonly'} />
+          <label for="gallery-id">Internal ID</label>
+          <input id="gallery-id" type="text" value="${escAdm(gallery.id)}" readonly />
+          <span class="media-upload-note">Stable database key. Projects remain connected to this value when the URL changes.</span>
+        </div>
+        <div class="form-group">
+          <label for="gallery-slug">URL Slug</label>
+          <input id="gallery-slug" type="text" value="${escAdm(gallery.slug || gallery.id)}" data-gallery-field="slug" placeholder="featured-work" />
+          <span class="media-upload-note">Editable public address. Previous slugs keep resolving to this section.</span>
         </div>
         <div class="form-group span-2">
           <label for="gallery-browser-title">Browser Tab Title — Optional</label>
@@ -2293,16 +2296,27 @@
       else updated[field] = input.value.trim();
     });
     if (!updated.title) return showStatus('ERROR: Section title cannot be empty.', 'error');
-    updated.id = String(updated.id || '')
+    updated.slug = String(updated.slug || '')
       .toLowerCase()
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '')
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-|-$/g, '');
-    if (!updated.id) return showStatus('ERROR: Section ID cannot be empty.', 'error');
-    if (workingGalleries.some(gallery => gallery.id === updated.id && gallery.id !== id)) {
-      return showStatus(`ERROR: Section ID “${updated.id}” is already in use.`, 'error');
+    if (!updated.slug) return showStatus('ERROR: URL Slug cannot be empty.', 'error');
+    const slugConflict = workingGalleries.some(gallery => {
+      if (gallery.id === id) return false;
+      return [gallery.id, gallery.slug, ...(gallery.previousSlugs || [])]
+        .filter(Boolean)
+        .includes(updated.slug);
+    });
+    if (slugConflict) {
+      return showStatus(`ERROR: URL Slug “${updated.slug}” is already in use.`, 'error');
     }
+    const previousSlug = workingGalleries[index].slug || workingGalleries[index].id;
+    const previousSlugs = new Set(updated.previousSlugs || []);
+    if (previousSlug && previousSlug !== updated.slug) previousSlugs.add(previousSlug);
+    previousSlugs.delete(updated.slug);
+    updated.previousSlugs = [...previousSlugs];
     if (!Number.isInteger(updated.order) || updated.order < 1) {
       return showStatus('ERROR: Menu Order must be a whole number greater than 0.', 'error');
     }
@@ -2320,8 +2334,6 @@
     renderSectionSelect();
     renderProjectList();
     updateOverrideNotice();
-    const sectionIdChanged = updated.id !== id;
-    if (sectionIdChanged) renderGalleryForm(updated);
     if (!remoteEnabled) {
       showStatus('Section saved.', 'success');
       finishFormSave(saveButton, savedRevision, true, 'Saved locally');
@@ -2329,8 +2341,7 @@
     }
     showStatus('Saving section to Supabase…', 'info');
     try {
-      if (sectionIdChanged) await replaceRemoteGalleryAndSync(id);
-      else await syncPortfolioSnapshot();
+      await syncPortfolioSnapshot();
       showStatus('Section saved to Supabase.', 'success');
       finishFormSave(saveButton, savedRevision, true, 'Saved to Supabase');
     } catch (error) {
@@ -2387,6 +2398,24 @@
     let suffix = 2;
     while (used.has(`${base}-${suffix}`)) suffix += 1;
     return `${base}-${suffix}`;
+  }
+
+  function uniqueGallerySlug(base) {
+    const normalized = String(base || 'section')
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '') || 'section';
+    const used = new Set(workingGalleries.flatMap(gallery => [
+      gallery.id,
+      gallery.slug,
+      ...(gallery.previousSlugs || [])
+    ]).filter(Boolean));
+    if (!used.has(normalized)) return normalized;
+    let suffix = 2;
+    while (used.has(`${normalized}-${suffix}`)) suffix += 1;
+    return `${normalized}-${suffix}`;
   }
 
   function uniqueSlug(base) {

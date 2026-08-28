@@ -159,7 +159,7 @@ function renderPortfolioOverview(settings, projects, galleries) {
       .forEach(gallery => {
         const link = document.createElement('a');
         link.className = 'work-section-link';
-        link.href = getGalleryHref(gallery.id);
+        link.href = getGalleryHref(gallery.slug || gallery.id);
         link.setAttribute('data-section', gallery.id);
         link.addEventListener('click', event => {
           if (!publicPortfolioRuntime) return;
@@ -236,7 +236,11 @@ function applyGalleryBackground(gallery, settingsOverride) {
 }
 
 function resolvePublishedGallery(galleries, requestedId) {
-  return galleries.find(item => item.id === requestedId && item.published !== false) ||
+  return galleries.find(item => (
+    item.id === requestedId ||
+    (item.slug || item.id) === requestedId ||
+    (Array.isArray(item.previousSlugs) && item.previousSlugs.includes(requestedId))
+  ) && item.published !== false) ||
     galleries.find(item => item.published !== false) ||
     { id: requestedId, title: requestedId.replace(/-/g, ' '), published: true, order: 1 };
 }
@@ -256,7 +260,7 @@ function updateGalleryMetadata(gallery) {
   setPortfolioMeta('meta[name="description"]', description);
   setPortfolioMeta('meta[property="og:title"]', title);
   setPortfolioMeta('meta[property="og:description"]', description);
-  const canonicalUrl = getCanonicalGalleryUrl(gallery.id);
+  const canonicalUrl = getCanonicalGalleryUrl(gallery.slug || gallery.id);
   document.querySelector('link[rel="canonical"]')?.setAttribute('href', canonicalUrl);
   setPortfolioMeta('meta[property="og:url"]', canonicalUrl);
 }
@@ -284,7 +288,13 @@ function navigatePortfolioSection(sectionId, options = {}) {
 
   if (options.history === 'push' || options.history === 'replace') {
     const method = options.history === 'replace' ? 'replaceState' : 'pushState';
-    window.history[method]({ portfolioSection: gallery.id }, '', getGalleryHref(gallery.id));
+    window.history[method]({ portfolioSection: gallery.id }, '', getGalleryHref(gallery.slug || gallery.id));
+  } else if (sectionId !== (gallery.slug || gallery.id)) {
+    window.history.replaceState(
+      { portfolioSection: gallery.id },
+      '',
+      getGalleryHref(gallery.slug || gallery.id)
+    );
   }
 
   const menu = document.getElementById('nav-menu');
@@ -404,7 +414,7 @@ function renderGalleryNavigation(galleries, activeId) {
       const item = document.createElement('li');
       item.className = 'nav-item';
       const link = document.createElement('a');
-      link.href = getGalleryHref(gallery.id);
+      link.href = getGalleryHref(gallery.slug || gallery.id);
       link.className = 'nav-link' + (gallery.id === activeId ? ' active' : '');
       link.setAttribute('data-section', gallery.id);
       link.setAttribute('aria-label', gallery.title);
@@ -494,7 +504,7 @@ async function initPortfolioSystem() {
     );
     const gallery = resolvePublishedGallery(galleries, requestedId);
     renderGalleryNavigation(galleries, gallery.id);
-    navigatePortfolioSection(gallery.id, { history: 'none', scroll: false });
+    navigatePortfolioSection(requestedId, { history: 'none', scroll: false });
   }
   document.body.classList.remove('section-entry-preview-ready');
   document.body.classList.remove('gallery-loading');

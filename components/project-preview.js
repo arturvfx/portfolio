@@ -144,7 +144,7 @@ function hydrateStoredProjectPreview() {
     : null;
   const backLink = document.getElementById('project-back-link');
   if (backLink) {
-    backLink.href = preview.sourceHref || getGalleryHref(preview.section);
+    backLink.href = preview.sourceHref || getGalleryHref(gallery?.slug || preview.section);
     backLink.textContent = `← ${preview.sourceLabel || preview.galleryTitle || (gallery ? gallery.title : (window.portfolioI18n?.t('backToGallery') || 'VOLTAR À GALERIA'))}`;
   }
 

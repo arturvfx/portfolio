@@ -52,6 +52,8 @@
       : 'default';
     return {
       id: row.id,
+      slug: row.slug || row.id,
+      previousSlugs: Array.isArray(row.previous_slugs) ? row.previous_slugs : [],
       title: row.title,
       browserTitle: row.browser_title || '',
       description: row.description || '',
@@ -67,6 +69,8 @@
   function galleryToRow(gallery) {
     return {
       id: gallery.id,
+      slug: gallery.slug || gallery.id,
+      previous_slugs: Array.isArray(gallery.previousSlugs) ? gallery.previousSlugs : [],
       title: gallery.title,
       browser_title: gallery.browserTitle || '',
       description: gallery.description || '',

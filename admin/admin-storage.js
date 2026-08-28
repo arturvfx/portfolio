@@ -166,6 +166,10 @@
       updatedAt: new Date().toISOString(),
       galleries: galleries.map(gallery => ({
         ...gallery,
+        slug: String(gallery.slug || gallery.id || '').trim(),
+        previousSlugs: Array.isArray(gallery.previousSlugs)
+          ? [...new Set(gallery.previousSlugs.map(value => String(value).trim()).filter(Boolean))]
+          : [],
         browserTitle: typeof gallery.browserTitle === 'string' ? gallery.browserTitle.trim() : '',
         translations: normalizeTranslations(gallery.translations, ['title', 'browserTitle', 'description'])
       })),

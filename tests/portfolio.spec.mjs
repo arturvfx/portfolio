@@ -94,6 +94,21 @@ test('section navigation preserves the document shell and resets scroll', async 
   await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0);
 });
 
+test('section URL slugs resolve independently from stable internal IDs', async ({ page, isMobile }) => {
+  test.skip(isMobile, 'Route resolution only needs one browser project');
+  await page.goto('/work');
+  await waitForPortfolio(page);
+  const resolved = await page.evaluate(() => resolvePublishedGallery([{
+    id: 'section-stable-id',
+    slug: 'current-url',
+    previousSlugs: ['old-url'],
+    title: 'TEST SECTION',
+    published: true
+  }], 'old-url'));
+  expect(resolved.id).toBe('section-stable-id');
+  expect(resolved.slug).toBe('current-url');
+});
+
 test('a gallery project opens a populated clean project route and can return', async ({ page }) => {
   await page.goto('/featured-work');
   await waitForPortfolio(page);
@@ -173,6 +188,8 @@ test('security headers protect the public document without blocking its scripts'
   expect(adminScript).toContain('setting-contactBrowserTitle');
   expect(adminScript).toContain('field-browserTitle');
   expect(adminScript).toContain('gallery-browser-title');
+  expect(adminScript).toContain('Internal ID');
+  expect(adminScript).toContain('URL Slug');
 });
 
 test.describe('mobile navigation', () => {

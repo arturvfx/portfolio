@@ -360,7 +360,7 @@ async function initProjectDetail() {
     const storedPreview = typeof readProjectPreview === 'function'
       ? readProjectPreview(project.slug)
       : null;
-    backLink.href = storedPreview?.sourceHref || getGalleryHref(project.section);
+    backLink.href = storedPreview?.sourceHref || getGalleryHref(gallery?.slug || project.section);
     backLink.textContent = `← ${storedPreview?.sourceLabel || (gallery ? gallery.title : (window.portfolioI18n?.t('backToGallery') || 'VOLTAR À GALERIA'))}`;
   }
 
