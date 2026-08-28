@@ -3,9 +3,15 @@
   "private": true,
   "version": "1.0.0",
   "scripts": {
-    "build": "node scripts/build-static.mjs"
+    "build": "node scripts/build-static.mjs",
+    "test": "npm run build && playwright test",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui"
   },
   "engines": {
     "node": ">=18"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.62.1"
   }
 }
