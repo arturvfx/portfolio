@@ -1,5 +1,5 @@
 import { createReadStream } from 'node:fs';
-import { access, stat } from 'node:fs/promises';
+import { access, readFile, stat } from 'node:fs/promises';
 import { createServer } from 'node:http';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -7,6 +7,10 @@ import { fileURLToPath } from 'node:url';
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const publicRoot = path.join(projectRoot, 'dist');
 const port = Number(process.env.PORT || 4174);
+const vercelConfig = JSON.parse(await readFile(path.join(projectRoot, 'vercel.json'), 'utf8'));
+const globalHeaders = vercelConfig.headers
+  ?.find(rule => rule.source === '/(.*)')
+  ?.headers || [];
 
 const mimeTypes = new Map([
   ['.css', 'text/css; charset=utf-8'],
@@ -69,6 +73,7 @@ const server = createServer(async (request, response) => {
 
   response.setHeader('Content-Type', mimeTypes.get(path.extname(absolutePath).toLowerCase()) || 'application/octet-stream');
   response.setHeader('Cache-Control', 'no-store');
+  globalHeaders.forEach(header => response.setHeader(header.key, header.value));
   createReadStream(absolutePath).pipe(response);
 });
 

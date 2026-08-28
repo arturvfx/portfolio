@@ -10,6 +10,28 @@ async function waitForPortfolio(page) {
   await expect(page.locator('body')).toHaveClass(/portfolio-ready/);
 }
 
+async function expectNoCspViolations(page) {
+  await page.waitForTimeout(50);
+  const violations = await page.evaluate(() => window.__portfolioCspViolations || []);
+  expect(violations, `CSP violations: ${JSON.stringify(violations)}`).toEqual([]);
+}
+
+test.beforeEach(async ({ page }) => {
+  await page.addInitScript(() => {
+    window.__portfolioCspViolations = [];
+    document.addEventListener('securitypolicyviolation', event => {
+      window.__portfolioCspViolations.push({
+        directive: event.effectiveDirective,
+        blocked: event.blockedURI
+      });
+    });
+  });
+});
+
+test.afterEach(async ({ page }) => {
+  if (!page.isClosed()) await expectNoCspViolations(page);
+});
+
 test('landing page exposes its primary actions and language switch', async ({ page }) => {
   await page.goto('/');
   await expect(page.locator('#main-title')).toHaveText(/ARTUR ARAUJO/i);
@@ -67,6 +89,13 @@ test('a gallery project opens a populated clean project route and can return', a
   await expect(page.locator('body')).toHaveClass(/project-data-ready/);
   await expect(page.locator('#project-detail-title')).toHaveText(expectedTitle.trim());
   await expect(page.locator('#project-back-link')).toBeVisible();
+  const youtubeCover = page.locator('.project-youtube-cover');
+  if (await youtubeCover.count()) {
+    await youtubeCover.click();
+    await expect(page.locator('.project-video-modal iframe')).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(page.locator('.project-video-modal')).toHaveCount(0);
+  }
   await page.locator('#project-back-link').click();
   await expect(page).toHaveURL(/\/featured-work$/);
 });
@@ -104,6 +133,19 @@ test('generated sitemap and project HTML expose crawlable production metadata', 
   expect(projectHtml).toMatch(/<title>(?!ARTUR ARAUJO \| Project)[^<]+<\/title>/);
   expect(projectHtml).toContain(`<link rel="canonical" href="https://arturaraujo.com${projectMatch[1]}">`);
   expect(projectHtml).toMatch(/<meta property="og:image" content="https:\/\//);
+});
+
+test('security headers protect the public document without blocking its scripts', async ({ page, request, isMobile }) => {
+  test.skip(isMobile, 'Header behavior only needs one browser project');
+  const response = await request.get('/work');
+  const csp = response.headers()['content-security-policy'];
+  expect(csp).toContain("script-src 'self' https://cdn.jsdelivr.net");
+  expect(csp).toContain("object-src 'none'");
+  expect(csp).toContain("frame-ancestors 'none'");
+
+  await page.goto('/admin');
+  await expect(page.locator('body')).toBeVisible();
+  await expect(page.locator('body')).not.toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
 });
 
 test.describe('mobile navigation', () => {
