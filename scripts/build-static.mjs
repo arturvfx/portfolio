@@ -156,20 +156,47 @@ function buildSitemap(urls) {
 
 async function generateSearchEntries() {
   try {
-    const [sections, projects, settings, galleryTemplate, projectTemplate] = await Promise.all([
+    const [sections, projects, settings, landingTemplate, contactTemplate, galleryTemplate, projectTemplate] = await Promise.all([
       fetchPublishedTable('portfolio_sections'),
       fetchPublishedTable('portfolio_projects'),
       fetchSiteSettings(),
+      readFile(path.join(outputRoot, 'index.html'), 'utf8'),
+      readFile(path.join(outputRoot, 'contact.html'), 'utf8'),
       readFile(path.join(outputRoot, 'gallery.html'), 'utf8'),
       readFile(path.join(outputRoot, 'project.html'), 'utf8')
     ]);
     const firstCover = absoluteMediaUrl(projects.find(project => project.cover_image)?.cover_image);
+    const landingTitle = plainText(settings.landingBrowserTitle) ||
+      `${plainText(settings.landingTitle) || 'ARTUR ARAUJO'} | Portfolio`;
+    const landingDescription = truncate(
+      settings.workIntroBody || settings.workIntroTitle ||
+      'Artur Araujo é generalista de VFX, atuando com composição, motion, edição e 3D.'
+    );
+    const landingHtml = applyMetadata(landingTemplate, {
+      title: landingTitle,
+      description: landingDescription,
+      canonical: `${publicOrigin}/`,
+      image: firstCover,
+      imageAlt: 'Portfólio de Artur Araujo'
+    });
+    await writeFile(path.join(outputRoot, 'index.html'), landingHtml);
+
+    const contactTitle = plainText(settings.contactBrowserTitle) || 'ARTUR ARAUJO | CONTATO';
+    const contactHtml = applyMetadata(contactTemplate, {
+      title: contactTitle,
+      description: truncate(settings.contactIntro || 'Entre em contato com Artur Araujo para projetos de VFX, edição e direção 3D.'),
+      canonical: `${publicOrigin}/contact`,
+      image: firstCover,
+      imageAlt: 'Contato de Artur Araujo'
+    });
+    await writeFile(path.join(outputRoot, 'contact.html'), contactHtml);
+
     const workDescription = truncate(
       settings.workIntroBody || settings.workIntroTitle ||
       'Seleção de trabalhos de VFX, composição, motion e edição de Artur Araujo.'
     );
     const workHtml = applyMetadata(galleryTemplate, {
-      title: 'ARTUR ARAUJO | Trabalhos selecionados',
+      title: plainText(settings.workBrowserTitle) || 'ARTUR ARAUJO | TRABALHOS SELECIONADOS',
       description: workDescription,
       canonical: `${publicOrigin}/work`,
       image: firstCover,
@@ -186,7 +213,7 @@ async function generateSearchEntries() {
         projects.find(project => project.section_id === section.id && project.cover_image)?.cover_image
       ) || firstCover;
       const html = applyMetadata(galleryTemplate, {
-        title: `ARTUR ARAUJO | ${plainText(section.title)}`,
+        title: plainText(section.browser_title) || `ARTUR ARAUJO | ${plainText(section.title)}`,
         description: truncate(section.description || `Projetos selecionados de ${plainText(section.title)} por Artur Araujo.`),
         canonical: `${publicOrigin}${route}`,
         image: sectionCover,
@@ -204,7 +231,7 @@ async function generateSearchEntries() {
         [project.category, project.title].filter(Boolean).join(' — ')
       );
       const html = applyMetadata(projectTemplate, {
-        title: `${plainText(project.title)} | ARTUR ARAUJO`,
+        title: plainText(project.browser_title) || `ARTUR ARAUJO | ${plainText(project.title)}`,
         description,
         canonical: `${publicOrigin}${route}`,
         image: absoluteMediaUrl(project.cover_image),

@@ -31,7 +31,8 @@
  * - projectStills: { url: string, size: '16-9' | '9-16' | '4-3' }[] (max 3)
  * - section: string ('featured-work' | 'content-editing' | 'digital-alchemy')
  * - size: string ('16-9' | '9-16' | '4-3')
- * - translations: { en: { title, category, services, projectSummary, contribution } }
+ * - browserTitle: string (optional full browser-tab title)
+ * - translations: { en: { title, browserTitle, category, services, projectSummary, contribution } }
  * - published: boolean
  * - order: number
  */

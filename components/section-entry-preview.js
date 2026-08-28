@@ -33,6 +33,7 @@
       id: row.id,
       slug: row.slug,
       title: row.title,
+      browserTitle: row.browser_title || '',
       category: row.category || '',
       client: row.client || '',
       year: row.year || '',
@@ -162,7 +163,7 @@
     try {
       return await requestRows('portfolio_projects', {
         ...common,
-        select: 'id,slug,title,category,client,year,services,project_summary,contribution,director,production_company,watch_now_enabled,watch_now_url,cover_image,preview_video,project_stills,section_id,size,published,display_order,desktop_focus_x,desktop_focus_y,desktop_cover_scale,hero_focus_x,hero_focus_y,hero_cover_scale,mobile_focus_x,mobile_focus_y,mobile_cover_scale,translations'
+        select: 'id,slug,title,browser_title,category,client,year,services,project_summary,contribution,director,production_company,watch_now_enabled,watch_now_url,cover_image,preview_video,project_stills,section_id,size,published,display_order,desktop_focus_x,desktop_focus_y,desktop_cover_scale,hero_focus_x,hero_focus_y,hero_cover_scale,mobile_focus_x,mobile_focus_y,mobile_cover_scale,translations'
       });
     } catch (error) {
       if (!String(error && error.message || error).includes('(400)')) throw error;

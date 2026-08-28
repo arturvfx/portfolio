@@ -39,8 +39,8 @@
   let projectEditingLocale = 'pt-BR';
   let settingsEditingLocale = 'pt-BR';
   let galleryEditingLocale = 'pt-BR';
-  const PROJECT_I18N_FIELDS = ['title', 'category', 'services', 'projectSummary', 'contribution'];
-  const GALLERY_I18N_FIELDS = ['title', 'description'];
+  const PROJECT_I18N_FIELDS = ['title', 'browserTitle', 'category', 'services', 'projectSummary', 'contribution'];
+  const GALLERY_I18N_FIELDS = ['title', 'browserTitle', 'description'];
   const SITE_I18N_FIELDS = window.portfolioI18n?.SITE_FIELDS || [];
 
   function translationValue(source, locale, field) {
@@ -825,6 +825,12 @@
         </div>
 
         <div class="form-group">
+          <label for="field-browserTitle">Browser Tab Title — Optional</label>
+          <input id="field-browserTitle" type="text" maxlength="120" value="${escAdm(projectText('browserTitle'))}" data-field="browserTitle" data-project-i18n-field="browserTitle" placeholder="${escAdm(projectPlaceholder('browserTitle') || `ARTUR ARAUJO | ${project.title}`)}" />
+          <span class="media-upload-note">Controls the browser tab and shared-link title. Leave empty to use “ARTUR ARAUJO | Project Title”.</span>
+        </div>
+
+        <div class="form-group">
           <label for="field-client">Client</label>
           <input id="field-client" type="text" value="${escAdm(project.client || '')}" data-field="client" />
         </div>
@@ -1273,6 +1279,7 @@
       id: slug,
       slug: slug,
       title: 'UNTITLED PROJECT',
+      browserTitle: '',
       client: '',
       category: '',
       year: String(new Date().getFullYear()),
@@ -1728,6 +1735,11 @@
       </div>
       <div class="form-grid">
         <h3 class="form-section-heading">Landing Page</h3>
+        <div class="form-group span-2">
+          <label for="setting-landingBrowserTitle">Browser Tab Title — Optional</label>
+          <input id="setting-landingBrowserTitle" type="text" maxlength="120" value="${escAdm(siteText('landingBrowserTitle'))}" data-site-field="landingBrowserTitle" data-site-i18n-field="landingBrowserTitle" placeholder="${escAdm(sitePlaceholder('landingBrowserTitle') || `${settings.landingTitle} | Portfolio`)}" />
+          <span class="media-upload-note">Controls only the browser tab and shared-link title. Leave empty to use the automatic title.</span>
+        </div>
         <div class="form-group">
           <label for="setting-landingTitle">Main Title</label>
           <input id="setting-landingTitle" type="text" value="${escAdm(siteText('landingTitle'))}" data-site-field="landingTitle" data-site-i18n-field="landingTitle" placeholder="${escAdm(sitePlaceholder('landingTitle'))}" />
@@ -1756,6 +1768,11 @@
         </div>
 
         <h3 class="form-section-heading">Work Overview</h3>
+        <div class="form-group span-2">
+          <label for="setting-workBrowserTitle">Browser Tab Title — Optional</label>
+          <input id="setting-workBrowserTitle" type="text" maxlength="120" value="${escAdm(siteText('workBrowserTitle'))}" data-site-field="workBrowserTitle" data-site-i18n-field="workBrowserTitle" placeholder="ARTUR ARAUJO | TRABALHOS SELECIONADOS" />
+          <span class="media-upload-note">Controls only the browser tab and shared-link title. Leave empty to use the automatic localized title.</span>
+        </div>
         <div class="form-group span-2">
           <label for="setting-workIntroTitle">Presentation Title — Optional</label>
           <textarea id="setting-workIntroTitle" rows="3" data-site-field="workIntroTitle" data-site-i18n-field="workIntroTitle" placeholder="${escAdm(sitePlaceholder('workIntroTitle'))}">${escAdm(siteText('workIntroTitle'))}</textarea>
@@ -1803,6 +1820,11 @@
         </div>
 
         <h3 class="form-section-heading">Contact Page</h3>
+        <div class="form-group span-2">
+          <label for="setting-contactBrowserTitle">Browser Tab Title — Optional</label>
+          <input id="setting-contactBrowserTitle" type="text" maxlength="120" value="${escAdm(siteText('contactBrowserTitle'))}" data-site-field="contactBrowserTitle" data-site-i18n-field="contactBrowserTitle" placeholder="ARTUR ARAUJO | CONTATO" />
+          <span class="media-upload-note">Controls only the browser tab and shared-link title. Leave empty to use the automatic localized title.</span>
+        </div>
         <div class="form-group span-2">
           <label for="setting-contactTitle">Contact Title</label>
           <input id="setting-contactTitle" type="text" value="${escAdm(siteText('contactTitle'))}" data-site-field="contactTitle" data-site-i18n-field="contactTitle" placeholder="${escAdm(sitePlaceholder('contactTitle'))}" />
@@ -2070,6 +2092,7 @@
     const gallery = {
       id,
       title: 'UNTITLED SECTION',
+      browserTitle: '',
       description: '',
       published: false,
       order: workingGalleries.length + 1,
@@ -2147,6 +2170,11 @@
         <div class="form-group">
           <label for="gallery-id">Section ID</label>
           <input id="gallery-id" type="text" value="${escAdm(gallery.id)}" ${idIsEditable ? 'data-gallery-field="id"' : 'readonly'} />
+        </div>
+        <div class="form-group span-2">
+          <label for="gallery-browser-title">Browser Tab Title — Optional</label>
+          <input id="gallery-browser-title" type="text" maxlength="120" value="${escAdm(galleryText('browserTitle'))}" data-gallery-field="browserTitle" data-gallery-i18n-field="browserTitle" placeholder="${escAdm(galleryPlaceholder('browserTitle') || `ARTUR ARAUJO | ${gallery.title}`)}" />
+          <span class="media-upload-note">Controls the browser tab and shared-link title. Leave empty to use “ARTUR ARAUJO | Section Title”.</span>
         </div>
         <div class="form-group span-2">
           <label for="gallery-description">Description</label>

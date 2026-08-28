@@ -8,16 +8,19 @@
   const STORAGE_KEY = 'portfolio-site-settings-v1';
   const DEFAULTS = Object.freeze({
     landingTitle: 'ARTUR ARAUJO',
+    landingBrowserTitle: '',
     landingSubtitle: 'GENERALISTA VFX',
     landingEnterLabel: 'ENTRAR',
     landingWatchReelLabel: 'ASSISTIR REEL',
     landingBackgroundVideo: 'assets/videos/bg-cinema.mp4',
     workIntroTitle: 'GENERALISTA ATUANDO ENTRE MOTION, COMPOSIÇÃO VFX E EDIÇÃO.',
     workIntroBody: 'Uma seleção de projetos de efeitos visuais, motion e edição para cinema, televisão e conteúdo de marca.',
+    workBrowserTitle: '',
     workHeroProjectIds: [],
     galleryBackgroundVideo: 'assets/videos/bg-cinema.mp4',
     contentTheme: 'dark',
     contactTitle: 'VAMOS TRABALHAR JUNTOS',
+    contactBrowserTitle: '',
     contactIntro: 'Disponível para produções audiovisuais, projetos de VFX e consultoria criativa.',
     contactAvailability: 'DISPONÍVEL PARA NOVOS PROJETOS',
     contactLocation: 'SÃO PAULO / REMOTO PARA TODO O MUNDO',
@@ -78,7 +81,10 @@
       if (isLegacyEnglishDefault) migratedEnglish[key] = candidate;
       // These fields are intentionally optional; explicit empty strings must
       // survive local and remote normalization.
-      if (['landingSubtitle', 'workIntroTitle', 'workIntroBody'].includes(key) && hasStringValue) {
+      if ([
+        'landingBrowserTitle', 'landingSubtitle', 'workBrowserTitle',
+        'workIntroTitle', 'workIntroBody', 'contactBrowserTitle'
+      ].includes(key) && hasStringValue) {
         settings[key] = isLegacyEnglishDefault ? DEFAULTS[key] : candidate;
       } else if (key === 'contentTheme') {
         settings[key] = candidate === 'light' ? 'light' : 'dark';
@@ -181,7 +187,10 @@
     }
 
     if (document.querySelector('[data-site-setting="landing-title"]')) {
-      document.title = `${visible.landingTitle} | Portfolio`;
+      document.title = visible.landingBrowserTitle || `${visible.landingTitle} | Portfolio`;
+    } else if (document.body.classList.contains('contact-page')) {
+      document.title = visible.contactBrowserTitle ||
+        `ARTUR ARAUJO | ${window.portfolioI18n?.t('contact') || 'CONTATO'}`;
     }
 
     window.dispatchEvent(new CustomEvent('portfolio-site-settings-applied', {

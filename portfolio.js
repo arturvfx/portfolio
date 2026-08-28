@@ -90,7 +90,8 @@ function getCurrentWorkSettings() {
 }
 
 function updatePortfolioOverviewMetadata(settings) {
-  const title = `ARTUR ARAUJO | ${window.portfolioI18n?.t('selectedWork') || 'TRABALHOS SELECIONADOS'}`;
+  const title = settings.workBrowserTitle ||
+    `ARTUR ARAUJO | ${window.portfolioI18n?.t('selectedWork') || 'TRABALHOS SELECIONADOS'}`;
   const description = settings.workIntroBody || settings.workIntroTitle ||
     (window.portfolioI18n?.getLocale() === 'en'
       ? 'Selected VFX, motion and editorial work by Artur Araujo.'
@@ -246,7 +247,7 @@ function setPortfolioMeta(selector, value) {
 }
 
 function updateGalleryMetadata(gallery) {
-  const title = `ARTUR ARAUJO | ${gallery.title}`;
+  const title = gallery.browserTitle || `ARTUR ARAUJO | ${gallery.title}`;
   const description = gallery.description ||
     (window.portfolioI18n?.getLocale() === 'en'
       ? `Selected ${gallery.title.toLowerCase()} projects by VFX generalist Artur Araujo.`

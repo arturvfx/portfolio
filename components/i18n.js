@@ -6,11 +6,11 @@
 
   const STORAGE_KEY = 'portfolio-language-v1';
   const DEFAULT_LOCALE = 'pt-BR';
-  const PROJECT_FIELDS = ['title', 'category', 'services', 'projectSummary', 'contribution'];
-  const GALLERY_FIELDS = ['title', 'description'];
+  const PROJECT_FIELDS = ['title', 'browserTitle', 'category', 'services', 'projectSummary', 'contribution'];
+  const GALLERY_FIELDS = ['title', 'browserTitle', 'description'];
   const SITE_FIELDS = [
-    'landingTitle', 'landingSubtitle', 'landingEnterLabel', 'landingWatchReelLabel',
-    'workIntroTitle', 'workIntroBody', 'contactTitle', 'contactIntro',
+    'landingTitle', 'landingBrowserTitle', 'landingSubtitle', 'landingEnterLabel', 'landingWatchReelLabel',
+    'workBrowserTitle', 'workIntroTitle', 'workIntroBody', 'contactTitle', 'contactBrowserTitle', 'contactIntro',
     'contactAvailability', 'contactLocation', 'contactSubmitLabel',
     'contactCategoryVfx', 'contactCategoryEditing', 'contactCategoryAlchemy',
     'contactCategoryFull', 'contactCategoryOther', 'footerTitle',

@@ -71,6 +71,7 @@
     const clean = { ...project };
     // Remove the retired credit from older local overrides during migration.
     delete clean.agencyStudio;
+    clean.browserTitle = typeof clean.browserTitle === 'string' ? clean.browserTitle.trim() : '';
     clean.projectStills = normalizeProjectStills(clean.projectStills);
     clean.desktopFocusX = normalizeCoverFocus(clean.desktopFocusX);
     clean.desktopFocusY = normalizeCoverFocus(clean.desktopFocusY);
@@ -82,7 +83,7 @@
     clean.mobileFocusY = normalizeCoverFocus(clean.mobileFocusY);
     clean.mobileCoverScale = normalizeCoverScale(clean.mobileCoverScale);
     clean.translations = normalizeTranslations(clean.translations, [
-      'title', 'category', 'services', 'projectSummary', 'contribution'
+      'title', 'browserTitle', 'category', 'services', 'projectSummary', 'contribution'
     ]);
     return clean;
   }
@@ -165,7 +166,8 @@
       updatedAt: new Date().toISOString(),
       galleries: galleries.map(gallery => ({
         ...gallery,
-        translations: normalizeTranslations(gallery.translations, ['title', 'description'])
+        browserTitle: typeof gallery.browserTitle === 'string' ? gallery.browserTitle.trim() : '',
+        translations: normalizeTranslations(gallery.translations, ['title', 'browserTitle', 'description'])
       })),
       deleted: requestedDeleted.filter(id => !activeIds.has(id))
     };

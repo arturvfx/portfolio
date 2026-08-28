@@ -369,7 +369,7 @@ async function initProjectDetail() {
 }
 
 function updateProjectMetadata(project) {
-  const title = `ARTUR ARAUJO | ${project.title}`;
+  const title = project.browserTitle || `ARTUR ARAUJO | ${project.title}`;
   const fallbackDetails = [project.client, project.category, project.year].filter(Boolean).join(' — ');
   const description = (project.projectSummary || `${project.title}${fallbackDetails ? ` — ${fallbackDetails}` : ''}.`)
     .replace(/\s+/g, ' ')

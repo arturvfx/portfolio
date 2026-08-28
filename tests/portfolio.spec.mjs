@@ -38,6 +38,7 @@ test('landing page exposes its primary actions and language switch', async ({ pa
   await expect(page.locator('#enter-button')).toBeVisible();
   await expect(page.locator('#watch-reel-button')).toBeVisible();
   await expect(page.locator('.site-language-toggle')).toHaveText('EN');
+  await expect(page).toHaveTitle(/ARTUR ARAUJO/i);
   await expectNoHorizontalOverflow(page);
 });
 
@@ -53,6 +54,21 @@ test('language switch persists and remains exclusive to the landing page', async
   await expect(page.locator('.site-language-toggle')).toHaveCount(0);
 });
 
+test('a custom browser title does not alter the visible landing heading', async ({ page, isMobile }) => {
+  test.skip(isMobile, 'The settings behavior only needs one browser project');
+  await page.goto('/');
+  await expect(page.locator('body')).toHaveClass(/site-settings-ready/);
+  const visibleHeading = await page.locator('#main-title').textContent();
+  await page.evaluate(() => {
+    window.siteSettings.apply({
+      ...window.siteSettings.loadLocal(),
+      landingBrowserTitle: 'CUSTOM PORTFOLIO TAB'
+    });
+  });
+  await expect(page).toHaveTitle('CUSTOM PORTFOLIO TAB');
+  await expect(page.locator('#main-title')).toHaveText(visibleHeading.trim());
+});
+
 test('enter opens the clean work route with the overview ready', async ({ page }) => {
   await page.goto('/');
   await page.locator('#enter-button').click();
@@ -60,6 +76,7 @@ test('enter opens the clean work route with the overview ready', async ({ page }
   await waitForPortfolio(page);
   await expect(page.locator('#portfolio-overview-view')).toBeVisible();
   await expect(page.locator('#work-section-index .work-section-link').first()).toBeVisible();
+  expect(await page.title()).not.toBe('ARTUR ARAUJO | Portfolio');
 });
 
 test('section navigation preserves the document shell and resets scroll', async ({ page }) => {
@@ -88,6 +105,7 @@ test('a gallery project opens a populated clean project route and can return', a
   await expect(page).toHaveURL(/\/project\/[^/?#]+$/);
   await expect(page.locator('body')).toHaveClass(/project-data-ready/);
   await expect(page.locator('#project-detail-title')).toHaveText(expectedTitle.trim());
+  expect(await page.title()).not.toBe('ARTUR ARAUJO | Project');
   await expect(page.locator('#project-back-link')).toBeVisible();
   const youtubeCover = page.locator('.project-youtube-cover');
   if (await youtubeCover.count()) {
@@ -149,6 +167,12 @@ test('security headers protect the public document without blocking its scripts'
   await expect(page.locator('link[href*="admin/admin.css"]')).toHaveCount(1);
   await expect(page.locator('#btn-deploy-seo')).toHaveText('Update SEO & Previews');
   await expect(page.locator('.admin-menu-note')).toContainText('Saved Supabase content is already live');
+  const adminScript = await (await request.get('/admin/admin.js')).text();
+  expect(adminScript).toContain('setting-landingBrowserTitle');
+  expect(adminScript).toContain('setting-workBrowserTitle');
+  expect(adminScript).toContain('setting-contactBrowserTitle');
+  expect(adminScript).toContain('field-browserTitle');
+  expect(adminScript).toContain('gallery-browser-title');
 });
 
 test.describe('mobile navigation', () => {

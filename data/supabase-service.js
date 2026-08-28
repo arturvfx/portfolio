@@ -53,6 +53,7 @@
     return {
       id: row.id,
       title: row.title,
+      browserTitle: row.browser_title || '',
       description: row.description || '',
       published: row.published,
       order: row.display_order,
@@ -67,6 +68,7 @@
     return {
       id: gallery.id,
       title: gallery.title,
+      browser_title: gallery.browserTitle || '',
       description: gallery.description || '',
       published: gallery.published !== false,
       display_order: Number(gallery.order),
@@ -87,6 +89,7 @@
       id: row.id,
       slug: row.slug,
       title: row.title,
+      browserTitle: row.browser_title || '',
       client: row.client || '',
       category: row.category || '',
       year: row.year || '',
@@ -123,6 +126,7 @@
       id: project.id,
       slug: project.slug,
       title: project.title,
+      browser_title: project.browserTitle || '',
       client: project.client || '',
       category: project.category || '',
       year: String(project.year || ''),

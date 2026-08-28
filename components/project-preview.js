@@ -15,6 +15,7 @@ function storeProjectPreview(project, options = {}) {
     locale: window.portfolioI18n?.getLocale() || 'pt-BR',
     slug: project.slug,
     title: project.title || '',
+    browserTitle: project.browserTitle || '',
     category: project.category || '',
     client: project.client || '',
     year: project.year || '',
@@ -191,7 +192,7 @@ function hydrateStoredProjectPreview() {
     }
   }
 
-  document.title = `ARTUR ARAUJO | ${preview.title}`;
+  document.title = preview.browserTitle || `ARTUR ARAUJO | ${preview.title}`;
   document.body.classList.remove('project-loading');
   document.body.classList.add('project-preview-ready');
   return true;
