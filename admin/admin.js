@@ -1554,8 +1554,11 @@
   // ─── Export ──────────────────────────────────────────────────
 
   function exportJson() {
-    adminStorage.exportJson(managedSection, workingProjects);
-    showStatus('JSON file exported successfully.', 'success');
+    const backup = adminStorage.exportFullBackup(workingGalleries, workingProjects, workingSettings);
+    showStatus(
+      `Full backup exported: ${backup.counts.sections} sections, ${backup.counts.projects} projects and ${backup.counts.media} media references.`,
+      'success'
+    );
   }
 
   // ─── Import ──────────────────────────────────────────────────
@@ -1563,6 +1566,61 @@
   function triggerImport() {
     const fileInput = dom.importFile;
     if (fileInput) fileInput.click();
+  }
+
+  async function restoreFullBackup(payload) {
+    const errors = adminStorage.validateFullBackup(payload);
+    if (errors.length) {
+      showStatus('BACKUP VALIDATION ERRORS:\n' + errors.join('\n'), 'error');
+      return;
+    }
+
+    const confirmed = confirm(
+      `Restore this full portfolio backup?\n\n` +
+      `${payload.galleries.length} section(s)\n${payload.projects.length} project(s)\n` +
+      `${Array.isArray(payload.media) ? payload.media.length : 0} media reference(s)\n\n` +
+      'Current local content will be replaced. Matching Supabase rows will be updated; unrelated remote rows are not deleted.'
+    );
+    if (!confirmed) return;
+
+    workingGalleries = adminStorage.normalizeGalleryOrder(JSON.parse(JSON.stringify(payload.galleries)));
+    workingProjects = JSON.parse(JSON.stringify(payload.projects));
+    workingGalleries.forEach(gallery => {
+      workingProjects = adminStorage.normalizeOrder(workingProjects, gallery.id);
+    });
+    workingSettings = window.siteSettings
+      ? siteSettings.saveLocal(payload.settings)
+      : JSON.parse(JSON.stringify(payload.settings));
+
+    adminStorage.saveGalleries(workingGalleries, []);
+    adminStorage.save(workingProjects, []);
+    managedSection = workingGalleries[0]?.id || '';
+    selectedId = null;
+    formDirty = false;
+
+    if (remoteEnabled) {
+      showStatus('Restoring the full backup to Supabase…', 'info');
+      try {
+        await syncPortfolioSnapshot();
+        await portfolioBackend.saveSiteSettings(workingSettings);
+      } catch (error) {
+        showStatus(`Restored locally, but Supabase failed: ${error.message || error}`, 'error');
+        renderSectionSelect();
+        renderProjectList();
+        clearForm();
+        updateOverrideNotice();
+        return;
+      }
+    }
+
+    renderSectionSelect();
+    renderProjectList();
+    clearForm();
+    updateOverrideNotice();
+    showStatus(
+      remoteEnabled ? 'Full backup restored locally and in Supabase.' : 'Full backup restored to the local admin copy.',
+      'success'
+    );
   }
 
   function handleImportFile(e) {
@@ -1581,6 +1639,11 @@
         payload = JSON.parse(ev.target.result);
       } catch (err) {
         showStatus('ERROR: File is not valid JSON. No changes made.', 'error');
+        return;
+      }
+
+      if (payload?.backupType === 'artur-portfolio-full') {
+        await restoreFullBackup(payload);
         return;
       }
 

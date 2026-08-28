@@ -3,6 +3,7 @@
   "private": true,
   "version": "1.0.0",
   "scripts": {
+    "backup:media": "node scripts/download-media-backup.mjs",
     "build": "node scripts/build-static.mjs",
     "test": "npm run build && playwright test",
     "test:e2e": "playwright test",

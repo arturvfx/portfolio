@@ -137,3 +137,23 @@ write access. Never place the `service_role` key in this repository.
   Supabase is unavailable.
 - Cover images and optional hover videos upload to the public media bucket.
 - Full project videos can use privacy-enhanced YouTube embeds.
+
+## 6. Full backup and recovery
+
+The admin's **Export Full Backup** action downloads one JSON file containing
+site settings, every section, every project and a deduplicated inventory of
+all referenced media. It intentionally excludes passwords, authentication
+tokens and contact-form submissions.
+
+Keep the JSON file with an offline copy of its media. While the media URLs are
+still available, download those files from the repository root with:
+
+```bash
+npm run backup:media -- /path/to/artur-portfolio-backup-YYYY-MM-DD.json
+```
+
+An optional second argument selects the destination folder. The generated
+folder contains the media files and a copy of the JSON annotated with each
+local filename. The admin can also import a full backup to restore settings,
+sections and projects. Remote rows with matching IDs are updated; unrelated
+rows are deliberately not deleted.

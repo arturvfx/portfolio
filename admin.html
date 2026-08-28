@@ -66,8 +66,9 @@
           <span class="admin-menu-label">Data &amp; account</span>
           <span id="auth-user"></span>
           <button id="btn-migrate-supabase" class="btn btn-primary" type="button" style="display:none">Sync All to Supabase</button>
-          <button id="btn-export" class="btn btn-secondary" type="button">↓ Export JSON</button>
-          <button id="btn-import" class="btn btn-secondary" type="button">↑ Import JSON</button>
+          <span class="admin-menu-note">Full backup includes site settings, every section, every project and a deduplicated media inventory. It never includes passwords or contact messages.</span>
+          <button id="btn-export" class="btn btn-secondary" type="button">↓ Export Full Backup</button>
+          <button id="btn-import" class="btn btn-secondary" type="button">↑ Import Backup</button>
           <button id="btn-reset" class="btn btn-danger" type="button">↺ Reset Local Backup</button>
           <span class="admin-menu-label">Search &amp; sharing</span>
           <span class="admin-menu-note">Saved Supabase content is already live. Use this only to rebuild the sitemap and social-sharing previews.</span>
@@ -117,9 +118,9 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.4/dist/umd/supabase.js"></script>
 <script src="../config/supabase-config.js?v=20260804-import"></script>
 <script src="../data/supabase-service.js?v=20260828-seo-deploy"></script>
-<script src="../admin/admin-storage.js?v=20260827-i18n"></script>
+<script src="../admin/admin-storage.js?v=20260828-full-backup"></script>
 <script src="../components/youtube-player.js?v=20260804-youtube-cover"></script>
-<script src="../admin/admin.js?v=20260828-seo-deploy"></script>
+<script src="../admin/admin.js?v=20260828-full-backup"></script>
 
 </body>
 </html>

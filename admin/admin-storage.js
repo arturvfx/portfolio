@@ -463,33 +463,126 @@
     return errors;
   }
 
-  // ─── Export ──────────────────────────────────────────────────
+  // ─── Full-site backup ────────────────────────────────────────
 
-  /**
-   * Download the effective projects for a given section as a JSON file.
-   * @param {string} section - Section id to export
-   * @param {Array} effectiveProjects - Current effective project array
-   */
-  function exportJson(section, effectiveProjects) {
-    const projects = (effectiveProjects || []).filter(p => p.section === section);
-    const payload = {
-      version: STORAGE_VERSION,
+  function addMediaReference(manifest, url, reference) {
+    const source = typeof url === 'string' ? url.trim() : '';
+    if (!source) return;
+    const existing = manifest.get(source) || { url: source, references: [] };
+    if (!existing.references.includes(reference)) existing.references.push(reference);
+    manifest.set(source, existing);
+  }
+
+  function collectMediaManifest(galleries, projects, settings) {
+    const manifest = new Map();
+    addMediaReference(manifest, settings?.landingBackgroundVideo, 'site.landingBackgroundVideo');
+    addMediaReference(manifest, settings?.galleryBackgroundVideo, 'site.galleryBackgroundVideo');
+
+    (galleries || []).forEach(gallery => {
+      addMediaReference(manifest, gallery.backgroundVideo, `section.${gallery.id}.backgroundVideo`);
+    });
+
+    (projects || []).forEach(project => {
+      const identity = project.id || project.slug || 'unknown';
+      addMediaReference(manifest, project.coverImage, `project.${identity}.coverImage`);
+      addMediaReference(manifest, project.previewVideo, `project.${identity}.previewVideo`);
+      normalizeProjectStills(project.projectStills).forEach((still, index) => {
+        addMediaReference(manifest, still.url, `project.${identity}.projectStills.${index}`);
+      });
+    });
+
+    return Array.from(manifest.values()).map((entry, index) => ({
+      id: index + 1,
+      ...entry
+    }));
+  }
+
+  function createFullBackup(galleries, projects, settings) {
+    const cleanGalleries = (galleries || []).map(gallery => ({
+      ...gallery,
+      previousSlugs: Array.isArray(gallery.previousSlugs) ? [...gallery.previousSlugs] : [],
+      translations: normalizeTranslations(gallery.translations, ['title', 'browserTitle', 'description'])
+    }));
+    const cleanProjects = (projects || []).map(sanitizeProject);
+    const cleanSettings = settings && typeof settings === 'object'
+      ? JSON.parse(JSON.stringify(settings))
+      : {};
+    const media = collectMediaManifest(cleanGalleries, cleanProjects, cleanSettings);
+
+    return {
+      backupType: 'artur-portfolio-full',
+      schemaVersion: 1,
       exportedAt: new Date().toISOString(),
-      section: section,
-      projects: projects
+      source: window.location.origin,
+      counts: {
+        sections: cleanGalleries.length,
+        projects: cleanProjects.length,
+        media: media.length
+      },
+      settings: cleanSettings,
+      galleries: cleanGalleries,
+      projects: cleanProjects,
+      media,
+      recoveryNote: 'Media files are listed by URL. Run the repository media-backup script while those URLs are still available to keep offline copies.'
     };
+  }
 
+  function downloadJson(payload, filename) {
     const json = JSON.stringify(payload, null, 2);
     const blob = new Blob([json], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
 
     const a = document.createElement('a');
     a.href = url;
-    a.download = section + '-projects.json';
+    a.download = filename;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+  }
+
+  function exportFullBackup(galleries, projects, settings) {
+    const payload = createFullBackup(galleries, projects, settings);
+    const date = payload.exportedAt.slice(0, 10);
+    downloadJson(payload, `artur-portfolio-backup-${date}.json`);
+    return payload;
+  }
+
+  function validateFullBackup(payload) {
+    const errors = [];
+    if (!payload || payload.backupType !== 'artur-portfolio-full') {
+      return ['This is not a full portfolio backup.'];
+    }
+    if (!Array.isArray(payload.galleries)) errors.push('"galleries" must be an array.');
+    if (!Array.isArray(payload.projects)) errors.push('"projects" must be an array.');
+    if (!payload.settings || typeof payload.settings !== 'object' || Array.isArray(payload.settings)) {
+      errors.push('"settings" must be an object.');
+    }
+    if (errors.length) return errors;
+
+    errors.push(...validate({ projects: payload.projects }));
+    const galleryIds = new Set();
+    const gallerySlugs = new Set();
+    payload.galleries.forEach((gallery, index) => {
+      const ref = `Section ${index + 1}`;
+      if (!gallery || typeof gallery !== 'object') {
+        errors.push(`${ref} must be an object.`);
+        return;
+      }
+      if (!gallery.id || typeof gallery.id !== 'string') errors.push(`${ref} requires a string "id".`);
+      if (!gallery.slug || typeof gallery.slug !== 'string') errors.push(`${ref} requires a string "slug".`);
+      if (!gallery.title || typeof gallery.title !== 'string') errors.push(`${ref} requires a string "title".`);
+      if (galleryIds.has(gallery.id)) errors.push(`${ref} duplicates internal ID "${gallery.id}".`);
+      if (gallerySlugs.has(gallery.slug)) errors.push(`${ref} duplicates URL slug "${gallery.slug}".`);
+      galleryIds.add(gallery.id);
+      gallerySlugs.add(gallery.slug);
+    });
+    payload.projects.forEach((project, index) => {
+      if (!galleryIds.has(project.section)) {
+        errors.push(`Project ${index + 1} references missing section "${project.section}".`);
+      }
+    });
+    return errors;
   }
 
   // ─── Public API ──────────────────────────────────────────────
@@ -515,7 +608,10 @@
     normalizeOrder,
     setOrder,
     validate,
-    exportJson
+    collectMediaManifest,
+    createFullBackup,
+    exportFullBackup,
+    validateFullBackup
   };
 
 }());

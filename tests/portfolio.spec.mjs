@@ -109,6 +109,28 @@ test('section URL slugs resolve independently from stable internal IDs', async (
   expect(resolved.slug).toBe('current-url');
 });
 
+test('admin full backup includes the complete content model and deduplicated media', async ({ page, isMobile }) => {
+  test.skip(isMobile, 'Backup serialization only needs one browser project');
+  await page.goto('/admin');
+  const backup = await page.evaluate(() => window.adminStorage.createFullBackup(
+    [{ id: 'section-id', slug: 'section-url', title: 'SECTION', order: 1, published: true }],
+    [{
+      id: 'project-id', slug: 'project-url', title: 'PROJECT', section: 'section-id',
+      size: '16-9', order: 1, published: true, coverImage: 'https://media.example/cover.jpg',
+      projectStills: [{ url: 'https://media.example/cover.jpg', size: '16-9' }]
+    }],
+    { landingTitle: 'ARTUR ARAUJO', landingBackgroundVideo: 'assets/videos/bg-cinema.mp4' }
+  ));
+
+  expect(backup.backupType).toBe('artur-portfolio-full');
+  expect(backup.galleries).toHaveLength(1);
+  expect(backup.projects).toHaveLength(1);
+  expect(backup.settings.landingTitle).toBe('ARTUR ARAUJO');
+  expect(backup.media).toHaveLength(2);
+  expect(backup.media.find(item => item.url.includes('cover.jpg')).references).toHaveLength(2);
+  expect(await page.evaluate(value => window.adminStorage.validateFullBackup(value), backup)).toEqual([]);
+});
+
 test('a gallery project opens a populated clean project route and can return', async ({ page }) => {
   await page.goto('/featured-work');
   await waitForPortfolio(page);
@@ -182,7 +204,8 @@ test('security headers protect the public document without blocking its scripts'
   await expect(page.locator('body')).not.toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
   await expect(page.locator('link[href*="admin/admin.css"]')).toHaveCount(1);
   await expect(page.locator('#btn-deploy-seo')).toHaveText('Update SEO & Previews');
-  await expect(page.locator('.admin-menu-note')).toContainText('Saved Supabase content is already live');
+  await expect(page.locator('.admin-menu-note', { hasText: 'Saved Supabase content is already live' }))
+    .toContainText('Saved Supabase content is already live');
   const adminScript = await (await request.get('/admin/admin.js')).text();
   expect(adminScript).toContain('setting-landingBrowserTitle');
   expect(adminScript).toContain('setting-workBrowserTitle');
