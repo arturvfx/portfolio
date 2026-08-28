@@ -112,6 +112,7 @@ test('section URL slugs resolve independently from stable internal IDs', async (
 test('a gallery project opens a populated clean project route and can return', async ({ page }) => {
   await page.goto('/featured-work');
   await waitForPortfolio(page);
+  const expectedBackPath = new URL(page.url()).pathname;
   const firstProject = page.locator('.project-link').first();
   await expect(firstProject).toBeVisible();
   const expectedTitle = await firstProject.locator('.frame-title').textContent();
@@ -130,7 +131,7 @@ test('a gallery project opens a populated clean project route and can return', a
     await expect(page.locator('.project-video-modal')).toHaveCount(0);
   }
   await page.locator('#project-back-link').click();
-  await expect(page).toHaveURL(/\/featured-work$/);
+  await expect(page).toHaveURL(new RegExp(`${expectedBackPath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`));
 });
 
 test('contact form validates locally without sending an empty request', async ({ page }) => {

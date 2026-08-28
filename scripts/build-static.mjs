@@ -234,7 +234,7 @@ async function generateSearchEntries() {
         title: plainText(project.browser_title) || `ARTUR ARAUJO | ${plainText(project.title)}`,
         description,
         canonical: `${publicOrigin}${route}`,
-        image: absoluteMediaUrl(project.cover_image),
+        image: absoluteMediaUrl(project.cover_image) || firstCover,
         imageAlt: plainText(project.title)
       });
       await writeRouteHtml(route, html);
