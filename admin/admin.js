@@ -32,6 +32,7 @@
   let saveFeedbackTimer = null;
   let adminStarted = false;
   let remoteEnabled = false;
+  let seoDeployPending = false;
   let remoteWriteQueue = Promise.resolve();
   let draggedProjectId = null;
   let suppressProjectClick = false;
@@ -112,6 +113,7 @@
     get authUser()    { return document.getElementById('auth-user'); },
     get logoutBtn()   { return document.getElementById('btn-logout'); },
     get migrateBtn()  { return document.getElementById('btn-migrate-supabase'); },
+    get deploySeoBtn() { return document.getElementById('btn-deploy-seo'); },
   };
 
   // ─── Init ────────────────────────────────────────────────────
@@ -261,6 +263,47 @@
       showStatus(`SUPABASE ERROR: ${error.message || error}`, 'error');
     } finally {
       dom.migrateBtn.disabled = false;
+    }
+  }
+
+  async function deploySeoAndPreviews() {
+    if (seoDeployPending) return;
+    if (!remoteEnabled) {
+      showStatus('Sign in to Supabase before updating SEO and previews.', 'error');
+      return;
+    }
+    if (formDirty) {
+      showStatus('Save the current changes first. Content is already live after it is saved to Supabase.', 'error');
+      return;
+    }
+
+    const button = dom.deploySeoBtn;
+    const originalLabel = button ? button.textContent : '';
+    seoDeployPending = true;
+    if (button) {
+      button.disabled = true;
+      button.textContent = 'Starting update…';
+    }
+    showStatus('Starting the SEO and social-preview rebuild…', 'info');
+
+    try {
+      await portfolioBackend.deploySeoAndPreviews();
+      showStatus('SEO and previews update started. Your saved content was already live.', 'success');
+      if (button) button.textContent = 'Update queued';
+      window.setTimeout(() => {
+        if (button) {
+          button.disabled = false;
+          button.textContent = originalLabel;
+        }
+        seoDeployPending = false;
+      }, 10000);
+    } catch (error) {
+      showStatus(`SEO/PREVIEWS ERROR: ${error.message || error}`, 'error');
+      if (button) {
+        button.disabled = false;
+        button.textContent = originalLabel;
+      }
+      seoDeployPending = false;
     }
   }
 
@@ -2395,6 +2438,8 @@
 
     const resetBtn = document.getElementById('btn-reset');
     if (resetBtn) resetBtn.addEventListener('click', resetOverrides);
+
+    if (dom.deploySeoBtn) dom.deploySeoBtn.addEventListener('click', deploySeoAndPreviews);
 
     const sectionSelect = dom.sectionSelect;
     if (sectionSelect) {

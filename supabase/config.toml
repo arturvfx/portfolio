@@ -1,2 +1,5 @@
 [functions.send-contact-email]
 verify_jwt = false
+
+[functions.trigger-site-deploy]
+verify_jwt = true

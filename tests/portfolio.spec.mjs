@@ -146,6 +146,9 @@ test('security headers protect the public document without blocking its scripts'
   await page.goto('/admin');
   await expect(page.locator('body')).toBeVisible();
   await expect(page.locator('body')).not.toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
+  await expect(page.locator('link[href*="admin/admin.css"]')).toHaveCount(1);
+  await expect(page.locator('#btn-deploy-seo')).toHaveText('Update SEO & Previews');
+  await expect(page.locator('.admin-menu-note')).toContainText('Saved Supabase content is already live');
 });
 
 test.describe('mobile navigation', () => {

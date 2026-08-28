@@ -315,6 +315,29 @@
     return supabaseClient.storage.from(bucket).getPublicUrl(upload.data.path).data.publicUrl;
   }
 
+  async function deploySeoAndPreviews() {
+    const supabaseClient = getClient();
+    if (!supabaseClient) throw new Error('Supabase is not configured.');
+
+    const result = await supabaseClient.functions.invoke('trigger-site-deploy', {
+      body: { source: 'portfolio-admin' }
+    });
+    if (result.error) {
+      let message = result.error.message || 'Could not start the SEO and previews update.';
+      const response = result.error.context;
+      if (response && typeof response.clone === 'function') {
+        try {
+          const payload = await response.clone().json();
+          if (payload && typeof payload.error === 'string') message = payload.error;
+        } catch (_error) {
+          // Keep the SDK error when the function did not return JSON.
+        }
+      }
+      throw new Error(message);
+    }
+    return result.data || { ok: true };
+  }
+
   window.portfolioBackend = {
     hasCredentials,
     isConfigured,
@@ -328,6 +351,7 @@
     importPortfolio,
     deleteGallery,
     deleteProject,
-    uploadMedia
+    uploadMedia,
+    deploySeoAndPreviews
   };
 }());

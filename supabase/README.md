@@ -85,6 +85,25 @@ supabase functions deploy send-contact-email --no-verify-jwt
 testing, add `http://localhost:8765` to `CONTACT_ALLOWED_ORIGINS`, separated by
 a comma.
 
+To let authenticated portfolio administrators refresh the generated sitemap
+and social-sharing metadata after content changes, create one Vercel Deploy
+Hook for the production branch. Treat its URL as a password and store it only
+as an Edge Function secret:
+
+```bash
+supabase secrets set \
+  VERCEL_DEPLOY_HOOK_URL=https://api.vercel.com/v1/integrations/deploy/... \
+  ADMIN_ALLOWED_ORIGINS=https://your-domain.com,https://www.your-domain.com
+
+supabase functions deploy trigger-site-deploy
+```
+
+The `trigger-site-deploy` function requires a valid Supabase user session and
+also verifies membership in `portfolio_admins` before it calls Vercel. The
+hook URL must never be added to browser code, an exported admin JSON file or
+the repository. Saved Supabase content is already live without this action;
+the admin control exists only to rebuild static search and sharing metadata.
+
 ## 3. Create the administrator
 
 Create the admin user in Supabase Authentication. Copy that user's UUID and

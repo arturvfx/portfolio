@@ -20,6 +20,10 @@ and local development files.
    `CONTACT_FROM_EMAIL=Artur Araujo <contact@example.com>`.
 6. Keep JWT verification disabled only for `send-contact-email`; the function
    performs its own validation, honeypot check and rate limiting.
+7. Create one Vercel Deploy Hook for the production branch, store it in the
+   `VERCEL_DEPLOY_HOOK_URL` Supabase secret and deploy the authenticated
+   `trigger-site-deploy` Edge Function. Set `ADMIN_ALLOWED_ORIGINS` to the apex
+   and `www` production origins.
 
 ## Domain and search metadata
 
@@ -30,6 +34,8 @@ After the final domain is known:
 2. The build reads published Supabase sections/projects and generates their
    canonical URLs, social metadata and `sitemap.xml`. A new deploy refreshes
    these search entries after content changes.
+   The admin's **Update SEO & Previews** control starts that deploy; saved
+   portfolio content itself is already visible directly from Supabase.
 3. Keep the absolute sitemap URL in `robots.txt` and submit it to the search
    engines you use.
 4. If the provider needs a `CNAME` file or platform configuration, create it
