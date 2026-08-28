@@ -89,6 +89,23 @@ test('unknown clean routes render the custom 404 page', async ({ page }) => {
   await expect(page.locator('main h1')).toContainText(/NÃO ENCONTRADA|NOT FOUND/);
 });
 
+test('generated sitemap and project HTML expose crawlable production metadata', async ({ request, isMobile }) => {
+  test.skip(isMobile, 'Build metadata only needs one browser project');
+  const sitemapResponse = await request.get('/sitemap.xml');
+  expect(sitemapResponse.ok()).toBeTruthy();
+  const sitemap = await sitemapResponse.text();
+  expect(sitemap).toContain('https://arturaraujo.com/work');
+  const projectMatch = sitemap.match(/https:\/\/arturaraujo\.com(\/project\/[^<]+)/);
+  expect(projectMatch).toBeTruthy();
+
+  const projectResponse = await request.get(projectMatch[1]);
+  expect(projectResponse.ok()).toBeTruthy();
+  const projectHtml = await projectResponse.text();
+  expect(projectHtml).toMatch(/<title>(?!ARTUR ARAUJO \| Project)[^<]+<\/title>/);
+  expect(projectHtml).toContain(`<link rel="canonical" href="https://arturaraujo.com${projectMatch[1]}">`);
+  expect(projectHtml).toMatch(/<meta property="og:image" content="https:\/\//);
+});
+
 test.describe('mobile navigation', () => {
   test.skip(({ isMobile }) => !isMobile, 'Mobile-only behavior');
 

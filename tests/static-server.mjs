@@ -24,7 +24,7 @@ const mimeTypes = new Map([
   ['.xml', 'application/xml; charset=utf-8']
 ]);
 
-function resolveRoute(pathname) {
+function resolveFallbackRoute(pathname) {
   if (pathname === '/') return 'index.html';
   if (pathname === '/contact') return 'contact.html';
   if (pathname === '/admin') return 'admin.html';
@@ -44,15 +44,25 @@ function safePath(relativePath) {
 
 const server = createServer(async (request, response) => {
   const url = new URL(request.url || '/', `http://${request.headers.host || '127.0.0.1'}`);
-  const relativePath = resolveRoute(decodeURIComponent(url.pathname));
-  let absolutePath = safePath(relativePath);
+  const pathname = decodeURIComponent(url.pathname);
+  const cleanHtmlPath = pathname === '/' ? 'index.html' : `${pathname.replace(/^\/+/, '')}.html`;
+  const candidates = [cleanHtmlPath, resolveFallbackRoute(pathname)];
+  let absolutePath = null;
 
-  try {
-    if (!absolutePath) throw new Error('Unsafe path');
-    await access(absolutePath);
-    const fileStats = await stat(absolutePath);
-    if (fileStats.isDirectory()) absolutePath = path.join(absolutePath, 'index.html');
-  } catch (error) {
+  for (const relativePath of candidates) {
+    const candidate = safePath(relativePath);
+    if (!candidate) continue;
+    try {
+      await access(candidate);
+      const fileStats = await stat(candidate);
+      absolutePath = fileStats.isDirectory() ? path.join(candidate, 'index.html') : candidate;
+      break;
+    } catch (error) {
+      // Try the next clean-route or fallback candidate.
+    }
+  }
+
+  if (!absolutePath) {
     absolutePath = path.join(publicRoot, '404.html');
     response.statusCode = 404;
   }

@@ -1,13 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "redirects": [
-    { "source": "/index.html", "destination": "/", "permanent": true },
-    { "source": "/contact.html", "destination": "/contact", "permanent": true },
-    { "source": "/admin.html", "destination": "/admin", "permanent": true },
-    { "source": "/featured-work.html", "destination": "/featured-work", "permanent": true },
-    { "source": "/content-editing.html", "destination": "/content-editing", "permanent": true },
-    { "source": "/digital-alchemy.html", "destination": "/digital-alchemy", "permanent": true }
-  ],
+  "cleanUrls": true,
   "headers": [
     {
       "source": "/(.*)",
@@ -21,13 +14,11 @@
     }
   ],
   "rewrites": [
-    { "source": "/contact", "destination": "/contact.html" },
-    { "source": "/admin", "destination": "/admin.html" },
-    { "source": "/work", "destination": "/gallery.html?view=overview" },
-    { "source": "/featured-work", "destination": "/gallery.html?section=featured-work" },
-    { "source": "/content-editing", "destination": "/gallery.html?section=content-editing" },
-    { "source": "/digital-alchemy", "destination": "/gallery.html?section=digital-alchemy" },
-    { "source": "/work/:section", "destination": "/gallery.html?section=:section" },
-    { "source": "/project/:slug", "destination": "/project.html?slug=:slug" }
+    { "source": "/work", "destination": "/gallery?view=overview" },
+    { "source": "/featured-work", "destination": "/gallery?section=featured-work" },
+    { "source": "/content-editing", "destination": "/gallery?section=content-editing" },
+    { "source": "/digital-alchemy", "destination": "/gallery?section=digital-alchemy" },
+    { "source": "/work/:section", "destination": "/gallery?section=:section" },
+    { "source": "/project/:slug", "destination": "/project?slug=:slug" }
   ]
 }
