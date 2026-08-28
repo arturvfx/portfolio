@@ -27,16 +27,17 @@ After the final domain is known:
 
 1. Point its DNS records to the selected static hosting provider and enforce
    HTTPS.
-2. Add absolute canonical URLs and an `og:image` social preview to the public
-   pages.
-3. Generate `sitemap.xml` using the production domain and add its absolute URL
-   to `robots.txt`.
+2. The build reads published Supabase sections/projects and generates their
+   canonical URLs, social metadata and `sitemap.xml`. A new deploy refreshes
+   these search entries after content changes.
+3. Keep the absolute sitemap URL in `robots.txt` and submit it to the search
+   engines you use.
 4. If the provider needs a `CNAME` file or platform configuration, create it
    only after the final domain and provider have been chosen.
 
 ## Production smoke test
 
-- Landing `ENTER` opens `/featured-work`.
+- Landing `ENTER` opens `/work`.
 - Every mobile menu item changes the filter without reloading the fixed header.
 - Gallery cards open `/project/project-slug` and browser back returns to the same filter.
 - `/contact` and `/admin` load without exposing their underlying `.html` files.
@@ -45,3 +46,11 @@ After the final domain is known:
 - Contact form saves a row, sends one email and exposes no destination address.
 - Admin login, project ordering, Site Settings and media uploads still work.
 - Test at 320 px, 390 px and desktop widths with no horizontal overflow.
+
+## Automated verification
+
+- `npm test` builds the site and runs the Playwright navigation suite locally.
+- `PLAYWRIGHT_TEST_BASE_URL=https://arturaraujo.com npx playwright test` runs the
+  same non-destructive suite against production.
+- GitHub Actions runs the local suite automatically on every push to `main`
+  and on pull requests targeting `main`.
