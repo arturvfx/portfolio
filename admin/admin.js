@@ -1820,6 +1820,15 @@
           <input id="file-landing-video" class="media-file-input" type="file" accept="video/mp4,video/webm" />
           <span class="media-upload-note">MP4 or WebM. The uploaded URL is saved only after clicking Save Site Settings.</span>
         </div>
+        <div class="form-group span-2">
+          <label for="setting-landingMobileReelVideo">Mobile Reel Video Path / URL — Optional</label>
+          <div class="media-input-row">
+            <input id="setting-landingMobileReelVideo" type="text" value="${escAdm(settings.landingMobileReelVideo || '')}" data-site-field="landingMobileReelVideo" placeholder="9:16 MP4 or WebM" />
+            <button id="btn-upload-landing-mobile-reel-video" class="btn btn-secondary" type="button">Upload Mobile Reel</button>
+          </div>
+          <input id="file-landing-mobile-reel-video" class="media-file-input" type="file" accept="video/mp4,video/webm" />
+          <span class="media-upload-note">Optional 9:16 version, loaded only after Watch Reel is clicked on mobile. When empty, the desktop reel is shown whole with black letterboxing.</span>
+        </div>
 
         <h3 class="form-section-heading">Work Overview</h3>
         <div class="form-group span-2">
@@ -1989,6 +1998,7 @@
       openPreview(`${getGalleryHref(featured?.slug || 'featured-work')}#site-footer`);
     });
     bindSiteVideoUpload('landing', 'landingBackgroundVideo');
+    bindSiteVideoUpload('landing-mobile-reel', 'landingMobileReelVideo');
     bindSiteVideoUpload('gallery', 'galleryBackgroundVideo');
   }
 

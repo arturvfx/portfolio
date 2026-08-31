@@ -106,7 +106,20 @@ body.gallery-solid-background .video-background-wrapper {
   object-fit: cover;
   filter: contrast(1.1) brightness(0.35) saturate(0.7);
   transform: scale(1.05);
-  transition: filter 0.55s ease, transform 0.55s ease;
+  transition: filter 0.55s ease, transform 0.55s ease, opacity 0.35s ease;
+}
+
+#mobile-reel-video {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.35s ease, visibility 0s linear 0.35s;
 }
 
 /* Subtle Black Overlay Covering Homepage Background Video */
@@ -515,6 +528,16 @@ body.gallery-solid-background .video-background-wrapper {
   transform: scale(1);
 }
 
+.landing-page.landing-reel-mode.landing-reel-mobile-source-ready #mobile-reel-video {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 0.35s ease, visibility 0s linear 0s;
+}
+
+.landing-page.landing-reel-mode.landing-reel-mobile-source-ready #bg-video {
+  opacity: 0;
+}
+
 .landing-page .landing-reel-close {
   z-index: 1010;
   opacity: 0;
@@ -630,6 +653,7 @@ body.shutter-click-active .brand-title::after {
 
   .landing-page .hero-container,
   .landing-page #bg-video,
+  .landing-page #mobile-reel-video,
   .landing-page .video-overlay,
   .landing-page .projection-beam,
   .landing-page .soft-vignette,
@@ -2810,6 +2834,14 @@ body.contact-page {
     --featured-hero-title-size: clamp(2.2rem, 10.5vw, 3.5rem);
     --featured-hero-title-leading: 0.92;
     --featured-hero-title-tracking: -0.045em;
+  }
+
+  .landing-page.landing-reel-mode #bg-video {
+    object-fit: contain;
+  }
+
+  .landing-page.landing-reel-mode.landing-reel-mobile-source-ready #mobile-reel-video {
+    object-fit: cover;
   }
 
   .nav-header {

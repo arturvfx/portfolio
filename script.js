@@ -7,12 +7,47 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   const watchReelBtn = document.getElementById('watch-reel-button');
   const reelCloseBtn = document.getElementById('landing-reel-close');
+  const mobileReelVideo = document.getElementById('mobile-reel-video');
   if (video && watchReelBtn && reelCloseBtn) {
+    const isMobileReelViewport = () => window.matchMedia('(max-width: 900px)').matches;
+
+    const prepareMobileReel = () => {
+      const mobileSource = mobileReelVideo?.dataset.mobileReelSrc?.trim() || '';
+      if (!mobileReelVideo || !isMobileReelViewport() || !mobileSource) return false;
+
+      document.body.classList.add('landing-reel-mobile-source');
+      if (mobileReelVideo.getAttribute('src') !== mobileSource) {
+        document.body.classList.remove('landing-reel-mobile-source-ready');
+        mobileReelVideo.src = mobileSource;
+        mobileReelVideo.load();
+      }
+
+      const revealMobileReel = () => {
+        if (!document.body.classList.contains('landing-reel-mode')) return;
+        if (Number.isFinite(mobileReelVideo.duration) && mobileReelVideo.duration > 0) {
+          try {
+            mobileReelVideo.currentTime = video.currentTime % mobileReelVideo.duration;
+          } catch (_error) {
+            // Some mobile browsers expose duration before the seek range is ready.
+          }
+        }
+        mobileReelVideo.playbackRate = 1;
+        mobileReelVideo.play().catch(() => undefined);
+        document.body.classList.add('landing-reel-mobile-source-ready');
+      };
+
+      if (mobileReelVideo.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA) revealMobileReel();
+      else mobileReelVideo.addEventListener('canplay', revealMobileReel, { once: true });
+      return true;
+    };
+
     const closeReel = () => {
       if (!document.body.classList.contains('landing-reel-mode')) return;
       document.body.classList.remove('landing-reel-mode');
+      document.body.classList.remove('landing-reel-mobile-source', 'landing-reel-mobile-source-ready');
       watchReelBtn.setAttribute('aria-pressed', 'false');
       reelCloseBtn.setAttribute('aria-hidden', 'true');
+      if (mobileReelVideo) mobileReelVideo.pause();
       video.playbackRate = 0.45;
       watchReelBtn.focus();
     };
@@ -23,6 +58,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       reelCloseBtn.setAttribute('aria-hidden', 'false');
       video.playbackRate = 1;
       video.play().catch(() => undefined);
+      prepareMobileReel();
       reelCloseBtn.focus();
     });
 

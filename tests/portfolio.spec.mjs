@@ -42,6 +42,38 @@ test('landing page exposes its primary actions and language switch', async ({ pa
   await expectNoHorizontalOverflow(page);
 });
 
+test('mobile reel loads its vertical source only on demand and contains the desktop fallback', async ({ page, isMobile }) => {
+  test.skip(!isMobile, 'This behavior is exclusive to the mobile viewport');
+  await page.goto('/');
+  await expect(page.locator('body')).toHaveClass(/site-settings-ready/);
+  const mobileReel = page.locator('#mobile-reel-video');
+  await expect(mobileReel).not.toHaveAttribute('src');
+
+  await page.evaluate(() => {
+    window.siteSettings.apply({
+      ...window.siteSettings.loadLocal(),
+      landingMobileReelVideo: 'assets/videos/bg-cinema.mp4'
+    });
+  });
+  await expect(mobileReel).not.toHaveAttribute('src');
+  await page.locator('#watch-reel-button').click();
+  await expect(page.locator('body')).toHaveClass(/landing-reel-mobile-source/);
+  await expect(mobileReel).toHaveAttribute('src', 'assets/videos/bg-cinema.mp4');
+  await expect(page.locator('body')).toHaveClass(/landing-reel-mobile-source-ready/);
+  expect(await mobileReel.evaluate(element => getComputedStyle(element).objectFit)).toBe('cover');
+
+  await page.locator('#landing-reel-close').click();
+  await page.evaluate(() => {
+    window.siteSettings.apply({
+      ...window.siteSettings.loadLocal(),
+      landingMobileReelVideo: ''
+    });
+  });
+  await page.locator('#watch-reel-button').click();
+  await expect(page.locator('body')).not.toHaveClass(/landing-reel-mobile-source/);
+  expect(await page.locator('#bg-video').evaluate(element => getComputedStyle(element).objectFit)).toBe('contain');
+});
+
 test('language switch persists and remains exclusive to the landing page', async ({ page }) => {
   await page.goto('/');
   await page.locator('.site-language-toggle').click();
@@ -119,14 +151,18 @@ test('admin full backup includes the complete content model and deduplicated med
       size: '16-9', order: 1, published: true, coverImage: 'https://media.example/cover.jpg',
       projectStills: [{ url: 'https://media.example/cover.jpg', size: '16-9' }]
     }],
-    { landingTitle: 'ARTUR ARAUJO', landingBackgroundVideo: 'assets/videos/bg-cinema.mp4' }
+    {
+      landingTitle: 'ARTUR ARAUJO',
+      landingBackgroundVideo: 'assets/videos/bg-cinema.mp4',
+      landingMobileReelVideo: 'https://media.example/mobile-reel.mp4'
+    }
   ));
 
   expect(backup.backupType).toBe('artur-portfolio-full');
   expect(backup.galleries).toHaveLength(1);
   expect(backup.projects).toHaveLength(1);
   expect(backup.settings.landingTitle).toBe('ARTUR ARAUJO');
-  expect(backup.media).toHaveLength(2);
+  expect(backup.media).toHaveLength(3);
   expect(backup.media.find(item => item.url.includes('cover.jpg')).references).toHaveLength(2);
   expect(await page.evaluate(value => window.adminStorage.validateFullBackup(value), backup)).toEqual([]);
 });

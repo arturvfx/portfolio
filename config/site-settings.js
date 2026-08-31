@@ -13,6 +13,7 @@
     landingEnterLabel: 'ENTRAR',
     landingWatchReelLabel: 'ASSISTIR REEL',
     landingBackgroundVideo: 'assets/videos/bg-cinema.mp4',
+    landingMobileReelVideo: '',
     workIntroTitle: 'GENERALISTA ATUANDO ENTRE MOTION, COMPOSIÇÃO VFX E EDIÇÃO.',
     workIntroBody: 'Uma seleção de projetos de efeitos visuais, motion e edição para cinema, televisão e conteúdo de marca.',
     workBrowserTitle: '',
@@ -182,6 +183,10 @@
     });
 
     applyVideoSource('landing-background-video', current.landingBackgroundVideo);
+    const mobileReelVideo = document.getElementById('mobile-reel-video');
+    if (mobileReelVideo) {
+      mobileReelVideo.dataset.mobileReelSrc = current.landingMobileReelVideo || '';
+    }
     if (!document.body.classList.contains('gallery-background-managed')) {
       applyVideoSource('gallery-background-video', current.galleryBackgroundVideo);
     }
