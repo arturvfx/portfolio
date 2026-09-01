@@ -1,6 +1,12 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "cleanUrls": true,
+  "crons": [
+    {
+      "path": "/api/supabase-health",
+      "schedule": "0 9 * * *"
+    }
+  ],
   "headers": [
     {
       "source": "/(.*)",

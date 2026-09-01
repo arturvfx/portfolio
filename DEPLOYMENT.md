@@ -24,6 +24,13 @@ and local development files.
    `VERCEL_DEPLOY_HOOK_URL` Supabase secret and deploy the authenticated
    `trigger-site-deploy` Edge Function. Set `ADMIN_ALLOWED_ORIGINS` to the apex
    and `www` production origins.
+8. In the Vercel project environment variables, add `CRON_SECRET` as a random
+   value with at least 16 characters for Production. The daily
+   `/api/supabase-health` Cron Job uses it automatically and performs three
+   minimal public reads to verify that the project's essential Supabase tables
+   remain available. `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` may also be
+   set there to override the browser-safe defaults used by the build and health
+   check; never use the `service_role` key.
 
 ## Domain and search metadata
 
@@ -60,3 +67,5 @@ After the final domain is known:
   same non-destructive suite against production.
 - GitHub Actions runs the local suite automatically on every push to `main`
   and on pull requests targeting `main`.
+- `npm run test:health` verifies that the scheduled Supabase health route is
+  authenticated and performs only its three expected read-only requests.

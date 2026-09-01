@@ -5,7 +5,8 @@
   "scripts": {
     "backup:media": "node scripts/download-media-backup.mjs",
     "build": "node scripts/build-static.mjs",
-    "test": "npm run build && playwright test",
+    "test": "npm run build && npm run test:health && playwright test",
+    "test:health": "node --test tests/supabase-health.unit.mjs",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui"
   },
