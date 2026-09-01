@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { readFile } from 'node:fs/promises';
 
 async function expectNoHorizontalOverflow(page) {
   await expect.poll(() => page.evaluate(() =>
@@ -210,12 +211,21 @@ test('unknown clean routes render the custom 404 page', async ({ page }) => {
   await expect(page.locator('main h1')).toContainText(/NÃO ENCONTRADA|NOT FOUND/);
 });
 
+test('legacy featured-work URL permanently redirects to the current section slug', async ({ request, isMobile }) => {
+  test.skip(isMobile, 'Redirect behavior only needs one browser project');
+  const response = await request.get('/featured-work', { maxRedirects: 0 });
+  expect(response.status()).toBe(308);
+  expect(response.headers().location).toBe('/work/film-tv-streaming');
+});
+
 test('generated sitemap and project HTML expose crawlable production metadata', async ({ request, isMobile }) => {
   test.skip(isMobile, 'Build metadata only needs one browser project');
   const sitemapResponse = await request.get('/sitemap.xml');
   expect(sitemapResponse.ok()).toBeTruthy();
   const sitemap = await sitemapResponse.text();
   expect(sitemap).toContain('https://arturaraujo.com/work');
+  expect(sitemap).toContain('https://arturaraujo.com/work/film-tv-streaming');
+  expect(sitemap).not.toContain('https://arturaraujo.com/featured-work');
   const projectMatch = sitemap.match(/https:\/\/arturaraujo\.com(\/project\/[^<]+)/);
   expect(projectMatch).toBeTruthy();
 
@@ -225,6 +235,11 @@ test('generated sitemap and project HTML expose crawlable production metadata', 
   expect(projectHtml).toMatch(/<title>(?!ARTUR ARAUJO \| Project)[^<]+<\/title>/);
   expect(projectHtml).toContain(`<link rel="canonical" href="https://arturaraujo.com${projectMatch[1]}">`);
   expect(projectHtml).toMatch(/<meta property="og:image" content="https:\/\//);
+
+  const legacyAliasHtml = await readFile(new URL('../dist/featured-work.html', import.meta.url), 'utf8');
+  expect(legacyAliasHtml).toContain('<meta name="robots" content="noindex, follow">');
+  expect(legacyAliasHtml).toContain('<link rel="canonical" href="https://arturaraujo.com/work/film-tv-streaming">');
+  expect(legacyAliasHtml).toContain('<meta http-equiv="refresh" content="0; url=/work/film-tv-streaming">');
 });
 
 test('security headers protect the public document without blocking its scripts', async ({ page, request, isMobile }) => {

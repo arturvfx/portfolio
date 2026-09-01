@@ -100,6 +100,13 @@ function applyMetadata(template, metadata) {
   return html;
 }
 
+function applyAliasMetadata(template, metadata, destination) {
+  let html = applyMetadata(template, metadata);
+  html = upsertMeta(html, 'name', 'robots', 'noindex, follow');
+  const refresh = `<meta http-equiv="refresh" content="0; url=${escapeHtmlAttribute(destination)}">`;
+  return html.replace('</head>', `  ${refresh}\n</head>`);
+}
+
 async function fetchPublishedTable(table, select = '*') {
   const query = new URLSearchParams({
     select,
@@ -206,6 +213,11 @@ async function generateSearchEntries() {
 
     const urls = [`${publicOrigin}/`, `${publicOrigin}/work`, `${publicOrigin}/contact`];
 
+    const canonicalSectionRoutes = new Set(sections
+      .filter(section => section.id && section.title)
+      .map(section => galleryPath(section.slug || section.id)));
+    let aliasCount = 0;
+
     for (const section of sections) {
       if (!section.id || !section.title) continue;
       const route = galleryPath(section.slug || section.id);
@@ -221,6 +233,23 @@ async function generateSearchEntries() {
       });
       await writeRouteHtml(route, html);
       urls.push(`${publicOrigin}${route}`);
+
+      const aliases = Array.isArray(section.previous_slugs) ? section.previous_slugs : [];
+      for (const alias of aliases) {
+        const normalizedAlias = plainText(alias);
+        if (!normalizedAlias || normalizedAlias === section.slug) continue;
+        const aliasRoute = galleryPath(normalizedAlias);
+        if (canonicalSectionRoutes.has(aliasRoute)) continue;
+        const aliasHtml = applyAliasMetadata(galleryTemplate, {
+          title: plainText(section.browser_title) || `ARTUR ARAUJO | ${plainText(section.title)}`,
+          description: truncate(section.description || `Projetos selecionados de ${plainText(section.title)} por Artur Araujo.`),
+          canonical: `${publicOrigin}${route}`,
+          image: sectionCover,
+          imageAlt: plainText(section.title)
+        }, route);
+        await writeRouteHtml(aliasRoute, aliasHtml);
+        aliasCount += 1;
+      }
     }
 
     for (const project of projects) {
@@ -242,7 +271,7 @@ async function generateSearchEntries() {
     }
 
     await writeFile(path.join(outputRoot, 'sitemap.xml'), buildSitemap(urls));
-    console.log(`Generated SEO entries for ${sections.length} sections and ${projects.length} projects.`);
+    console.log(`Generated SEO entries for ${sections.length} sections, ${projects.length} projects and ${aliasCount} legacy aliases.`);
   } catch (error) {
     console.warn(`Could not refresh SEO entries from Supabase; keeping the committed base sitemap. ${error.message}`);
   }

@@ -17,9 +17,15 @@
       ]
     }
   ],
+  "redirects": [
+    {
+      "source": "/featured-work",
+      "destination": "/work/film-tv-streaming",
+      "permanent": true
+    }
+  ],
   "rewrites": [
     { "source": "/work", "destination": "/gallery?view=overview" },
-    { "source": "/featured-work", "destination": "/gallery?section=featured-work" },
     { "source": "/content-editing", "destination": "/gallery?section=content-editing" },
     { "source": "/digital-alchemy", "destination": "/gallery?section=digital-alchemy" },
     { "source": "/work/:section", "destination": "/gallery?section=:section" },

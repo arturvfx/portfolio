@@ -11,6 +11,7 @@ const vercelConfig = JSON.parse(await readFile(path.join(projectRoot, 'vercel.js
 const globalHeaders = vercelConfig.headers
   ?.find(rule => rule.source === '/(.*)')
   ?.headers || [];
+const redirects = Array.isArray(vercelConfig.redirects) ? vercelConfig.redirects : [];
 
 const mimeTypes = new Map([
   ['.css', 'text/css; charset=utf-8'],
@@ -49,6 +50,14 @@ function safePath(relativePath) {
 const server = createServer(async (request, response) => {
   const url = new URL(request.url || '/', `http://${request.headers.host || '127.0.0.1'}`);
   const pathname = decodeURIComponent(url.pathname);
+  const redirect = redirects.find(rule => rule.source === pathname);
+  if (redirect) {
+    response.statusCode = redirect.permanent ? 308 : 307;
+    response.setHeader('Location', redirect.destination);
+    response.setHeader('Cache-Control', 'no-store');
+    response.end();
+    return;
+  }
   const cleanHtmlPath = pathname === '/' ? 'index.html' : `${pathname.replace(/^\/+/, '')}.html`;
   const candidates = [cleanHtmlPath, resolveFallbackRoute(pathname)];
   let absolutePath = null;
