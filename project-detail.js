@@ -100,7 +100,9 @@ function renderProjectDetailMedia(project) {
   const container = document.getElementById('project-detail-media');
   if (!container) return;
   container.innerHTML = '';
-  container.className = `project-detail-media detail-ratio-${project.size || '16-9'}`;
+  // Gallery thumbnail ratios do not control the individual project hero.
+  // Keep this frame identical whether it opens YouTube or displays static media.
+  container.className = 'project-detail-media detail-ratio-16-9';
   const desktopFocusX = Number.isFinite(Number(project.desktopFocusX))
     ? Math.max(0, Math.min(100, Number(project.desktopFocusX)))
     : 50;

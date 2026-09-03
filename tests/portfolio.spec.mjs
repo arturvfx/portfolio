@@ -193,6 +193,52 @@ test('a gallery project opens a populated clean project route and can return', a
   await expect(page).toHaveURL(new RegExp(`${expectedBackPath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`));
 });
 
+test('a project without YouTube keeps the same hero frame without a play control', async ({ page }) => {
+  await page.goto('/featured-work');
+  await waitForPortfolio(page);
+  await page.locator('.project-link').first().click();
+  await expect(page.locator('body')).toHaveClass(/project-data-ready/);
+
+  const frames = await page.evaluate(() => {
+    const sharedProject = {
+      title: 'STATIC COVER TEST',
+      size: '9-16',
+      coverImage: 'data:image/gif;base64,R0lGODlhAQABAAAAACw=',
+      previewVideo: '',
+      desktopFocusX: 50,
+      desktopFocusY: 50,
+      desktopCoverScale: 100,
+      mobileFocusX: 50,
+      mobileFocusY: 50,
+      mobileCoverScale: 100
+    };
+
+    renderProjectDetailMedia({
+      ...sharedProject,
+      youtubeUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ'
+    });
+    const youtubeFrame = document.querySelector('#project-detail-media').getBoundingClientRect();
+
+    renderProjectDetailMedia({ ...sharedProject, youtubeUrl: '' });
+    const staticContainer = document.querySelector('#project-detail-media');
+    const staticFrame = staticContainer.getBoundingClientRect();
+
+    return {
+      youtubeWidth: youtubeFrame.width,
+      youtubeHeight: youtubeFrame.height,
+      staticWidth: staticFrame.width,
+      staticHeight: staticFrame.height,
+      className: staticContainer.className,
+      playControls: staticContainer.querySelectorAll('.project-youtube-cover, .project-play-icon').length
+    };
+  });
+
+  expect(frames.className).toContain('detail-ratio-16-9');
+  expect(frames.playControls).toBe(0);
+  expect(frames.staticWidth).toBeCloseTo(frames.youtubeWidth, 1);
+  expect(frames.staticHeight).toBeCloseTo(frames.youtubeHeight, 1);
+});
+
 test('contact form validates locally without sending an empty request', async ({ page }) => {
   let contactRequests = 0;
   page.on('request', request => {
