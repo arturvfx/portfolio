@@ -13,6 +13,7 @@
     landingEnterLabel: 'ENTRAR',
     landingWatchReelLabel: 'ASSISTIR REEL',
     landingBackgroundVideo: 'assets/videos/bg-cinema.mp4',
+    landingReelVideo: '',
     landingMobileReelVideo: '',
     workIntroTitle: 'GENERALISTA ATUANDO ENTRE MOTION, COMPOSIÇÃO VFX E EDIÇÃO.',
     workIntroBody: 'Uma seleção de projetos de efeitos visuais, motion e edição para cinema, televisão e conteúdo de marca.',
@@ -183,9 +184,10 @@
     });
 
     applyVideoSource('landing-background-video', current.landingBackgroundVideo);
-    const mobileReelVideo = document.getElementById('mobile-reel-video');
-    if (mobileReelVideo) {
-      mobileReelVideo.dataset.mobileReelSrc = current.landingMobileReelVideo || '';
+    const landingReelVideo = document.getElementById('landing-reel-video');
+    if (landingReelVideo) {
+      landingReelVideo.dataset.desktopReelSrc = current.landingReelVideo || '';
+      landingReelVideo.dataset.mobileReelSrc = current.landingMobileReelVideo || '';
     }
     if (!document.body.classList.contains('gallery-background-managed')) {
       applyVideoSource('gallery-background-video', current.galleryBackgroundVideo);
@@ -213,7 +215,13 @@
       value.toLowerCase().split('?')[0].endsWith('.webm') ? 'video/webm' : 'video/mp4'
     );
     const video = videoSource.closest('video');
-    if (video) video.load();
+    if (video) {
+      if (settingName === 'landing-background-video') {
+        document.body?.classList.remove('landing-video-ready');
+        video.removeAttribute('data-random-start-applied');
+      }
+      video.load();
+    }
   }
 
   async function loadRemote() {

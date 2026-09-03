@@ -109,7 +109,15 @@ body.gallery-solid-background .video-background-wrapper {
   transition: filter 0.55s ease, transform 0.55s ease, opacity 0.35s ease;
 }
 
-#mobile-reel-video {
+.landing-page #bg-video {
+  opacity: 0;
+}
+
+.landing-page.landing-video-ready #bg-video {
+  opacity: 1;
+}
+
+#landing-reel-video {
   position: absolute;
   inset: 0;
   z-index: 0;
@@ -521,6 +529,7 @@ body.gallery-solid-background .video-background-wrapper {
 .landing-page.landing-reel-mode .video-background-wrapper {
   animation: none;
   transform: none;
+  pointer-events: auto;
 }
 
 .landing-page.landing-reel-mode #bg-video {
@@ -528,13 +537,19 @@ body.gallery-solid-background .video-background-wrapper {
   transform: scale(1);
 }
 
-.landing-page.landing-reel-mode.landing-reel-mobile-source-ready #mobile-reel-video {
+.landing-page.landing-reel-mode.landing-reel-dedicated-source-ready #landing-reel-video {
   opacity: 1;
   visibility: visible;
+  pointer-events: auto;
   transition: opacity 0.35s ease, visibility 0s linear 0s;
 }
 
-.landing-page.landing-reel-mode.landing-reel-mobile-source-ready #bg-video {
+.landing-page.landing-reel-mode:not(.landing-reel-dedicated-source) #bg-video {
+  pointer-events: auto;
+}
+
+.landing-page.landing-reel-mode.landing-reel-dedicated-source-ready #bg-video,
+.landing-page.landing-reel-mode.landing-reel-preview-resetting #bg-video {
   opacity: 0;
 }
 
@@ -653,7 +668,7 @@ body.shutter-click-active .brand-title::after {
 
   .landing-page .hero-container,
   .landing-page #bg-video,
-  .landing-page #mobile-reel-video,
+  .landing-page #landing-reel-video,
   .landing-page .video-overlay,
   .landing-page .projection-beam,
   .landing-page .soft-vignette,
@@ -2840,7 +2855,11 @@ body.contact-page {
     object-fit: contain;
   }
 
-  .landing-page.landing-reel-mode.landing-reel-mobile-source-ready #mobile-reel-video {
+  .landing-page.landing-reel-mode.landing-reel-dedicated-source-ready #landing-reel-video {
+    object-fit: contain;
+  }
+
+  .landing-page.landing-reel-mode.landing-reel-dedicated-source-ready.landing-reel-vertical-source #landing-reel-video {
     object-fit: cover;
   }
 

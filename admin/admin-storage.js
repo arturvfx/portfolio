@@ -476,6 +476,7 @@
   function collectMediaManifest(galleries, projects, settings) {
     const manifest = new Map();
     addMediaReference(manifest, settings?.landingBackgroundVideo, 'site.landingBackgroundVideo');
+    addMediaReference(manifest, settings?.landingReelVideo, 'site.landingReelVideo');
     addMediaReference(manifest, settings?.landingMobileReelVideo, 'site.landingMobileReelVideo');
     addMediaReference(manifest, settings?.galleryBackgroundVideo, 'site.galleryBackgroundVideo');
 

@@ -11,9 +11,22 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!Number.isFinite(video.duration) || video.duration <= 0) return;
 
         randomizedSource = source;
+        document.body.classList.remove('landing-video-ready');
         const endBuffer = Math.min(2, video.duration * 0.1);
-        video.currentTime = Math.random() * Math.max(0, video.duration - endBuffer);
-        video.dataset.randomStartApplied = 'true';
+        const randomStart = Math.random() * Math.max(0, video.duration - endBuffer);
+        const revealRandomFrame = () => {
+          if ((video.currentSrc || source) !== source) return;
+          video.dataset.randomStartApplied = 'true';
+          document.body.classList.add('landing-video-ready');
+        };
+
+        if (Math.abs(video.currentTime - randomStart) < 0.01) {
+          revealRandomFrame();
+          return;
+        }
+
+        video.addEventListener('seeked', revealRandomFrame, { once: true });
+        video.currentTime = randomStart;
       };
 
       video.addEventListener('loadedmetadata', randomizeLandingVideoStart);
@@ -25,48 +38,109 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   const watchReelBtn = document.getElementById('watch-reel-button');
   const reelCloseBtn = document.getElementById('landing-reel-close');
-  const mobileReelVideo = document.getElementById('mobile-reel-video');
+  const landingReelVideo = document.getElementById('landing-reel-video');
   if (video && watchReelBtn && reelCloseBtn) {
     const isMobileReelViewport = () => window.matchMedia('(max-width: 900px)').matches;
 
-    const prepareMobileReel = () => {
-      const mobileSource = mobileReelVideo?.dataset.mobileReelSrc?.trim() || '';
-      if (!mobileReelVideo || !isMobileReelViewport() || !mobileSource) return false;
-
-      document.body.classList.add('landing-reel-mobile-source');
-      if (mobileReelVideo.getAttribute('src') !== mobileSource) {
-        document.body.classList.remove('landing-reel-mobile-source-ready');
-        mobileReelVideo.src = mobileSource;
-        mobileReelVideo.load();
-      }
-
-      const revealMobileReel = () => {
+    const playFromBeginning = (targetVideo, reveal) => {
+      const revealWhenReady = () => {
         if (!document.body.classList.contains('landing-reel-mode')) return;
-        if (Number.isFinite(mobileReelVideo.duration) && mobileReelVideo.duration > 0) {
-          try {
-            mobileReelVideo.currentTime = video.currentTime % mobileReelVideo.duration;
-          } catch (_error) {
-            // Some mobile browsers expose duration before the seek range is ready.
-          }
-        }
-        mobileReelVideo.playbackRate = 1;
-        mobileReelVideo.play().catch(() => undefined);
-        document.body.classList.add('landing-reel-mobile-source-ready');
+        reveal();
       };
 
-      if (mobileReelVideo.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA) revealMobileReel();
-      else mobileReelVideo.addEventListener('canplay', revealMobileReel, { once: true });
+      targetVideo.pause();
+      try {
+        targetVideo.currentTime = 0;
+      } catch (_error) {
+        // The pending play request will start at zero once metadata is available.
+      }
+      targetVideo.playbackRate = 1;
+      targetVideo.play().catch(() => undefined);
+      if (targetVideo.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA) revealWhenReady();
+      else targetVideo.addEventListener('canplay', revealWhenReady, { once: true });
+    };
+
+    const lockMobileReelOrientation = async targetVideo => {
+      if (!isMobileReelViewport() || typeof window.screen?.orientation?.lock !== 'function') return;
+      const orientation = targetVideo?.videoWidth && targetVideo?.videoHeight &&
+        targetVideo.videoWidth < targetVideo.videoHeight
+        ? 'portrait'
+        : 'landscape';
+      try {
+        await window.screen.orientation.lock(orientation);
+      } catch (_error) {
+        // Safari/iOS may reserve orientation changes for its native video player.
+      }
+    };
+
+    const unlockReelOrientation = () => {
+      if (typeof window.screen?.orientation?.unlock !== 'function') return;
+      try {
+        window.screen.orientation.unlock();
+      } catch (_error) {
+        // Orientation may already be controlled by the operating system.
+      }
+    };
+
+    const prepareDedicatedReel = () => {
+      if (!landingReelVideo) return false;
+      const mobileSource = landingReelVideo.dataset.mobileReelSrc?.trim() || '';
+      const desktopSource = landingReelVideo.dataset.desktopReelSrc?.trim() || '';
+      const usesVerticalSource = isMobileReelViewport() && Boolean(mobileSource);
+      const source = usesVerticalSource ? mobileSource : desktopSource;
+      if (!source) return false;
+
+      document.body.classList.add('landing-reel-dedicated-source');
+      document.body.classList.toggle('landing-reel-vertical-source', usesVerticalSource);
+      document.body.classList.remove('landing-reel-dedicated-source-ready');
+      landingReelVideo.controls = true;
+      landingReelVideo.muted = false;
+      landingReelVideo.setAttribute('aria-hidden', 'false');
+      landingReelVideo.setAttribute('aria-label', watchReelBtn.getAttribute('aria-label') || 'Reel');
+      if (landingReelVideo.getAttribute('src') !== source) {
+        landingReelVideo.src = source;
+        landingReelVideo.load();
+      }
+
+      const startDedicatedReel = () => playFromBeginning(landingReelVideo, () => {
+        if (!document.body.classList.contains('landing-reel-mode')) return;
+        video.pause();
+        document.body.classList.add('landing-reel-dedicated-source-ready');
+      });
+
+      startDedicatedReel();
       return true;
+    };
+
+    const playPreviewAsReel = () => {
+      document.body.classList.add('landing-reel-preview-resetting');
+      video.controls = true;
+      video.muted = false;
+      playFromBeginning(video, () => {
+        document.body.classList.remove('landing-reel-preview-resetting');
+      });
     };
 
     const closeReel = () => {
       if (!document.body.classList.contains('landing-reel-mode')) return;
       document.body.classList.remove('landing-reel-mode');
-      document.body.classList.remove('landing-reel-mobile-source', 'landing-reel-mobile-source-ready');
+      document.body.classList.remove(
+        'landing-reel-dedicated-source',
+        'landing-reel-dedicated-source-ready',
+        'landing-reel-vertical-source',
+        'landing-reel-preview-resetting'
+      );
       watchReelBtn.setAttribute('aria-pressed', 'false');
       reelCloseBtn.setAttribute('aria-hidden', 'true');
-      if (mobileReelVideo) mobileReelVideo.pause();
+      if (landingReelVideo) {
+        landingReelVideo.pause();
+        landingReelVideo.setAttribute('aria-hidden', 'true');
+      }
+      video.controls = false;
+      video.muted = true;
       video.playbackRate = 1;
+      video.play().catch(() => undefined);
+      unlockReelOrientation();
       watchReelBtn.focus();
     };
 
@@ -74,13 +148,23 @@ document.addEventListener('DOMContentLoaded', async () => {
       document.body.classList.add('landing-reel-mode');
       watchReelBtn.setAttribute('aria-pressed', 'true');
       reelCloseBtn.setAttribute('aria-hidden', 'false');
-      video.playbackRate = 1;
-      video.play().catch(() => undefined);
-      prepareMobileReel();
+      if (!prepareDedicatedReel()) playPreviewAsReel();
       reelCloseBtn.focus();
     });
 
     reelCloseBtn.addEventListener('click', closeReel);
+    [video, landingReelVideo].filter(Boolean).forEach(reelElement => {
+      reelElement.addEventListener('webkitbeginfullscreen', () => lockMobileReelOrientation(reelElement));
+      reelElement.addEventListener('webkitendfullscreen', unlockReelOrientation);
+    });
+    document.addEventListener('fullscreenchange', () => {
+      const fullscreenVideo = document.fullscreenElement;
+      if (fullscreenVideo === video || fullscreenVideo === landingReelVideo) {
+        lockMobileReelOrientation(fullscreenVideo);
+      } else {
+        unlockReelOrientation();
+      }
+    });
     document.addEventListener('keydown', event => {
       if (event.key === 'Escape') closeReel();
     });

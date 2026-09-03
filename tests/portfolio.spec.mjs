@@ -49,6 +49,7 @@ test('landing video plays at normal speed from a randomized point', async ({ pag
   });
   await page.goto('/');
   const video = page.locator('#bg-video');
+  await expect(page.locator('body')).toHaveClass(/landing-video-ready/);
   await expect.poll(() => video.evaluate(element => element.dataset.randomStartApplied || '')).toBe('true');
 
   const playback = await video.evaluate(element => ({
@@ -61,11 +62,33 @@ test('landing video plays at normal speed from a randomized point', async ({ pag
   expect(playback.currentTime).toBeLessThan(playback.duration);
 });
 
+test('full desktop reel is deferred and starts from zero', async ({ page, isMobile }) => {
+  test.skip(isMobile, 'Desktop reel behavior only needs the desktop browser project');
+  await page.goto('/');
+  await expect(page.locator('body')).toHaveClass(/site-settings-ready/);
+  const reel = page.locator('#landing-reel-video');
+  await page.evaluate(() => {
+    window.siteSettings.apply({
+      ...window.siteSettings.loadLocal(),
+      landingReelVideo: 'assets/videos/bg-cinema.mp4',
+      landingMobileReelVideo: ''
+    });
+  });
+
+  await expect(reel).not.toHaveAttribute('src');
+  await page.locator('#watch-reel-button').click();
+  await expect(reel).toHaveAttribute('src', 'assets/videos/bg-cinema.mp4');
+  await expect(page.locator('body')).toHaveClass(/landing-reel-dedicated-source-ready/);
+  await expect(reel).toHaveJSProperty('controls', true);
+  await expect(reel).toHaveJSProperty('muted', false);
+  expect(await reel.evaluate(element => element.currentTime)).toBeLessThan(2.5);
+});
+
 test('mobile reel loads its vertical source only on demand and contains the desktop fallback', async ({ page, isMobile }) => {
   test.skip(!isMobile, 'This behavior is exclusive to the mobile viewport');
   await page.goto('/');
   await expect(page.locator('body')).toHaveClass(/site-settings-ready/);
-  const mobileReel = page.locator('#mobile-reel-video');
+  const mobileReel = page.locator('#landing-reel-video');
   await expect(mobileReel).not.toHaveAttribute('src');
 
   await page.evaluate(() => {
@@ -76,21 +99,29 @@ test('mobile reel loads its vertical source only on demand and contains the desk
   });
   await expect(mobileReel).not.toHaveAttribute('src');
   await page.locator('#watch-reel-button').click();
-  await expect(page.locator('body')).toHaveClass(/landing-reel-mobile-source/);
+  await expect(page.locator('body')).toHaveClass(/landing-reel-dedicated-source/);
   await expect(mobileReel).toHaveAttribute('src', 'assets/videos/bg-cinema.mp4');
-  await expect(page.locator('body')).toHaveClass(/landing-reel-mobile-source-ready/);
+  await expect(page.locator('body')).toHaveClass(/landing-reel-dedicated-source-ready/);
+  await expect(mobileReel).toHaveJSProperty('controls', true);
+  await expect(mobileReel).toHaveJSProperty('muted', false);
   expect(await mobileReel.evaluate(element => getComputedStyle(element).objectFit)).toBe('cover');
+  expect(await mobileReel.evaluate(element => element.currentTime)).toBeLessThan(2.5);
 
   await page.locator('#landing-reel-close').click();
   await page.evaluate(() => {
     window.siteSettings.apply({
       ...window.siteSettings.loadLocal(),
+      landingReelVideo: '',
       landingMobileReelVideo: ''
     });
   });
   await page.locator('#watch-reel-button').click();
-  await expect(page.locator('body')).not.toHaveClass(/landing-reel-mobile-source/);
+  await expect(page.locator('body')).not.toHaveClass(/landing-reel-dedicated-source/);
+  await expect(page.locator('body')).not.toHaveClass(/landing-reel-preview-resetting/);
+  await expect(page.locator('#bg-video')).toHaveJSProperty('controls', true);
+  await expect(page.locator('#bg-video')).toHaveJSProperty('muted', false);
   expect(await page.locator('#bg-video').evaluate(element => getComputedStyle(element).objectFit)).toBe('contain');
+  expect(await page.locator('#bg-video').evaluate(element => element.currentTime)).toBeLessThan(2.5);
 });
 
 test('language switch persists and remains exclusive to the landing page', async ({ page }) => {
@@ -173,6 +204,7 @@ test('admin full backup includes the complete content model and deduplicated med
     {
       landingTitle: 'ARTUR ARAUJO',
       landingBackgroundVideo: 'assets/videos/bg-cinema.mp4',
+      landingReelVideo: 'https://media.example/desktop-reel.mp4',
       landingMobileReelVideo: 'https://media.example/mobile-reel.mp4'
     }
   ));
@@ -181,7 +213,7 @@ test('admin full backup includes the complete content model and deduplicated med
   expect(backup.galleries).toHaveLength(1);
   expect(backup.projects).toHaveLength(1);
   expect(backup.settings.landingTitle).toBe('ARTUR ARAUJO');
-  expect(backup.media).toHaveLength(3);
+  expect(backup.media).toHaveLength(4);
   expect(backup.media.find(item => item.url.includes('cover.jpg')).references).toHaveLength(2);
   expect(await page.evaluate(value => window.adminStorage.validateFullBackup(value), backup)).toEqual([]);
 });
@@ -255,6 +287,22 @@ test('a project without YouTube keeps the same hero frame without a play control
   expect(frames.playControls).toBe(0);
   expect(frames.staticWidth).toBeCloseTo(frames.youtubeWidth, 1);
   expect(frames.staticHeight).toBeCloseTo(frames.youtubeHeight, 1);
+
+  const previewClassName = await page.evaluate(() => {
+    const slug = getProjectSlugFromLocation();
+    storeProjectPreview({
+      slug,
+      title: 'PORTRAIT PREVIEW TEST',
+      category: 'TEST',
+      size: '9-16',
+      youtubeUrl: '',
+      coverImage: 'data:image/gif;base64,R0lGODlhAQABAAAAACw='
+    });
+    hydrateStoredProjectPreview();
+    return document.querySelector('#project-detail-media').className;
+  });
+  expect(previewClassName).toContain('detail-ratio-16-9');
+  expect(previewClassName).not.toContain('detail-ratio-9-16');
 });
 
 test('contact form validates locally without sending an empty request', async ({ page }) => {

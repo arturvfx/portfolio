@@ -1812,13 +1812,18 @@
           <input id="setting-landingWatchReelLabel" type="text" value="${escAdm(siteText('landingWatchReelLabel'))}" data-site-field="landingWatchReelLabel" data-site-i18n-field="landingWatchReelLabel" placeholder="${escAdm(sitePlaceholder('landingWatchReelLabel'))}" />
         </div>
         <div class="form-group span-2">
-          <label for="setting-landingBackgroundVideo">Landing Background Video Path / URL</label>
+          <label for="setting-landingBackgroundVideo">Landing Preview Video Path / URL</label>
           <div class="media-input-row">
             <input id="setting-landingBackgroundVideo" type="text" value="${escAdm(settings.landingBackgroundVideo)}" data-site-field="landingBackgroundVideo" />
             <button id="btn-upload-landing-video" class="btn btn-secondary" type="button">Upload Video</button>
           </div>
           <input id="file-landing-video" class="media-file-input" type="file" accept="video/mp4,video/webm" />
-          <span class="media-upload-note">MP4 or WebM. The uploaded URL is saved only after clicking Save Site Settings.</span>
+          <span class="media-upload-note">Loaded immediately on the homepage. For faster entry, use a compact lower-bitrate 720p MP4 or WebM loop under Supabase's 50 MB upload limit. The URL is saved only after clicking Save Site Settings.</span>
+        </div>
+        <div class="form-group span-2">
+          <label for="setting-landingReelVideo">Full Desktop Reel Video Path / URL — Optional</label>
+          <input id="setting-landingReelVideo" type="text" value="${escAdm(settings.landingReelVideo || '')}" data-site-field="landingReelVideo" placeholder="https://media.example.com/reel.mp4" />
+          <span class="media-upload-note">Loaded only after Watch Reel is clicked and always starts at 0:00. Paste the full-quality R2 URL here. When empty, the preview video is reused.</span>
         </div>
         <div class="form-group span-2">
           <label for="setting-landingMobileReelVideo">Mobile Reel Video Path / URL — Optional</label>

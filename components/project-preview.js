@@ -150,8 +150,9 @@ function hydrateStoredProjectPreview() {
 
   const media = document.getElementById('project-detail-media');
   if (media) {
-    const detailRatio = preview.hasYoutubeVideo ? '16-9' : (preview.size || '16-9');
-    media.className = `project-detail-media detail-ratio-${detailRatio}`;
+    // Match the final project hero immediately. Thumbnail proportions belong
+    // only to the gallery and must never cause a layout shift on this page.
+    media.className = 'project-detail-media detail-ratio-16-9';
     const desktopFocusX = Number.isFinite(Number(preview.desktopFocusX))
       ? Math.max(0, Math.min(100, Number(preview.desktopFocusX)))
       : 50;
