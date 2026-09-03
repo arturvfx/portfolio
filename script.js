@@ -1,8 +1,26 @@
 document.addEventListener('DOMContentLoaded', async () => {
-  // Slow background video playback rate for projected cinema feel
   const video = document.getElementById('bg-video');
   if (video) {
-    video.playbackRate = 0.45;
+    video.playbackRate = 1;
+
+    if (document.body.classList.contains('landing-page')) {
+      let randomizedSource = '';
+      const randomizeLandingVideoStart = () => {
+        const source = video.currentSrc || video.querySelector('source')?.src || '';
+        if (!source || source === randomizedSource) return;
+        if (!Number.isFinite(video.duration) || video.duration <= 0) return;
+
+        randomizedSource = source;
+        const endBuffer = Math.min(2, video.duration * 0.1);
+        video.currentTime = Math.random() * Math.max(0, video.duration - endBuffer);
+        video.dataset.randomStartApplied = 'true';
+      };
+
+      video.addEventListener('loadedmetadata', randomizeLandingVideoStart);
+      if (video.readyState >= HTMLMediaElement.HAVE_METADATA) {
+        randomizeLandingVideoStart();
+      }
+    }
   }
 
   const watchReelBtn = document.getElementById('watch-reel-button');
@@ -48,7 +66,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       watchReelBtn.setAttribute('aria-pressed', 'false');
       reelCloseBtn.setAttribute('aria-hidden', 'true');
       if (mobileReelVideo) mobileReelVideo.pause();
-      video.playbackRate = 0.45;
+      video.playbackRate = 1;
       watchReelBtn.focus();
     };
 

@@ -43,6 +43,24 @@ test('landing page exposes its primary actions and language switch', async ({ pa
   await expectNoHorizontalOverflow(page);
 });
 
+test('landing video plays at normal speed from a randomized point', async ({ page }) => {
+  await page.addInitScript(() => {
+    Math.random = () => 0.5;
+  });
+  await page.goto('/');
+  const video = page.locator('#bg-video');
+  await expect.poll(() => video.evaluate(element => element.dataset.randomStartApplied || '')).toBe('true');
+
+  const playback = await video.evaluate(element => ({
+    currentTime: element.currentTime,
+    duration: element.duration,
+    playbackRate: element.playbackRate
+  }));
+  expect(playback.playbackRate).toBe(1);
+  expect(playback.currentTime).toBeGreaterThan(playback.duration * 0.25);
+  expect(playback.currentTime).toBeLessThan(playback.duration);
+});
+
 test('mobile reel loads its vertical source only on demand and contains the desktop fallback', async ({ page, isMobile }) => {
   test.skip(!isMobile, 'This behavior is exclusive to the mobile viewport');
   await page.goto('/');
