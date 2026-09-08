@@ -530,8 +530,11 @@
   }
 
   function downloadJson(payload, filename) {
-    const json = JSON.stringify(payload, null, 2);
-    const blob = new Blob([json], { type: 'application/json' });
+    downloadText(JSON.stringify(payload, null, 2), filename, 'application/json');
+  }
+
+  function downloadText(content, filename, type) {
+    const blob = new Blob([content], { type: type || 'text/plain' });
     const url = URL.createObjectURL(blob);
 
     const a = document.createElement('a');
@@ -548,6 +551,149 @@
     const date = payload.exportedAt.slice(0, 10);
     downloadJson(payload, `artur-portfolio-backup-${date}.json`);
     return payload;
+  }
+
+  function sqlText(value) {
+    return `'${String(value == null ? '' : value).replace(/\0/g, '').replace(/'/g, "''")}'`;
+  }
+
+  function sqlBoolean(value) {
+    return value ? 'TRUE' : 'FALSE';
+  }
+
+  function sqlNumber(value, fallback) {
+    const number = Number(value);
+    return String(Number.isFinite(number) ? number : fallback);
+  }
+
+  function sqlTextArray(value) {
+    const items = Array.isArray(value) ? value : [];
+    return items.length ? `ARRAY[${items.map(sqlText).join(', ')}]::text[]` : 'ARRAY[]::text[]';
+  }
+
+  function sqlJson(value) {
+    return `${sqlText(JSON.stringify(value == null ? {} : value))}::jsonb`;
+  }
+
+  function sqlUpsert(table, columns, rows, conflictColumn) {
+    if (!rows.length) return `-- No rows exported for public.${table}.`;
+    const updates = columns
+      .filter(column => column !== conflictColumn)
+      .map(column => `  ${column} = EXCLUDED.${column}`)
+      .join(',\n');
+    return [
+      `INSERT INTO public.${table} (`,
+      `  ${columns.join(',\n  ')}`,
+      ') VALUES',
+      rows.map(row => `  (${row.join(', ')})`).join(',\n'),
+      `ON CONFLICT (${conflictColumn}) DO UPDATE SET`,
+      `${updates};`
+    ].join('\n');
+  }
+
+  function createSqlBackup(galleries, projects, settings) {
+    const backup = createFullBackup(galleries, projects, settings);
+    const sectionColumns = [
+      'id', 'slug', 'previous_slugs', 'title', 'browser_title', 'description',
+      'published', 'display_order', 'background_enabled', 'background_source',
+      'background_video', 'translations', 'hero_enabled'
+    ];
+    const sectionRows = backup.galleries.map(gallery => [
+      sqlText(gallery.id),
+      sqlText(gallery.slug || gallery.id),
+      sqlTextArray(gallery.previousSlugs),
+      sqlText(gallery.title),
+      sqlText(gallery.browserTitle || ''),
+      sqlText(gallery.description || ''),
+      sqlBoolean(gallery.published !== false),
+      sqlNumber(gallery.order, 1),
+      sqlBoolean(gallery.backgroundEnabled !== false),
+      sqlText(['default', 'homepage', 'custom'].includes(gallery.backgroundSource) ? gallery.backgroundSource : 'default'),
+      sqlText(gallery.backgroundVideo || ''),
+      sqlJson(gallery.translations || { en: {} }),
+      'FALSE'
+    ]);
+
+    const projectColumns = [
+      'id', 'slug', 'title', 'browser_title', 'client', 'category', 'year', 'services',
+      'project_summary', 'contribution', 'director', 'production_company',
+      'watch_now_enabled', 'watch_now_url', 'cover_image', 'desktop_focus_x',
+      'desktop_focus_y', 'desktop_cover_scale', 'hero_focus_x', 'hero_focus_y',
+      'hero_cover_scale', 'mobile_focus_x', 'mobile_focus_y', 'mobile_cover_scale',
+      'preview_video', 'youtube_url', 'project_stills', 'section_id', 'size',
+      'published', 'display_order', 'translations'
+    ];
+    const projectRows = backup.projects.map(project => [
+      sqlText(project.id),
+      sqlText(project.slug),
+      sqlText(project.title),
+      sqlText(project.browserTitle || ''),
+      sqlText(project.client || ''),
+      sqlText(project.category || ''),
+      sqlText(project.year || ''),
+      sqlTextArray(project.services),
+      sqlText(project.projectSummary || ''),
+      sqlText(project.contribution || ''),
+      sqlText(project.director || ''),
+      sqlText(project.productionCompany || ''),
+      sqlBoolean(project.watchNowEnabled === true),
+      sqlText(project.watchNowUrl || ''),
+      sqlText(project.coverImage || ''),
+      sqlNumber(project.desktopFocusX, 50),
+      sqlNumber(project.desktopFocusY, 50),
+      sqlNumber(project.desktopCoverScale, 100),
+      sqlNumber(project.heroFocusX, 50),
+      sqlNumber(project.heroFocusY, 50),
+      sqlNumber(project.heroCoverScale, 100),
+      sqlNumber(project.mobileFocusX, 50),
+      sqlNumber(project.mobileFocusY, 50),
+      sqlNumber(project.mobileCoverScale, 100),
+      sqlText(project.previewVideo || ''),
+      sqlText(project.youtubeUrl || ''),
+      sqlJson(project.projectStills || []),
+      sqlText(project.section),
+      sqlText(SUPPORTED_SIZES.includes(project.size) ? project.size : '16-9'),
+      sqlBoolean(project.published !== false),
+      sqlNumber(project.order, 1),
+      sqlJson(project.translations || { en: {} })
+    ]);
+
+    const exportedAt = backup.exportedAt;
+    const sql = [
+      '-- ARTUR ARAUJO portfolio content backup',
+      `-- Exported at: ${exportedAt}`,
+      '-- Apply every file in supabase/migrations before restoring this data.',
+      '-- Matching IDs are updated; unrelated existing rows are intentionally left untouched.',
+      '-- Media binaries, contact messages, authentication users and secrets are not included.',
+      '',
+      'BEGIN;',
+      '',
+      sqlUpsert('portfolio_sections', sectionColumns, sectionRows, 'id'),
+      '',
+      sqlUpsert('portfolio_projects', projectColumns, projectRows, 'id'),
+      '',
+      sqlUpsert(
+        'portfolio_site_settings',
+        ['id', 'settings'],
+        [[sqlText('global'), sqlJson(backup.settings)]],
+        'id'
+      ),
+      '',
+      'COMMIT;',
+      ''
+    ].join('\n');
+
+    return {
+      sql,
+      exportedAt,
+      counts: { sections: backup.counts.sections, projects: backup.counts.projects }
+    };
+  }
+
+  function exportSqlBackup(galleries, projects, settings) {
+    const backup = createSqlBackup(galleries, projects, settings);
+    downloadText(backup.sql, `artur-portfolio-content-${backup.exportedAt.slice(0, 10)}.sql`, 'application/sql');
+    return backup;
   }
 
   function validateFullBackup(payload) {
@@ -613,6 +759,8 @@
     collectMediaManifest,
     createFullBackup,
     exportFullBackup,
+    createSqlBackup,
+    exportSqlBackup,
     validateFullBackup
   };
 

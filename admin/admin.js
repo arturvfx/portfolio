@@ -1561,6 +1561,14 @@
     );
   }
 
+  function exportSql() {
+    const backup = adminStorage.exportSqlBackup(workingGalleries, workingProjects, workingSettings);
+    showStatus(
+      `SQL backup exported: ${backup.counts.sections} sections, ${backup.counts.projects} projects and global site settings.`,
+      'success'
+    );
+  }
+
   // ─── Import ──────────────────────────────────────────────────
 
   function triggerImport() {
@@ -2564,6 +2572,9 @@
 
     const exportBtn = document.getElementById('btn-export');
     if (exportBtn) exportBtn.addEventListener('click', exportJson);
+
+    const exportSqlBtn = document.getElementById('btn-export-sql');
+    if (exportSqlBtn) exportSqlBtn.addEventListener('click', exportSql);
 
     const importBtn = document.getElementById('btn-import');
     if (importBtn) importBtn.addEventListener('click', triggerImport);

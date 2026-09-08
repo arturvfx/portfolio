@@ -194,10 +194,11 @@ test('section URL slugs resolve independently from stable internal IDs', async (
 test('admin full backup includes the complete content model and deduplicated media', async ({ page, isMobile }) => {
   test.skip(isMobile, 'Backup serialization only needs one browser project');
   await page.goto('/admin');
+  await expect(page.locator('#btn-export-sql')).toHaveCount(1);
   const backup = await page.evaluate(() => window.adminStorage.createFullBackup(
     [{ id: 'section-id', slug: 'section-url', title: 'SECTION', order: 1, published: true }],
     [{
-      id: 'project-id', slug: 'project-url', title: 'PROJECT', section: 'section-id',
+      id: 'project-id', slug: 'project-url', title: "DIRECTOR'S CUT", section: 'section-id',
       size: '16-9', order: 1, published: true, coverImage: 'https://media.example/cover.jpg',
       projectStills: [{ url: 'https://media.example/cover.jpg', size: '16-9' }]
     }],
@@ -216,6 +217,21 @@ test('admin full backup includes the complete content model and deduplicated med
   expect(backup.media).toHaveLength(4);
   expect(backup.media.find(item => item.url.includes('cover.jpg')).references).toHaveLength(2);
   expect(await page.evaluate(value => window.adminStorage.validateFullBackup(value), backup)).toEqual([]);
+
+  const sqlBackup = await page.evaluate(payload => window.adminStorage.createSqlBackup(
+    payload.galleries,
+    payload.projects,
+    payload.settings
+  ), backup);
+  expect(sqlBackup.counts).toEqual({ sections: 1, projects: 1 });
+  expect(sqlBackup.sql).toContain('BEGIN;');
+  expect(sqlBackup.sql).toContain('COMMIT;');
+  expect(sqlBackup.sql).toContain('INSERT INTO public.portfolio_sections');
+  expect(sqlBackup.sql).toContain('INSERT INTO public.portfolio_projects');
+  expect(sqlBackup.sql).toContain('INSERT INTO public.portfolio_site_settings');
+  expect(sqlBackup.sql).toContain("DIRECTOR''S CUT");
+  expect(sqlBackup.sql).not.toContain('portfolio_admins');
+  expect(sqlBackup.sql).not.toContain('contact_messages');
 });
 
 test('a gallery project opens a populated clean project route and can return', async ({ page }) => {

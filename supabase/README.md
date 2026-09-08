@@ -157,3 +157,10 @@ folder contains the media files and a copy of the JSON annotated with each
 local filename. The admin can also import a full backup to restore settings,
 sections and projects. Remote rows with matching IDs are updated; unrelated
 rows are deliberately not deleted.
+
+**Export SQL Backup** downloads the same editable portfolio content as SQL
+upserts for `portfolio_sections`, `portfolio_projects` and
+`portfolio_site_settings`. Apply the repository migrations first, then run the
+SQL file in the Supabase SQL Editor. The script runs in a transaction, updates
+matching IDs and leaves unrelated rows untouched. It does not contain media
+binaries, contact messages, admin users, passwords, tokens or API keys.
