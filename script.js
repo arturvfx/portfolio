@@ -60,16 +60,34 @@ document.addEventListener('DOMContentLoaded', async () => {
       else targetVideo.addEventListener('canplay', revealWhenReady, { once: true });
     };
 
-    const lockMobileReelOrientation = async targetVideo => {
+    const lockMobileReelOrientation = async () => {
       if (!isMobileReelViewport() || typeof window.screen?.orientation?.lock !== 'function') return;
-      const orientation = targetVideo?.videoWidth && targetVideo?.videoHeight &&
-        targetVideo.videoWidth < targetVideo.videoHeight
-        ? 'portrait'
-        : 'landscape';
       try {
-        await window.screen.orientation.lock(orientation);
+        await window.screen.orientation.lock('landscape');
       } catch (_error) {
         // Safari/iOS may reserve orientation changes for its native video player.
+      }
+    };
+
+    const openMobileReelFullscreen = async targetVideo => {
+      if (!isMobileReelViewport() || !targetVideo) return;
+
+      if (typeof targetVideo.requestFullscreen === 'function') {
+        try {
+          await targetVideo.requestFullscreen();
+          await lockMobileReelOrientation();
+          return;
+        } catch (_error) {
+          // Fall through to the native iOS video fullscreen API when available.
+        }
+      }
+
+      if (typeof targetVideo.webkitEnterFullscreen === 'function') {
+        try {
+          targetVideo.webkitEnterFullscreen();
+        } catch (_error) {
+          // iOS can reject automatic fullscreen before media metadata is ready.
+        }
       }
     };
 
@@ -148,19 +166,21 @@ document.addEventListener('DOMContentLoaded', async () => {
       document.body.classList.add('landing-reel-mode');
       watchReelBtn.setAttribute('aria-pressed', 'true');
       reelCloseBtn.setAttribute('aria-hidden', 'false');
-      if (!prepareDedicatedReel()) playPreviewAsReel();
+      const usesDedicatedReel = prepareDedicatedReel();
+      if (!usesDedicatedReel) playPreviewAsReel();
+      openMobileReelFullscreen(usesDedicatedReel ? landingReelVideo : video);
       reelCloseBtn.focus();
     });
 
     reelCloseBtn.addEventListener('click', closeReel);
     [video, landingReelVideo].filter(Boolean).forEach(reelElement => {
-      reelElement.addEventListener('webkitbeginfullscreen', () => lockMobileReelOrientation(reelElement));
+      reelElement.addEventListener('webkitbeginfullscreen', lockMobileReelOrientation);
       reelElement.addEventListener('webkitendfullscreen', unlockReelOrientation);
     });
     document.addEventListener('fullscreenchange', () => {
       const fullscreenVideo = document.fullscreenElement;
       if (fullscreenVideo === video || fullscreenVideo === landingReelVideo) {
-        lockMobileReelOrientation(fullscreenVideo);
+        lockMobileReelOrientation();
       } else {
         unlockReelOrientation();
       }

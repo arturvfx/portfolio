@@ -86,6 +86,28 @@ test('full desktop reel is deferred and starts from zero', async ({ page, isMobi
 
 test('mobile reel loads its vertical source only on demand and contains the desktop fallback', async ({ page, isMobile }) => {
   test.skip(!isMobile, 'This behavior is exclusive to the mobile viewport');
+  await page.addInitScript(() => {
+    window.__reelFullscreenRequests = [];
+    window.__reelOrientationLocks = [];
+    Object.defineProperty(HTMLVideoElement.prototype, 'requestFullscreen', {
+      configurable: true,
+      value() {
+        window.__reelFullscreenRequests.push(this.id);
+        return Promise.resolve();
+      }
+    });
+    const orientation = window.screen.orientation || {};
+    Object.defineProperty(orientation, 'lock', {
+      configurable: true,
+      value(value) {
+        window.__reelOrientationLocks.push(value);
+        return Promise.resolve();
+      }
+    });
+    if (!window.screen.orientation) {
+      Object.defineProperty(window.screen, 'orientation', { configurable: true, value: orientation });
+    }
+  });
   await page.goto('/');
   await expect(page.locator('body')).toHaveClass(/site-settings-ready/);
   const mobileReel = page.locator('#landing-reel-video');
@@ -104,6 +126,8 @@ test('mobile reel loads its vertical source only on demand and contains the desk
   await expect(page.locator('body')).toHaveClass(/landing-reel-dedicated-source-ready/);
   await expect(mobileReel).toHaveJSProperty('controls', true);
   await expect(mobileReel).toHaveJSProperty('muted', false);
+  await expect.poll(() => page.evaluate(() => window.__reelFullscreenRequests)).toContain('landing-reel-video');
+  await expect.poll(() => page.evaluate(() => window.__reelOrientationLocks)).toContain('landscape');
   expect(await mobileReel.evaluate(element => getComputedStyle(element).objectFit)).toBe('cover');
   expect(await mobileReel.evaluate(element => element.currentTime)).toBeLessThan(2.5);
 
