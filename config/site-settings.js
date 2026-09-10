@@ -12,7 +12,7 @@
     landingSubtitle: 'GENERALISTA VFX',
     landingEnterLabel: 'ENTRAR',
     landingWatchReelLabel: 'ASSISTIR REEL',
-    landingBackgroundVideo: 'assets/videos/bg-cinema.mp4',
+    landingBackgroundVideo: '',
     landingReelVideo: '',
     landingMobileReelVideo: '',
     workIntroTitle: 'GENERALISTA ATUANDO ENTRE MOTION, COMPOSIÇÃO VFX E EDIÇÃO.',
@@ -84,7 +84,7 @@
       // These fields are intentionally optional; explicit empty strings must
       // survive local and remote normalization.
       if ([
-        'landingBrowserTitle', 'landingSubtitle', 'workBrowserTitle',
+        'landingBrowserTitle', 'landingSubtitle', 'landingBackgroundVideo', 'workBrowserTitle',
         'workIntroTitle', 'workIntroBody', 'contactBrowserTitle'
       ].includes(key) && hasStringValue) {
         settings[key] = isLegacyEnglishDefault ? DEFAULTS[key] : candidate;
@@ -208,12 +208,21 @@
 
   function applyVideoSource(settingName, value) {
     const videoSource = document.querySelector(`[data-site-setting="${settingName}"]`);
-    if (!videoSource || videoSource.getAttribute('src') === value) return;
-    videoSource.setAttribute('src', value);
-    videoSource.setAttribute(
-      'type',
-      value.toLowerCase().split('?')[0].endsWith('.webm') ? 'video/webm' : 'video/mp4'
-    );
+    if (!videoSource) return;
+    const nextValue = typeof value === 'string' ? value.trim() : '';
+    const currentValue = videoSource.getAttribute('src') || '';
+    if (currentValue === nextValue) return;
+
+    if (nextValue) {
+      videoSource.setAttribute('src', nextValue);
+      videoSource.setAttribute(
+        'type',
+        nextValue.toLowerCase().split('?')[0].endsWith('.webm') ? 'video/webm' : 'video/mp4'
+      );
+    } else {
+      videoSource.removeAttribute('src');
+      videoSource.removeAttribute('type');
+    }
     const video = videoSource.closest('video');
     if (video) {
       if (settingName === 'landing-background-video') {

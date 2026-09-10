@@ -1820,13 +1820,13 @@
           <input id="setting-landingWatchReelLabel" type="text" value="${escAdm(siteText('landingWatchReelLabel'))}" data-site-field="landingWatchReelLabel" data-site-i18n-field="landingWatchReelLabel" placeholder="${escAdm(sitePlaceholder('landingWatchReelLabel'))}" />
         </div>
         <div class="form-group span-2">
-          <label for="setting-landingBackgroundVideo">Landing Preview Video Path / URL</label>
+          <label for="setting-landingBackgroundVideo">Landing Preview Video Path / URL — Optional</label>
           <div class="media-input-row">
             <input id="setting-landingBackgroundVideo" type="text" value="${escAdm(settings.landingBackgroundVideo)}" data-site-field="landingBackgroundVideo" />
             <button id="btn-upload-landing-video" class="btn btn-secondary" type="button">Upload Video</button>
           </div>
           <input id="file-landing-video" class="media-file-input" type="file" accept="video/mp4,video/webm" />
-          <span class="media-upload-note">Loaded immediately on the homepage. For faster entry, use a compact lower-bitrate 720p MP4 or WebM loop under Supabase's 50 MB upload limit. The URL is saved only after clicking Save Site Settings.</span>
+          <span class="media-upload-note">Leave empty for a solid black landing background. When used, choose a compact lower-bitrate 720p MP4 or WebM loop under Supabase's 50 MB upload limit. The URL is saved only after clicking Save Site Settings.</span>
         </div>
         <div class="form-group span-2">
           <label for="setting-landingReelVideo">Full Desktop Reel Video Path / URL — Optional</label>
@@ -2108,7 +2108,7 @@
       return;
     }
     const required = [
-      'landingTitle', 'landingEnterLabel', 'landingWatchReelLabel', 'landingBackgroundVideo', 'galleryBackgroundVideo', 'contentTheme',
+      'landingTitle', 'landingEnterLabel', 'landingWatchReelLabel', 'galleryBackgroundVideo', 'contentTheme',
       'contactTitle', 'contactIntro', 'contactAvailability', 'contactLocation', 'contactSubmitLabel',
       'contactCategoryVfx', 'contactCategoryEditing', 'contactCategoryAlchemy', 'contactCategoryFull',
       'contactCategoryOther',

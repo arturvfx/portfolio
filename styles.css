@@ -111,9 +111,10 @@ body.gallery-solid-background .video-background-wrapper {
 
 .landing-page #bg-video {
   opacity: 0;
+  transition: filter 0.55s ease, transform 0.55s ease, opacity 1.15s ease;
 }
 
-.landing-page.landing-video-ready #bg-video {
+.landing-page.site-settings-ready.landing-video-ready #bg-video {
   opacity: 1;
 }
 

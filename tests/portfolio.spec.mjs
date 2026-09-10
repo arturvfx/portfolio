@@ -47,9 +47,15 @@ test('landing video plays at normal speed from a randomized point', async ({ pag
   await page.addInitScript(() => {
     Math.random = () => 0.5;
   });
+  await page.route('**/rest/v1/portfolio_site_settings**', route => route.fulfill({
+    contentType: 'application/json',
+    body: JSON.stringify([{ settings: { landingBackgroundVideo: 'assets/videos/bg-cinema.mp4' } }])
+  }));
   await page.goto('/');
   const video = page.locator('#bg-video');
+  await expect(page.locator('body')).toHaveClass(/site-settings-ready/);
   await expect(page.locator('body')).toHaveClass(/landing-video-ready/);
+  await expect(video).toHaveCSS('opacity', '1');
   await expect.poll(() => video.evaluate(element => element.dataset.randomStartApplied || '')).toBe('true');
 
   const playback = await video.evaluate(element => ({
@@ -60,6 +66,67 @@ test('landing video plays at normal speed from a randomized point', async ({ pag
   expect(playback.playbackRate).toBe(1);
   expect(playback.currentTime).toBeGreaterThan(playback.duration * 0.25);
   expect(playback.currentTime).toBeLessThan(playback.duration);
+});
+
+test('a first visit never loads or reveals the legacy landing video before remote settings', async ({ page }) => {
+  let releaseSettings;
+  let markSettingsRequested;
+  const settingsRequested = new Promise(resolve => { markSettingsRequested = resolve; });
+  const settingsReleased = new Promise(resolve => { releaseSettings = resolve; });
+
+  await page.route('**/rest/v1/portfolio_site_settings**', async route => {
+    markSettingsRequested();
+    await settingsReleased;
+    await route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify([{ settings: { landingBackgroundVideo: 'assets/videos/bg-cinema.mp4' } }])
+    });
+  });
+
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
+  await settingsRequested;
+  const source = page.locator('[data-site-setting="landing-background-video"]');
+  const video = page.locator('#bg-video');
+  await expect(source).not.toHaveAttribute('src');
+  await expect(page.locator('body')).toHaveClass(/site-settings-loading/);
+  await expect(video).toHaveCSS('opacity', '0');
+
+  releaseSettings();
+  await expect(source).toHaveAttribute('src', 'assets/videos/bg-cinema.mp4');
+  await expect(page.locator('body')).toHaveClass(/site-settings-ready/);
+  await expect(page.locator('body')).toHaveClass(/landing-video-ready/);
+  await expect(video).toHaveCSS('opacity', '1');
+});
+
+test('a first visit stays black when remote landing settings are unavailable', async ({ page }) => {
+  await page.route('**/rest/v1/portfolio_site_settings**', route => route.fulfill({
+    status: 503,
+    contentType: 'application/json',
+    body: JSON.stringify({ message: 'Temporarily unavailable' })
+  }));
+
+  await page.goto('/');
+  const source = page.locator('[data-site-setting="landing-background-video"]');
+  const video = page.locator('#bg-video');
+  await expect(page.locator('body')).toHaveClass(/site-settings-ready/);
+  await expect(page.locator('body')).not.toHaveClass(/landing-video-ready/);
+  await expect(source).not.toHaveAttribute('src');
+  await expect(video).toHaveCSS('opacity', '0');
+});
+
+test('an explicitly empty landing preview setting keeps the homepage black', async ({ page }) => {
+  await page.route('**/rest/v1/portfolio_site_settings**', route => route.fulfill({
+    contentType: 'application/json',
+    body: JSON.stringify([{ settings: { landingBackgroundVideo: '' } }])
+  }));
+
+  await page.goto('/');
+  const source = page.locator('[data-site-setting="landing-background-video"]');
+  const video = page.locator('#bg-video');
+  await expect(page.locator('body')).toHaveClass(/site-settings-ready/);
+  await expect(source).not.toHaveAttribute('src');
+  await expect(video).toHaveCSS('opacity', '0');
+  expect(await page.evaluate(() => window.siteSettings.getCurrent().landingBackgroundVideo)).toBe('');
 });
 
 test('full desktop reel is deferred and starts from zero', async ({ page, isMobile }) => {

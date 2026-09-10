@@ -20,15 +20,15 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@600;700;800;900&family=Inter:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
   
-  <link rel="stylesheet" href="styles.css?v=20260903-deferred-reel">
+  <link rel="stylesheet" href="styles.css?v=20260910-landing-video-reveal">
   <script src="components/i18n.js?v=20260827-i18n"></script>
-  <script src="config/site-settings.js?v=20260903-deferred-reel"></script>
+  <script src="config/site-settings.js?v=20260910-landing-video-reveal"></script>
 </head>
 <body class="landing-page site-settings-loading">
   <!-- Fullscreen Cinema Looping Video & Overlays -->
   <div class="video-background-wrapper">
     <video id="bg-video" autoplay loop muted playsinline preload="auto">
-      <source src="assets/videos/bg-cinema.mp4" type="video/mp4" data-site-setting="landing-background-video">
+      <source data-site-setting="landing-background-video">
     </video>
     <video id="landing-reel-video" loop controls controlslist="nodownload" playsinline preload="none" aria-hidden="true"></video>
     <div class="video-overlay"></div>
