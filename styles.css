@@ -19,7 +19,7 @@
   --featured-gallery-row-gap: 3.5rem;
   --featured-gallery-col-gap: 2vw;
   --featured-meta-top-padding: 0.75rem;
-  --featured-meta-item-gap: 0.45rem;
+  --featured-meta-item-gap: 0.25rem;
 
   /* ── Frame Aspect Ratio Standards ─────────────────────────── */
   --featured-frame-ratio-16-9: 16 / 9;
