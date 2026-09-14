@@ -19,7 +19,7 @@
     workIntroBody: 'Uma seleção de projetos de efeitos visuais, motion e edição para cinema, televisão e conteúdo de marca.',
     workBrowserTitle: '',
     workHeroProjectIds: [],
-    galleryBackgroundVideo: 'assets/videos/bg-cinema.mp4',
+    galleryBackgroundVideo: '',
     contentTheme: 'dark',
     contactTitle: 'VAMOS TRABALHAR JUNTOS',
     contactBrowserTitle: '',
@@ -49,6 +49,7 @@
     contactCategoryFull: 'POST-PRODUCTION DIRECTION', contactCategoryOther: 'OTHER',
     footerTitle: "LET'S WORK TOGETHER", footerContactLabel: 'CONTACT'
   });
+  const LEGACY_GALLERY_VIDEO = 'assets/videos/bg-cinema.mp4';
   let currentSettings = null;
 
   function normalizeTranslations(value) {
@@ -80,6 +81,7 @@
       const hasStringValue = typeof source[key] === 'string';
       const candidate = hasStringValue ? source[key].trim() : '';
       const isLegacyEnglishDefault = LEGACY_EN_DEFAULTS[key] && candidate === LEGACY_EN_DEFAULTS[key];
+      const isLegacyGalleryVideo = key === 'galleryBackgroundVideo' && candidate === LEGACY_GALLERY_VIDEO;
       if (isLegacyEnglishDefault) migratedEnglish[key] = candidate;
       // These fields are intentionally optional; explicit empty strings must
       // survive local and remote normalization.
@@ -91,7 +93,9 @@
       } else if (key === 'contentTheme') {
         settings[key] = candidate === 'light' ? 'light' : 'dark';
       } else {
-        settings[key] = isLegacyEnglishDefault ? DEFAULTS[key] : (candidate || DEFAULTS[key]);
+        settings[key] = isLegacyEnglishDefault || isLegacyGalleryVideo
+          ? DEFAULTS[key]
+          : (candidate || DEFAULTS[key]);
       }
       return settings;
     }, {});

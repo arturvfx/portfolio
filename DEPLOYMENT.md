@@ -7,7 +7,8 @@ and local development files.
 
 ## Before the first production deployment
 
-1. Run every Supabase migration through `009_project_stills.sql`.
+1. Run every Supabase migration in numeric order through
+   `018_section_slugs.sql` (or the newest numbered migration added later).
 2. Confirm that `config/supabase-config.js` contains only the project URL and
    the browser-safe publishable key. Never add the service-role key there.
 3. In Supabase Authentication, set the production Site URL and add both the
@@ -39,8 +40,12 @@ After the final domain is known:
 1. Point its DNS records to the selected static hosting provider and enforce
    HTTPS.
 2. The build reads published Supabase sections/projects and generates their
-   canonical URLs, social metadata and `sitemap.xml`. A new deploy refreshes
-   these search entries after content changes.
+   canonical URLs, social metadata and `sitemap.xml`. It also writes a current
+   published-content snapshot into `dist/data/projects-data.js` and
+   `dist/config/page-configs.js`, so the first paint never uses old template
+   projects. A new deploy refreshes these files after content changes. On
+   Vercel, a failed Supabase snapshot stops the new build and leaves the last
+   successful deployment online.
    The admin's **Update SEO & Previews** control starts that deploy; saved
    portfolio content itself is already visible directly from Supabase.
 3. Keep the absolute sitemap URL in `robots.txt` and submit it to the search

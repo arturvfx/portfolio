@@ -161,6 +161,124 @@ function buildSitemap(urls) {
   ].join('\n');
 }
 
+function normalizeFocus(value) {
+  const number = Number(value);
+  return Number.isFinite(number) ? Math.max(0, Math.min(100, number)) : 50;
+}
+
+function normalizeScale(value) {
+  const number = Number(value);
+  return Number.isFinite(number) ? Math.max(100, Math.min(200, number)) : 100;
+}
+
+function normalizeProjectStills(value) {
+  const sizes = new Set(['16-9', '9-16', '4-3']);
+  if (!Array.isArray(value)) return [];
+  return value.slice(0, 3).map(item => {
+    const source = typeof item === 'string' ? { url: item } : (item || {});
+    return {
+      url: plainText(source.url),
+      size: sizes.has(source.size) ? source.size : '16-9'
+    };
+  }).filter(item => item.url);
+}
+
+function projectFromRow(row) {
+  return {
+    id: row.id,
+    slug: row.slug,
+    title: row.title,
+    browserTitle: row.browser_title || '',
+    client: row.client || '',
+    category: row.category || '',
+    year: row.year || '',
+    services: Array.isArray(row.services) ? row.services : [],
+    projectSummary: row.project_summary || '',
+    contribution: row.contribution || '',
+    director: row.director || '',
+    productionCompany: row.production_company || '',
+    watchNowEnabled: row.watch_now_enabled === true,
+    watchNowUrl: row.watch_now_url || '',
+    coverImage: row.cover_image || '',
+    desktopFocusX: normalizeFocus(row.desktop_focus_x),
+    desktopFocusY: normalizeFocus(row.desktop_focus_y),
+    desktopCoverScale: normalizeScale(row.desktop_cover_scale),
+    heroFocusX: normalizeFocus(row.hero_focus_x),
+    heroFocusY: normalizeFocus(row.hero_focus_y),
+    heroCoverScale: normalizeScale(row.hero_cover_scale),
+    mobileFocusX: normalizeFocus(row.mobile_focus_x),
+    mobileFocusY: normalizeFocus(row.mobile_focus_y),
+    mobileCoverScale: normalizeScale(row.mobile_cover_scale),
+    previewVideo: row.preview_video || '',
+    youtubeUrl: row.youtube_url || '',
+    projectStills: normalizeProjectStills(row.project_stills),
+    section: row.section_id,
+    size: row.size || '16-9',
+    published: row.published !== false,
+    order: Number(row.display_order),
+    translations: row.translations && typeof row.translations === 'object'
+      ? row.translations
+      : { en: {} }
+  };
+}
+
+function galleryFromRow(row) {
+  return {
+    id: row.id,
+    slug: row.slug || row.id,
+    previousSlugs: Array.isArray(row.previous_slugs) ? row.previous_slugs : [],
+    title: row.title,
+    browserTitle: row.browser_title || '',
+    description: row.description || '',
+    published: row.published !== false,
+    order: Number(row.display_order),
+    backgroundEnabled: row.background_enabled !== false,
+    backgroundSource: ['default', 'homepage', 'custom'].includes(row.background_source)
+      ? row.background_source
+      : 'default',
+    backgroundVideo: row.background_video || '',
+    translations: row.translations && typeof row.translations === 'object'
+      ? row.translations
+      : { en: {} }
+  };
+}
+
+async function writeRuntimeSnapshot(sections, projects) {
+  if (!sections.length) {
+    throw new Error('Supabase returned no published sections; refusing an empty runtime snapshot.');
+  }
+
+  const projectSource = [
+    '/**',
+    ' * Generated at build time from published Supabase rows.',
+    ' * Supabase remains the live source; this snapshot prevents stale template',
+    ' * content from appearing while the first remote request resolves or fails.',
+    ' */',
+    `const PROJECTS_DATA = ${JSON.stringify(projects.map(projectFromRow), null, 2)};`,
+    ''
+  ].join('\n');
+  const gallerySource = [
+    '/** Generated at build time from published Supabase rows. */',
+    `const GALLERIES_DATA = ${JSON.stringify(sections.map(galleryFromRow), null, 2)};`,
+    '',
+    'function galleryToPageConfig(gallery) {',
+    '  return {',
+    '    ...gallery,',
+    '    projectSection: gallery.id,',
+    '    activeNav: gallery.id,',
+    "    layoutPreset: gallery.layoutPreset || 'editorial',",
+    "    containerId: 'project-gallery'",
+    '  };',
+    '}',
+    ''
+  ].join('\n');
+
+  await Promise.all([
+    writeFile(path.join(outputRoot, 'data', 'projects-data.js'), projectSource),
+    writeFile(path.join(outputRoot, 'config', 'page-configs.js'), gallerySource)
+  ]);
+}
+
 async function generateSearchEntries() {
   try {
     const [sections, projects, settings, landingTemplate, contactTemplate, galleryTemplate, projectTemplate] = await Promise.all([
@@ -172,6 +290,7 @@ async function generateSearchEntries() {
       readFile(path.join(outputRoot, 'gallery.html'), 'utf8'),
       readFile(path.join(outputRoot, 'project.html'), 'utf8')
     ]);
+    await writeRuntimeSnapshot(sections, projects);
     const firstCover = absoluteMediaUrl(projects.find(project => project.cover_image)?.cover_image);
     const landingTitle = plainText(settings.landingBrowserTitle) ||
       `${plainText(settings.landingTitle) || 'ARTUR ARAUJO'} | Portfolio`;
@@ -273,7 +392,8 @@ async function generateSearchEntries() {
     await writeFile(path.join(outputRoot, 'sitemap.xml'), buildSitemap(urls));
     console.log(`Generated SEO entries for ${sections.length} sections, ${projects.length} projects and ${aliasCount} legacy aliases.`);
   } catch (error) {
-    console.warn(`Could not refresh SEO entries from Supabase; keeping the committed base sitemap. ${error.message}`);
+    if (process.env.VERCEL) throw error;
+    console.warn(`Could not refresh SEO entries from Supabase; keeping the committed base sitemap and empty local portfolio fallback. ${error.message}`);
   }
 }
 

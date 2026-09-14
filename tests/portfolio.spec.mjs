@@ -43,6 +43,35 @@ test('landing page exposes its primary actions and language switch', async ({ pa
   await expectNoHorizontalOverflow(page);
 });
 
+test('landing page ignites the title before revealing the interface', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.locator('body')).toHaveClass(/landing-intro-ready/);
+
+  const animation = await page.evaluate(() => {
+    const title = getComputedStyle(document.getElementById('main-title'));
+    const actions = getComputedStyle(document.querySelector('.action-wrapper'));
+    const language = getComputedStyle(document.querySelector('.site-language-toggle'));
+    return {
+      titleName: title.animationName,
+      titleDuration: title.animationDuration,
+      titleDelay: title.animationDelay,
+      actionName: actions.animationName,
+      actionDelay: actions.animationDelay,
+      languageName: language.animationName,
+      languageDelay: language.animationDelay
+    };
+  });
+  expect(animation.titleName).toContain('landingBrandIgnition');
+  expect(animation.titleDuration).toBe('1.05s');
+  expect(animation.titleDelay).toBe('0.14s');
+  expect(animation.actionName).toContain('landingInterfaceReveal');
+  expect(animation.actionDelay).toBe('0.7s');
+  expect(animation.languageName).toContain('landingAuxiliaryReveal');
+  expect(animation.languageDelay).toBe('0.82s');
+  await expect(page.locator('#main-title')).toHaveCSS('opacity', '1');
+  await expect(page.locator('.action-wrapper')).toHaveCSS('opacity', '1');
+});
+
 test('landing video plays at normal speed from a randomized point', async ({ page }) => {
   await page.addInitScript(() => {
     Math.random = () => 0.5;
@@ -463,6 +492,16 @@ test('generated sitemap and project HTML expose crawlable production metadata', 
   expect(legacyAliasHtml).toContain('<meta name="robots" content="noindex, follow">');
   expect(legacyAliasHtml).toContain('<link rel="canonical" href="https://arturaraujo.com/work/film-tv-streaming">');
   expect(legacyAliasHtml).toContain('<meta http-equiv="refresh" content="0; url=/work/film-tv-streaming">');
+
+  const runtimeProjects = await readFile(new URL('../dist/data/projects-data.js', import.meta.url), 'utf8');
+  const runtimeSections = await readFile(new URL('../dist/config/page-configs.js', import.meta.url), 'utf8');
+  expect(runtimeProjects).toContain('Generated at build time from published Supabase rows');
+  expect(runtimeSections).toContain('Generated at build time from published Supabase rows');
+  expect(runtimeProjects).not.toContain('MONSTERS OF GOD');
+
+  const galleryTemplate = await readFile(new URL('../gallery.html', import.meta.url), 'utf8');
+  expect(galleryTemplate).toContain('<source data-site-setting="gallery-background-video">');
+  expect(galleryTemplate).not.toContain('src="assets/videos/bg-cinema.mp4"');
 });
 
 test('security headers protect the public document without blocking its scripts', async ({ page, request, isMobile }) => {

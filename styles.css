@@ -67,7 +67,7 @@ html, body {
   -webkit-font-smoothing: antialiased;
 }
 
-.landing-page.site-settings-loading .content-box {
+.landing-page:not(.landing-intro-ready) .content-box {
   visibility: hidden;
 }
 
@@ -114,8 +114,9 @@ body.gallery-solid-background .video-background-wrapper {
   transition: filter 0.55s ease, transform 0.55s ease, opacity 1.15s ease;
 }
 
-.landing-page.site-settings-ready.landing-video-ready #bg-video {
+.landing-page.site-settings-ready.landing-video-ready.landing-intro-ready #bg-video {
   opacity: 1;
+  transition-delay: 0.34s;
 }
 
 #landing-reel-video {
@@ -277,6 +278,69 @@ body.gallery-solid-background .video-background-wrapper {
   width: 100%;
   max-width: 1400px;
   animation: fadeInUp 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Homepage ignition: black frame, title as the first light source, then the
+   surrounding projection and controls. This stays independent from ENTER's
+   mechanical glitch and only runs when the landing document is created. */
+.landing-page .content-box {
+  animation: none;
+}
+
+.landing-page .brand-title,
+.landing-page .brand-subtitle,
+.landing-page .action-wrapper,
+.landing-page .site-language-toggle {
+  opacity: 0;
+}
+
+.landing-page .brand-title {
+  filter: blur(4px) brightness(0);
+  text-shadow: none;
+}
+
+.landing-page .brand-subtitle,
+.landing-page .action-wrapper,
+.landing-page .site-language-toggle {
+  filter: blur(3px) brightness(0.4);
+}
+
+.landing-page.landing-intro-ready .brand-title {
+  animation: landingBrandIgnition 1.05s cubic-bezier(0.2, 0.72, 0.2, 1) 0.14s forwards;
+}
+
+.landing-page.landing-intro-ready .brand-subtitle,
+.landing-page.landing-intro-ready .action-wrapper {
+  animation: landingInterfaceReveal 0.82s cubic-bezier(0.22, 0.7, 0.2, 1) 0.7s forwards;
+}
+
+.landing-page.landing-intro-ready .site-language-toggle {
+  animation: landingAuxiliaryReveal 0.72s ease 0.82s forwards;
+}
+
+.landing-page:not(.landing-intro-ready) .video-overlay,
+.landing-page:not(.landing-intro-ready) .projection-beam,
+.landing-page:not(.landing-intro-ready) .soft-vignette,
+.landing-page:not(.landing-intro-ready) .film-grain-overlay,
+.landing-page:not(.landing-intro-ready) .film-scratches-overlay {
+  opacity: 0;
+}
+
+.landing-page.landing-intro-ready .video-overlay,
+.landing-page.landing-intro-ready .projection-beam,
+.landing-page.landing-intro-ready .soft-vignette {
+  opacity: 1;
+  transition-delay: 0.34s;
+}
+
+.landing-page.landing-intro-ready .film-grain-overlay {
+  opacity: 0.095;
+  transition-delay: 0.46s;
+}
+
+.landing-page.landing-intro-ready .film-scratches-overlay {
+  opacity: 0.04;
+  transition-delay: 0.46s;
 }
 
 /* Main Title Style with A24 Chromatic Aberration & Soft Projector Focus */
@@ -511,7 +575,8 @@ body.gallery-solid-background .video-background-wrapper {
 .landing-page .projection-beam,
 .landing-page .soft-vignette,
 .landing-page .film-grain-overlay,
-.landing-page .film-scratches-overlay {
+.landing-page .film-scratches-overlay,
+.landing-page .site-language-toggle {
   transition: opacity 0.45s ease, visibility 0s linear 0s;
 }
 
@@ -520,7 +585,8 @@ body.gallery-solid-background .video-background-wrapper {
 .landing-page.landing-reel-mode .projection-beam,
 .landing-page.landing-reel-mode .soft-vignette,
 .landing-page.landing-reel-mode .film-grain-overlay,
-.landing-page.landing-reel-mode .film-scratches-overlay {
+.landing-page.landing-reel-mode .film-scratches-overlay,
+.landing-page.landing-reel-mode .site-language-toggle {
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
@@ -567,6 +633,60 @@ body.gallery-solid-background .video-background-wrapper {
   visibility: visible;
   pointer-events: auto;
   transition: opacity 0.2s ease 0.38s, visibility 0s linear 0.38s, background 0.16s ease, color 0.16s ease;
+}
+
+@keyframes landingBrandIgnition {
+  0% {
+    opacity: 0;
+    filter: blur(4px) brightness(0);
+    text-shadow: none;
+  }
+  32% {
+    opacity: 0.35;
+    filter: blur(2px) brightness(0.58);
+    text-shadow:
+      0 0 10px rgba(243, 241, 236, 0.14),
+      -3px 0 8px rgba(255, 35, 75, 0.1),
+      3px 0 8px rgba(0, 225, 255, 0.1);
+  }
+  68% {
+    opacity: 1;
+    filter: blur(0.35px) brightness(1.22);
+    text-shadow:
+      0 0 30px rgba(243, 241, 236, 0.42),
+      0 0 58px rgba(243, 241, 236, 0.16),
+      0 4px 25px rgba(0, 0, 0, 0.95);
+  }
+  100% {
+    opacity: 1;
+    filter: blur(0.7px) brightness(1);
+    text-shadow:
+      0 0 22px rgba(243, 241, 236, 0.3),
+      0 0 45px rgba(243, 241, 236, 0.1),
+      0 4px 25px rgba(0, 0, 0, 0.95);
+  }
+}
+
+@keyframes landingInterfaceReveal {
+  from {
+    opacity: 0;
+    filter: blur(3px) brightness(0.4);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0) brightness(1);
+  }
+}
+
+@keyframes landingAuxiliaryReveal {
+  from {
+    opacity: 0;
+    filter: blur(2px) brightness(0.5);
+  }
+  to {
+    opacity: 0.48;
+    filter: blur(0) brightness(1);
+  }
 }
 
 /* Two-step projector lock-up: one channel breaks, the other freezes, then cut. */
@@ -661,6 +781,37 @@ body.shutter-click-active .brand-title::after {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .landing-page .brand-title,
+  .landing-page .brand-subtitle,
+  .landing-page .action-wrapper,
+  .landing-page .site-language-toggle,
+  .landing-page.landing-intro-ready .brand-title,
+  .landing-page.landing-intro-ready .brand-subtitle,
+  .landing-page.landing-intro-ready .action-wrapper,
+  .landing-page.landing-intro-ready .site-language-toggle {
+    animation: none;
+    opacity: 1;
+  }
+
+  .landing-page .brand-title,
+  .landing-page.landing-intro-ready .brand-title {
+    filter: blur(0.7px) brightness(1);
+  }
+
+  .landing-page .brand-subtitle,
+  .landing-page .action-wrapper,
+  .landing-page .site-language-toggle,
+  .landing-page.landing-intro-ready .brand-subtitle,
+  .landing-page.landing-intro-ready .action-wrapper,
+  .landing-page.landing-intro-ready .site-language-toggle {
+    filter: none;
+  }
+
+  .landing-page .site-language-toggle,
+  .landing-page.landing-intro-ready .site-language-toggle {
+    opacity: 0.48;
+  }
+
   body.shutter-click-active .brand-title,
   body.shutter-click-active .brand-title::before,
   body.shutter-click-active .brand-title::after {

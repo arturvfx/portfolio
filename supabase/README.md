@@ -46,26 +46,22 @@ To add the editable Contact page copy to an existing Site Settings row, run:
 
 `supabase/migrations/008_contact_site_settings.sql`
 
-To add up to three configurable still images to each project page, run:
+Then apply every remaining migration in numeric order. Each file is safe to
+run once and advances the content model without changing the public API keys:
 
-`supabase/migrations/009_project_stills.sql`
+1. `009_project_stills.sql` — up to three configurable project stills
+2. `010_section_backgrounds.sql` — video/solid section backgrounds
+3. `011_section_featured_hero.sql` — historical section-hero compatibility
+4. `012_mobile_cover_focus.sql` — mobile focal point
+5. `013_mobile_cover_scale.sql` — mobile cover zoom
+6. `014_desktop_cover_framing.sql` — desktop focal point and zoom
+7. `015_bilingual_content.sql` — optional English content
+8. `016_browser_titles.sql` — editable browser-tab titles
+9. `017_repair_hero_framing.sql` — Featured Hero framing repair
+10. `018_section_slugs.sql` — editable section URLs and redirects
 
-To configure the mobile focal point of each project's cover image, run:
-
-`supabase/migrations/012_mobile_cover_focus.sql`
-
-To add the mobile cover scale/zoom control, run:
-
-`supabase/migrations/013_mobile_cover_scale.sql`
-
-To add the independent desktop cover focal point and scale controls, run:
-
-`supabase/migrations/014_desktop_cover_framing.sql`
-
-To add optional English project and section content while keeping the existing
-fields as the canonical PT-BR version, run:
-
-`supabase/migrations/015_bilingual_content.sql`
+For a new environment, run the complete `supabase/migrations/` directory from
+`001` through `018` in order. Future numbered migrations belong after `018`.
 
 Then configure and deploy the Edge Function. The destination address remains
 server-side and is never included in the public site:
