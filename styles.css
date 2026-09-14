@@ -306,7 +306,7 @@ body.gallery-solid-background .video-background-wrapper {
 }
 
 .landing-page.landing-intro-ready .brand-title {
-  animation: landingBrandIgnition 1.05s cubic-bezier(0.2, 0.72, 0.2, 1) 0.14s forwards;
+  animation: landingBrandIgnition 1.05s cubic-bezier(0.22, 0.68, 0.28, 1) 0.14s forwards;
 }
 
 .landing-page.landing-intro-ready .brand-subtitle,
@@ -641,21 +641,20 @@ body.gallery-solid-background .video-background-wrapper {
     filter: blur(4px) brightness(0);
     text-shadow: none;
   }
-  32% {
-    opacity: 0.35;
-    filter: blur(2px) brightness(0.58);
+  38% {
+    opacity: 0.28;
+    filter: blur(2.7px) brightness(0.32);
     text-shadow:
-      0 0 10px rgba(243, 241, 236, 0.14),
-      -3px 0 8px rgba(255, 35, 75, 0.1),
-      3px 0 8px rgba(0, 225, 255, 0.1);
+      0 0 7px rgba(243, 241, 236, 0.08),
+      0 2px 10px rgba(0, 0, 0, 0.32);
   }
-  68% {
-    opacity: 1;
-    filter: blur(0.35px) brightness(1.22);
+  72% {
+    opacity: 0.7;
+    filter: blur(1.4px) brightness(0.72);
     text-shadow:
-      0 0 30px rgba(243, 241, 236, 0.42),
-      0 0 58px rgba(243, 241, 236, 0.16),
-      0 4px 25px rgba(0, 0, 0, 0.95);
+      0 0 15px rgba(243, 241, 236, 0.19),
+      0 0 30px rgba(243, 241, 236, 0.06),
+      0 3px 18px rgba(0, 0, 0, 0.68);
   }
   100% {
     opacity: 1;
