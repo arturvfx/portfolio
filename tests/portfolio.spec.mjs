@@ -153,6 +153,10 @@ test('full desktop reel is deferred and starts from zero', async ({ page, isMobi
 
 test('mobile reel loads its vertical source only on demand and contains the desktop fallback', async ({ page, isMobile }) => {
   test.skip(!isMobile, 'This behavior is exclusive to the mobile viewport');
+  await page.route('**/rest/v1/portfolio_site_settings**', route => route.fulfill({
+    contentType: 'application/json',
+    body: JSON.stringify([{ settings: { landingBackgroundVideo: 'assets/videos/bg-cinema.mp4' } }])
+  }));
   await page.addInitScript(() => {
     window.__reelFullscreenRequests = [];
     window.__reelOrientationLocks = [];
