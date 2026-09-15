@@ -673,17 +673,18 @@
   }
 
   function bindCoverFocusControls(mode) {
-    const fieldPrefix = ['desktop', 'hero'].includes(mode) ? mode : 'mobile';
-    const preview = document.getElementById(`${fieldPrefix}-focus-preview`);
-    const mediaHost = document.getElementById(`${fieldPrefix}-focus-media`);
-    const marker = document.getElementById(`${fieldPrefix}-focus-marker`);
+    const fieldPrefix = mode === 'project-mobile' ? 'projectMobile' : mode;
+    const idPrefix = mode === 'project-mobile' ? 'project-mobile' : mode;
+    const preview = document.getElementById(`${idPrefix}-focus-preview`);
+    const mediaHost = document.getElementById(`${idPrefix}-focus-media`);
+    const marker = document.getElementById(`${idPrefix}-focus-marker`);
     const xInput = document.getElementById(`field-${fieldPrefix}FocusX`);
     const yInput = document.getElementById(`field-${fieldPrefix}FocusY`);
     const scaleInput = document.getElementById(`field-${fieldPrefix}CoverScale`);
-    const xOutput = document.getElementById(`${fieldPrefix}-focus-x-value`);
-    const yOutput = document.getElementById(`${fieldPrefix}-focus-y-value`);
-    const scaleOutput = document.getElementById(`${fieldPrefix}-cover-scale-value`);
-    const resetButton = document.getElementById(`btn-reset-${fieldPrefix}-focus`);
+    const xOutput = document.getElementById(`${idPrefix}-focus-x-value`);
+    const yOutput = document.getElementById(`${idPrefix}-focus-y-value`);
+    const scaleOutput = document.getElementById(`${idPrefix}-cover-scale-value`);
+    const resetButton = document.getElementById(`btn-reset-${idPrefix}-focus`);
     const coverInput = document.getElementById('field-coverImage');
     const videoInput = document.getElementById('field-previewVideo');
     const sizeInput = document.getElementById('field-size');
@@ -793,6 +794,9 @@
     const mobileFocusX = normalizeCoverFocus(project.mobileFocusX);
     const mobileFocusY = normalizeCoverFocus(project.mobileFocusY);
     const mobileCoverScale = normalizeCoverScale(project.mobileCoverScale);
+    const projectMobileFocusX = normalizeCoverFocus(project.projectMobileFocusX ?? project.mobileFocusX);
+    const projectMobileFocusY = normalizeCoverFocus(project.projectMobileFocusY ?? project.mobileFocusY);
+    const projectMobileCoverScale = normalizeCoverScale(project.projectMobileCoverScale ?? project.mobileCoverScale);
     const projectText = field => translationValue(project, projectEditingLocale, field);
     const projectPlaceholder = field => translationPlaceholder(project, projectEditingLocale, field);
 
@@ -997,7 +1001,29 @@
                 <input id="field-mobileFocusY" type="range" min="0" max="100" step="1" value="${mobileFocusY}" data-field="mobileFocusY" />
                 <label for="field-mobileCoverScale">Scale <output id="mobile-cover-scale-value">${Math.round(mobileCoverScale)}%</output></label>
                 <input id="field-mobileCoverScale" type="range" min="100" max="200" step="1" value="${mobileCoverScale}" data-field="mobileCoverScale" />
-                  <span class="media-upload-note">Applied to gallery thumbnails, the mobile opening highlight and the mobile project page.</span>
+                  <span class="media-upload-note">Applied to gallery thumbnails and the mobile opening highlight.</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="cover-focus-panel project-mobile-cover-focus">
+              <div class="cover-focus-header">
+                <span class="form-subsection-heading">Mobile Project Hero Framing</span>
+                <button id="btn-reset-project-mobile-focus" class="btn btn-secondary cover-focus-reset" type="button">Reset</button>
+              </div>
+              <div class="cover-focus-editor">
+                <div id="project-mobile-focus-preview" class="cover-focus-preview project-mobile-cover-preview" aria-label="Drag to choose the mobile project hero focal point">
+                  <div id="project-mobile-focus-media" class="cover-focus-media"></div>
+                  <span id="project-mobile-focus-marker" class="cover-focus-marker" aria-hidden="true"></span>
+                </div>
+                <div class="cover-focus-controls">
+                <label for="field-projectMobileFocusX">Horizontal <output id="project-mobile-focus-x-value">${Math.round(projectMobileFocusX)}%</output></label>
+                <input id="field-projectMobileFocusX" type="range" min="0" max="100" step="1" value="${projectMobileFocusX}" data-field="projectMobileFocusX" />
+                <label for="field-projectMobileFocusY">Vertical <output id="project-mobile-focus-y-value">${Math.round(projectMobileFocusY)}%</output></label>
+                <input id="field-projectMobileFocusY" type="range" min="0" max="100" step="1" value="${projectMobileFocusY}" data-field="projectMobileFocusY" />
+                <label for="field-projectMobileCoverScale">Scale <output id="project-mobile-cover-scale-value">${Math.round(projectMobileCoverScale)}%</output></label>
+                <input id="field-projectMobileCoverScale" type="range" min="100" max="200" step="1" value="${projectMobileCoverScale}" data-field="projectMobileCoverScale" />
+                  <span class="media-upload-note">Applied only to the hero image on the individual project page on mobile.</span>
                 </div>
               </div>
             </div>
@@ -1117,6 +1143,7 @@
     bindCoverFocusControls('desktop');
     bindCoverFocusControls('hero');
     bindCoverFocusControls('mobile');
+    bindCoverFocusControls('project-mobile');
     [0, 1, 2].forEach(index => bindProjectStillControls(project.id, index));
   }
 
@@ -1283,6 +1310,9 @@
       mobileFocusX: 50,
       mobileFocusY: 50,
       mobileCoverScale: 100,
+      projectMobileFocusX: 50,
+      projectMobileFocusY: 50,
+      projectMobileCoverScale: 100,
       translations: { en: {} },
       previewVideo: '',
       youtubeUrl: '',
@@ -1390,12 +1420,13 @@
       } else if (
         field === 'desktopFocusX' || field === 'desktopFocusY' ||
         field === 'heroFocusX' || field === 'heroFocusY' ||
-        field === 'mobileFocusX' || field === 'mobileFocusY'
+        field === 'mobileFocusX' || field === 'mobileFocusY' ||
+        field === 'projectMobileFocusX' || field === 'projectMobileFocusY'
       ) {
         updated[field] = Math.max(0, Math.min(100, Number(raw) || 0));
       } else if (
         field === 'desktopCoverScale' || field === 'heroCoverScale' ||
-        field === 'mobileCoverScale'
+        field === 'mobileCoverScale' || field === 'projectMobileCoverScale'
       ) {
         updated[field] = normalizeCoverScale(raw);
       } else if (field === 'published' || field === 'watchNowEnabled') {

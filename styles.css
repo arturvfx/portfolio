@@ -3439,9 +3439,9 @@ body.contact-page {
 
   .project-detail-hero .project-detail-media img,
   .project-detail-hero .project-detail-media video {
-    object-position: var(--mobile-focus-x, 50%) var(--mobile-focus-y, 50%);
-    transform: scale(var(--mobile-cover-scale, 1));
-    transform-origin: var(--mobile-focus-x, 50%) var(--mobile-focus-y, 50%);
+    object-position: var(--project-mobile-focus-x, var(--mobile-focus-x, 50%)) var(--project-mobile-focus-y, var(--mobile-focus-y, 50%));
+    transform: scale(var(--project-mobile-cover-scale, var(--mobile-cover-scale, 1)));
+    transform-origin: var(--project-mobile-focus-x, var(--mobile-focus-x, 50%)) var(--project-mobile-focus-y, var(--mobile-focus-y, 50%));
   }
 
   .project-youtube-cover:hover img,

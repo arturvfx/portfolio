@@ -82,6 +82,9 @@
     clean.mobileFocusX = normalizeCoverFocus(clean.mobileFocusX);
     clean.mobileFocusY = normalizeCoverFocus(clean.mobileFocusY);
     clean.mobileCoverScale = normalizeCoverScale(clean.mobileCoverScale);
+    clean.projectMobileFocusX = normalizeCoverFocus(clean.projectMobileFocusX ?? clean.mobileFocusX);
+    clean.projectMobileFocusY = normalizeCoverFocus(clean.projectMobileFocusY ?? clean.mobileFocusY);
+    clean.projectMobileCoverScale = normalizeCoverScale(clean.projectMobileCoverScale ?? clean.mobileCoverScale);
     clean.translations = normalizeTranslations(clean.translations, [
       'title', 'browserTitle', 'category', 'services', 'projectSummary', 'contribution'
     ]);
@@ -402,12 +405,13 @@
       if (p.coverImage != null && typeof p.coverImage !== 'string') {
         errors.push(`${ref}: "coverImage" must be a string.`);
       }
-      ['desktopFocusX', 'desktopFocusY', 'heroFocusX', 'heroFocusY', 'mobileFocusX', 'mobileFocusY'].forEach(field => {
+      ['desktopFocusX', 'desktopFocusY', 'heroFocusX', 'heroFocusY', 'mobileFocusX', 'mobileFocusY',
+        'projectMobileFocusX', 'projectMobileFocusY'].forEach(field => {
         if (p[field] != null && (typeof p[field] !== 'number' || !Number.isFinite(p[field]) || p[field] < 0 || p[field] > 100)) {
           errors.push(`${ref}: "${field}" must be a number from 0 to 100.`);
         }
       });
-      ['desktopCoverScale', 'heroCoverScale', 'mobileCoverScale'].forEach(field => {
+      ['desktopCoverScale', 'heroCoverScale', 'mobileCoverScale', 'projectMobileCoverScale'].forEach(field => {
         if (p[field] != null && (
           typeof p[field] !== 'number' ||
           !Number.isFinite(p[field]) ||
@@ -620,6 +624,7 @@
       'watch_now_enabled', 'watch_now_url', 'cover_image', 'desktop_focus_x',
       'desktop_focus_y', 'desktop_cover_scale', 'hero_focus_x', 'hero_focus_y',
       'hero_cover_scale', 'mobile_focus_x', 'mobile_focus_y', 'mobile_cover_scale',
+      'project_mobile_focus_x', 'project_mobile_focus_y', 'project_mobile_cover_scale',
       'preview_video', 'youtube_url', 'project_stills', 'section_id', 'size',
       'published', 'display_order', 'translations'
     ];
@@ -648,6 +653,9 @@
       sqlNumber(project.mobileFocusX, 50),
       sqlNumber(project.mobileFocusY, 50),
       sqlNumber(project.mobileCoverScale, 100),
+      sqlNumber(project.projectMobileFocusX ?? project.mobileFocusX, 50),
+      sqlNumber(project.projectMobileFocusY ?? project.mobileFocusY, 50),
+      sqlNumber(project.projectMobileCoverScale ?? project.mobileCoverScale, 100),
       sqlText(project.previewVideo || ''),
       sqlText(project.youtubeUrl || ''),
       sqlJson(project.projectStills || []),

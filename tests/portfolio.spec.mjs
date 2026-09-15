@@ -363,6 +363,7 @@ test('admin full backup includes the complete content model and deduplicated med
     [{
       id: 'project-id', slug: 'project-url', title: "DIRECTOR'S CUT", section: 'section-id',
       size: '16-9', order: 1, published: true, coverImage: 'https://media.example/cover.jpg',
+      projectMobileFocusX: 42, projectMobileFocusY: 37, projectMobileCoverScale: 118,
       projectStills: [{ url: 'https://media.example/cover.jpg', size: '16-9' }]
     }],
     {
@@ -393,6 +394,9 @@ test('admin full backup includes the complete content model and deduplicated med
   expect(sqlBackup.sql).toContain('INSERT INTO public.portfolio_projects');
   expect(sqlBackup.sql).toContain('INSERT INTO public.portfolio_site_settings');
   expect(sqlBackup.sql).toContain("DIRECTOR''S CUT");
+  expect(sqlBackup.sql).toContain('project_mobile_focus_x');
+  expect(sqlBackup.sql).toContain('project_mobile_focus_y');
+  expect(sqlBackup.sql).toContain('project_mobile_cover_scale');
   expect(sqlBackup.sql).not.toContain('portfolio_admins');
   expect(sqlBackup.sql).not.toContain('contact_messages');
 });
@@ -448,7 +452,10 @@ test('a project without YouTube keeps the same hero frame without a play control
       desktopCoverScale: 100,
       mobileFocusX: 50,
       mobileFocusY: 50,
-      mobileCoverScale: 100
+      mobileCoverScale: 100,
+      projectMobileFocusX: 31,
+      projectMobileFocusY: 64,
+      projectMobileCoverScale: 123
     };
 
     renderProjectDetailMedia({
@@ -467,11 +474,17 @@ test('a project without YouTube keeps the same hero frame without a play control
       staticWidth: staticFrame.width,
       staticHeight: staticFrame.height,
       className: staticContainer.className,
+      projectMobileFocusX: staticContainer.style.getPropertyValue('--project-mobile-focus-x'),
+      projectMobileFocusY: staticContainer.style.getPropertyValue('--project-mobile-focus-y'),
+      projectMobileCoverScale: staticContainer.style.getPropertyValue('--project-mobile-cover-scale'),
       playControls: staticContainer.querySelectorAll('.project-youtube-cover, .project-play-icon').length
     };
   });
 
   expect(frames.className).toContain('detail-ratio-16-9');
+  expect(frames.projectMobileFocusX).toBe('31%');
+  expect(frames.projectMobileFocusY).toBe('64%');
+  expect(frames.projectMobileCoverScale).toBe('1.23');
   expect(frames.playControls).toBe(0);
   expect(frames.staticWidth).toBeCloseTo(frames.youtubeWidth, 1);
   expect(frames.staticHeight).toBeCloseTo(frames.youtubeHeight, 1);
@@ -573,6 +586,8 @@ test('security headers protect the public document without blocking its scripts'
   expect(adminScript).toContain('setting-workBrowserTitle');
   expect(adminScript).toContain('setting-contactBrowserTitle');
   expect(adminScript).toContain('field-browserTitle');
+  expect(adminScript).toContain('Mobile Project Hero Framing');
+  expect(adminScript).toContain('field-projectMobileFocusX');
   expect(adminScript).toContain('gallery-browser-title');
   expect(adminScript).toContain('Internal ID');
   expect(adminScript).toContain('URL Slug');

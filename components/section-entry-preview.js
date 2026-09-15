@@ -67,6 +67,9 @@
       mobileFocusX: normalizeFocus(row.mobile_focus_x),
       mobileFocusY: normalizeFocus(row.mobile_focus_y),
       mobileCoverScale: normalizeScale(row.mobile_cover_scale),
+      projectMobileFocusX: normalizeFocus(row.project_mobile_focus_x ?? row.mobile_focus_x),
+      projectMobileFocusY: normalizeFocus(row.project_mobile_focus_y ?? row.mobile_focus_y),
+      projectMobileCoverScale: normalizeScale(row.project_mobile_cover_scale ?? row.mobile_cover_scale),
       translations: row.translations && typeof row.translations === 'object' ? row.translations : { en: {} }
     };
   }
@@ -185,14 +188,14 @@
     try {
       return await requestRows('portfolio_projects', {
         ...common,
-        select: 'id,slug,title,browser_title,category,client,year,services,project_summary,contribution,director,production_company,watch_now_enabled,watch_now_url,cover_image,preview_video,project_stills,section_id,size,published,display_order,desktop_focus_x,desktop_focus_y,desktop_cover_scale,hero_focus_x,hero_focus_y,hero_cover_scale,mobile_focus_x,mobile_focus_y,mobile_cover_scale,translations'
+        select: 'id,slug,title,browser_title,category,client,year,services,project_summary,contribution,director,production_company,watch_now_enabled,watch_now_url,cover_image,preview_video,project_stills,section_id,size,published,display_order,desktop_focus_x,desktop_focus_y,desktop_cover_scale,hero_focus_x,hero_focus_y,hero_cover_scale,mobile_focus_x,mobile_focus_y,mobile_cover_scale,project_mobile_focus_x,project_mobile_focus_y,project_mobile_cover_scale,translations'
       });
     } catch (error) {
       if (!String(error && error.message || error).includes('(400)')) throw error;
       try {
         return await requestRows('portfolio_projects', {
           ...common,
-          select: 'id,slug,title,category,client,year,services,project_summary,contribution,director,production_company,watch_now_enabled,watch_now_url,cover_image,preview_video,project_stills,section_id,size,published,display_order,desktop_focus_x,desktop_focus_y,desktop_cover_scale,hero_focus_x,hero_focus_y,hero_cover_scale,mobile_focus_x,mobile_focus_y,mobile_cover_scale'
+          select: 'id,slug,title,browser_title,category,client,year,services,project_summary,contribution,director,production_company,watch_now_enabled,watch_now_url,cover_image,preview_video,project_stills,section_id,size,published,display_order,desktop_focus_x,desktop_focus_y,desktop_cover_scale,hero_focus_x,hero_focus_y,hero_cover_scale,mobile_focus_x,mobile_focus_y,mobile_cover_scale,translations'
         });
       } catch (heroError) {
         if (!String(heroError && heroError.message || heroError).includes('(400)')) throw heroError;

@@ -47,6 +47,9 @@ function storeProjectPreview(project, options = {}) {
     mobileFocusX: Number.isFinite(Number(project.mobileFocusX)) ? Number(project.mobileFocusX) : 50,
     mobileFocusY: Number.isFinite(Number(project.mobileFocusY)) ? Number(project.mobileFocusY) : 50,
     mobileCoverScale: Number.isFinite(Number(project.mobileCoverScale)) ? Number(project.mobileCoverScale) : 100,
+    projectMobileFocusX: Number.isFinite(Number(project.projectMobileFocusX)) ? Number(project.projectMobileFocusX) : (Number.isFinite(Number(project.mobileFocusX)) ? Number(project.mobileFocusX) : 50),
+    projectMobileFocusY: Number.isFinite(Number(project.projectMobileFocusY)) ? Number(project.projectMobileFocusY) : (Number.isFinite(Number(project.mobileFocusY)) ? Number(project.mobileFocusY) : 50),
+    projectMobileCoverScale: Number.isFinite(Number(project.projectMobileCoverScale)) ? Number(project.projectMobileCoverScale) : (Number.isFinite(Number(project.mobileCoverScale)) ? Number(project.mobileCoverScale) : 100),
     savedAt: Date.now()
   };
 
@@ -199,12 +202,24 @@ function hydrateStoredProjectPreview() {
     const mobileCoverScale = Number.isFinite(Number(preview.mobileCoverScale))
       ? Math.max(100, Math.min(200, Number(preview.mobileCoverScale)))
       : 100;
+    const projectMobileFocusX = Number.isFinite(Number(preview.projectMobileFocusX))
+      ? Math.max(0, Math.min(100, Number(preview.projectMobileFocusX)))
+      : mobileFocusX;
+    const projectMobileFocusY = Number.isFinite(Number(preview.projectMobileFocusY))
+      ? Math.max(0, Math.min(100, Number(preview.projectMobileFocusY)))
+      : mobileFocusY;
+    const projectMobileCoverScale = Number.isFinite(Number(preview.projectMobileCoverScale))
+      ? Math.max(100, Math.min(200, Number(preview.projectMobileCoverScale)))
+      : mobileCoverScale;
     media.style.setProperty('--desktop-focus-x', `${desktopFocusX}%`);
     media.style.setProperty('--desktop-focus-y', `${desktopFocusY}%`);
     media.style.setProperty('--desktop-cover-scale', String(desktopCoverScale / 100));
     media.style.setProperty('--mobile-focus-x', `${mobileFocusX}%`);
     media.style.setProperty('--mobile-focus-y', `${mobileFocusY}%`);
     media.style.setProperty('--mobile-cover-scale', String(mobileCoverScale / 100));
+    media.style.setProperty('--project-mobile-focus-x', `${projectMobileFocusX}%`);
+    media.style.setProperty('--project-mobile-focus-y', `${projectMobileFocusY}%`);
+    media.style.setProperty('--project-mobile-cover-scale', String(projectMobileCoverScale / 100));
     if (preview.coverImage) {
       const image = document.createElement('img');
       image.src = preview.coverImage;

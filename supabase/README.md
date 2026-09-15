@@ -59,9 +59,10 @@ run once and advances the content model without changing the public API keys:
 8. `016_browser_titles.sql` — editable browser-tab titles
 9. `017_repair_hero_framing.sql` — Featured Hero framing repair
 10. `018_section_slugs.sql` — editable section URLs and redirects
+11. `019_project_mobile_hero_framing.sql` — independent mobile framing for project-page heroes
 
 For a new environment, run the complete `supabase/migrations/` directory from
-`001` through `018` in order. Future numbered migrations belong after `018`.
+`001` through `019` in order. Future numbered migrations belong after `019`.
 
 Then configure and deploy the Edge Function. The destination address remains
 server-side and is never included in the public site:

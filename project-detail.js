@@ -134,12 +134,24 @@ function renderProjectDetailMedia(project) {
   const mobileCoverScale = Number.isFinite(Number(project.mobileCoverScale))
     ? Math.max(100, Math.min(200, Number(project.mobileCoverScale)))
     : 100;
+  const projectMobileFocusX = Number.isFinite(Number(project.projectMobileFocusX))
+    ? Math.max(0, Math.min(100, Number(project.projectMobileFocusX)))
+    : mobileFocusX;
+  const projectMobileFocusY = Number.isFinite(Number(project.projectMobileFocusY))
+    ? Math.max(0, Math.min(100, Number(project.projectMobileFocusY)))
+    : mobileFocusY;
+  const projectMobileCoverScale = Number.isFinite(Number(project.projectMobileCoverScale))
+    ? Math.max(100, Math.min(200, Number(project.projectMobileCoverScale)))
+    : mobileCoverScale;
   container.style.setProperty('--desktop-focus-x', `${desktopFocusX}%`);
   container.style.setProperty('--desktop-focus-y', `${desktopFocusY}%`);
   container.style.setProperty('--desktop-cover-scale', String(desktopCoverScale / 100));
   container.style.setProperty('--mobile-focus-x', `${mobileFocusX}%`);
   container.style.setProperty('--mobile-focus-y', `${mobileFocusY}%`);
   container.style.setProperty('--mobile-cover-scale', String(mobileCoverScale / 100));
+  container.style.setProperty('--project-mobile-focus-x', `${projectMobileFocusX}%`);
+  container.style.setProperty('--project-mobile-focus-y', `${projectMobileFocusY}%`);
+  container.style.setProperty('--project-mobile-cover-scale', String(projectMobileCoverScale / 100));
 
   const youtubeUrl = getYouTubeWatchUrl(project.youtubeUrl);
   if (youtubeUrl) {

@@ -656,6 +656,11 @@ html, body {
   aspect-ratio: 9 / 16;
 }
 
+.project-mobile-cover-preview {
+  width: min(100%, 10rem);
+  aspect-ratio: 9 / 16;
+}
+
 .desktop-cover-preview {
   width: min(100%, 18rem);
   aspect-ratio: 16 / 9;
@@ -1035,4 +1040,3 @@ select option { background: var(--bg-raised); }
 
   .form-action-spacer { display: none; }
 }
-
