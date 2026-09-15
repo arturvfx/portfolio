@@ -435,7 +435,7 @@ test('a gallery project opens a populated clean project route and can return', a
   await expect(page).toHaveURL(new RegExp(`${expectedBackPath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`));
 });
 
-test('a project without YouTube keeps the same hero frame without a play control', async ({ page }) => {
+test('a project without YouTube keeps the same hero frame without a play control', async ({ page, isMobile }) => {
   await page.goto('/featured-work');
   await waitForPortfolio(page);
   await page.locator('.project-link').first().click();
@@ -477,6 +477,8 @@ test('a project without YouTube keeps the same hero frame without a play control
       projectMobileFocusX: staticContainer.style.getPropertyValue('--project-mobile-focus-x'),
       projectMobileFocusY: staticContainer.style.getPropertyValue('--project-mobile-focus-y'),
       projectMobileCoverScale: staticContainer.style.getPropertyValue('--project-mobile-cover-scale'),
+      mediaTop: staticContainer.getBoundingClientRect().top,
+      headerBottom: document.querySelector('.nav-header').getBoundingClientRect().bottom,
       playControls: staticContainer.querySelectorAll('.project-youtube-cover, .project-play-icon').length
     };
   });
@@ -485,6 +487,7 @@ test('a project without YouTube keeps the same hero frame without a play control
   expect(frames.projectMobileFocusX).toBe('31%');
   expect(frames.projectMobileFocusY).toBe('64%');
   expect(frames.projectMobileCoverScale).toBe('1.23');
+  if (isMobile) expect(frames.mediaTop).toBeCloseTo(frames.headerBottom, 1);
   expect(frames.playControls).toBe(0);
   expect(frames.staticWidth).toBeCloseTo(frames.youtubeWidth, 1);
   expect(frames.staticHeight).toBeCloseTo(frames.youtubeHeight, 1);
@@ -588,11 +591,10 @@ test('security headers protect the public document without blocking its scripts'
   expect(adminScript).toContain('field-browserTitle');
   expect(adminScript).toContain('Mobile Project Hero Framing');
   expect(adminScript).toContain('field-projectMobileFocusX');
-  expect(adminScript).toContain('fixed black header mask');
+  expect(adminScript).toContain('visible image area below the fixed header');
   const adminStyles = await (await request.get('/admin/admin.css')).text();
-  expect(adminStyles).toContain('.project-mobile-cover-preview::after');
-  expect(adminStyles).toContain('aspect-ratio: 4 / 5');
-  expect(adminStyles).toContain('height: 16%');
+  expect(adminStyles).not.toContain('.project-mobile-cover-preview::after');
+  expect(adminStyles).toContain('aspect-ratio: 1 / 1');
   expect(adminScript).toContain('gallery-browser-title');
   expect(adminScript).toContain('Internal ID');
   expect(adminScript).toContain('URL Slug');

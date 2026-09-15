@@ -3432,8 +3432,12 @@ body.contact-page {
     gap: 2.5rem 1.5rem;
   }
 
+  .project-detail-hero {
+    padding-top: 4.25rem;
+  }
+
   .project-detail-hero .project-detail-media.detail-ratio-16-9 {
-    height: 70svh;
+    height: calc(70svh - 4.25rem);
     aspect-ratio: auto;
   }
 
