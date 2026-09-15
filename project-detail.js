@@ -31,6 +31,19 @@ function resolveProjectMediaUrl(value) {
   }
 }
 
+function normalizeProjectDetailStills(value) {
+  const supportedSizes = new Set(['16-9', '9-16', '4-3']);
+  if (!Array.isArray(value)) return [];
+  return value.slice(0, 3).map(item => {
+    const source = typeof item === 'string' ? { url: item } : (item || {});
+    const url = resolveProjectMediaUrl(source.url);
+    return {
+      url,
+      size: supportedSizes.has(source.size) ? source.size : '16-9'
+    };
+  }).filter(still => still.url);
+}
+
 function markProjectDataReady() {
   document.body.classList.remove(
     'project-loading',
@@ -306,9 +319,7 @@ function renderProjectStills(project) {
   const section = document.getElementById('project-detail-stills');
   const grid = document.getElementById('project-detail-stills-grid');
   if (!section || !grid) return;
-  const stills = typeof normalizeProjectStills === 'function'
-    ? normalizeProjectStills(project.projectStills)
-    : [];
+  const stills = normalizeProjectDetailStills(project.projectStills);
 
   grid.replaceChildren();
   stills.forEach((still, index) => {

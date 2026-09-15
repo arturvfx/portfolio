@@ -410,6 +410,14 @@ test('a gallery project opens a populated clean project route and can return', a
   await expect(page.locator('body')).toHaveClass(/project-data-ready/);
   expect(await page.evaluate(() => sessionStorage.getItem('portfolio-project-preview-v3'))).toBeNull();
   await expect(page.locator('#project-detail-title')).toHaveText(expectedTitle.trim());
+  const projectStillCount = await page.evaluate(() => {
+    const project = getLocalPortfolioData().projects.find(item => item.slug === getProjectSlugFromLocation());
+    return Array.isArray(project?.projectStills) ? project.projectStills.length : 0;
+  });
+  if (projectStillCount > 0) {
+    await expect(page.locator('#project-detail-stills')).toBeVisible();
+    await expect(page.locator('.project-detail-still')).toHaveCount(projectStillCount);
+  }
   expect(await page.title()).not.toBe('ARTUR ARAUJO | Project');
   await expect(page.locator('#project-back-link')).toBeVisible();
   const youtubeCover = page.locator('.project-youtube-cover');
