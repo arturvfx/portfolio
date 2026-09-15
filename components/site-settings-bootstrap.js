@@ -1,4 +1,4 @@
 (function () {
   'use strict';
-  window.siteSettings?.hydrate();
+  window.siteSettingsReady = window.siteSettings?.hydrate() || Promise.resolve(null);
 }());

@@ -1,6 +1,6 @@
 /**
  * Global public-site settings shared by the landing, contact and footer surfaces.
- * Supabase is the public source of truth; localStorage is an immediate backup.
+ * Supabase is the public source of truth; localStorage is an outage fallback.
  */
 (function () {
   'use strict';
@@ -152,7 +152,7 @@
     }
   }
 
-  function apply(settings) {
+  function apply(settings, options = {}) {
     const current = normalize(settings);
     currentSettings = current;
     const visible = window.portfolioI18n
@@ -197,11 +197,13 @@
       applyVideoSource('gallery-background-video', current.galleryBackgroundVideo);
     }
 
-    if (document.querySelector('[data-site-setting="landing-title"]')) {
-      document.title = visible.landingBrowserTitle || `${visible.landingTitle} | Portfolio`;
-    } else if (document.body.classList.contains('contact-page')) {
-      document.title = visible.contactBrowserTitle ||
-        `ARTUR ARAUJO | ${window.portfolioI18n?.t('contact') || 'CONTATO'}`;
+    if (options.updateDocumentTitle !== false) {
+      if (document.querySelector('[data-site-setting="landing-title"]')) {
+        document.title = visible.landingBrowserTitle || `${visible.landingTitle} | Portfolio`;
+      } else if (document.body.classList.contains('contact-page')) {
+        document.title = visible.contactBrowserTitle ||
+          `ARTUR ARAUJO | ${window.portfolioI18n?.t('contact') || 'CONTATO'}`;
+      }
     }
 
     window.dispatchEvent(new CustomEvent('portfolio-site-settings-applied', {
@@ -246,7 +248,10 @@
       headers: {
         apikey: config.publishableKey,
         Authorization: `Bearer ${config.publishableKey}`
-      }
+      },
+      signal: typeof AbortSignal !== 'undefined' && typeof AbortSignal.timeout === 'function'
+        ? AbortSignal.timeout(5000)
+        : undefined
     });
     if (!response.ok) throw new Error(`Site settings request failed (${response.status}).`);
     const rows = await response.json();
@@ -254,11 +259,16 @@
   }
 
   async function hydrate() {
-    let current = apply(loadLocal());
+    // The deployed HTML already carries current build-time metadata and the
+    // page stays behind its loading surface. Do not paint the local backup
+    // first: it may contain an older title, text, image, video or theme and
+    // would then visibly swap when Supabase resolves.
+    let current = loadLocal();
     try {
       const remote = await loadRemote();
-      if (remote) current = apply(saveLocal(remote));
+      current = remote ? apply(saveLocal(remote)) : apply(current, { updateDocumentTitle: false });
     } catch (error) {
+      current = apply(current, { updateDocumentTitle: false });
       console.warn('Could not load remote site settings; using local defaults.', error);
     } finally {
       document.body.classList.remove('site-settings-loading');
@@ -282,7 +292,7 @@
     hydrate
   };
 
-  // The script runs in <head>. Apply the cached theme to the root before the
-  // first paint so navigation never exposes the default dark canvas first.
-  applyThemeClasses(loadLocal());
+  // The production build stamps the current content theme into the HTML.
+  // Applying localStorage here would let an older admin backup override that
+  // correct first frame before the live settings request starts.
 }());

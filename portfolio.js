@@ -12,8 +12,7 @@
  *   2. config/page-configs.js       → GALLERIES_DATA, galleryToPageConfig
  *   3. components/project-frame.js  → renderProjectFrame
  *   4. components/project-gallery.js → renderProjectGallery
- *   5. admin/admin-storage.js       → adminStorage (optional — for local fallback support)
- *   6. data/supabase-service.js     → portfolioBackend (optional — primary public source)
+ *   5. data/supabase-service.js     → portfolioBackend (optional — primary public source)
  */
 
 /**
@@ -341,12 +340,11 @@ function getLocalPortfolioData() {
   const projectSource = typeof PROJECTS_DATA !== 'undefined' ? PROJECTS_DATA : [];
   const gallerySource = typeof GALLERIES_DATA !== 'undefined' ? GALLERIES_DATA : [];
   const data = {
-    projects: typeof adminStorage !== 'undefined'
-      ? adminStorage.getEffective(projectSource)
-      : projectSource.map(project => ({ ...project })),
-    galleries: typeof adminStorage !== 'undefined'
-      ? adminStorage.getEffectiveGalleries(gallerySource)
-      : gallerySource.map(gallery => ({ ...gallery }))
+    // The public build snapshot is safer than the browser's admin backup.
+    // Local overrides may be older than both the deploy and Supabase and must
+    // never leak into the public first frame.
+    projects: projectSource.map(project => ({ ...project })),
+    galleries: gallerySource.map(gallery => ({ ...gallery }))
   };
   return window.portfolioI18n ? portfolioI18n.localizePortfolio(data) : data;
 }
@@ -449,13 +447,15 @@ function renderInitialGalleryNavigation() {
   if (document.getElementById('project-gallery')) {
     if (isPortfolioOverviewLocation()) {
       activeId = 'work';
-      const entryPreview = window.sectionEntryPreview?.read('work');
-      renderPortfolioOverview(
-        entryPreview?.settings || getCurrentWorkSettings(),
-        entryPreview?.projects?.length ? entryPreview.projects : localPortfolio.projects,
-        localPortfolio.galleries
-      );
-      document.body.classList.add('section-entry-preview-ready');
+      const entryPreview = window.sectionEntryPreview?.consume('work');
+      if (entryPreview?.projects?.length) {
+        renderPortfolioOverview(
+          entryPreview.settings || getCurrentWorkSettings(),
+          entryPreview.projects,
+          localPortfolio.galleries
+        );
+        document.body.classList.add('section-entry-preview-ready');
+      }
     } else {
       activeId = getGallerySectionFromLocation(
         document.getElementById('project-gallery')?.getAttribute('data-page') ||
@@ -488,7 +488,10 @@ async function initPortfolioSystem() {
   const container =
     document.getElementById('project-gallery') ||
     document.querySelector('.portfolio-grid[data-page]');
-  const portfolioData = await getPublicPortfolioData();
+  const [portfolioData] = await Promise.all([
+    getPublicPortfolioData(),
+    window.siteSettingsReady || Promise.resolve(null)
+  ]);
   const galleries = portfolioData.galleries;
   if (!container) {
     renderGalleryNavigation(galleries, null);

@@ -2,10 +2,18 @@
  * Fast project-page handoff.
  * Stores the clicked gallery project's visible data in sessionStorage so the
  * detail hero can be hydrated before the remote portfolio request completes.
+ * The handoff is short-lived and consumed on first use; it is not a page cache.
  */
 
-const PROJECT_PREVIEW_STORAGE_KEY = 'portfolio-project-preview-v2';
-const PROJECT_PREVIEW_MAX_AGE = 30 * 60 * 1000;
+const PROJECT_PREVIEW_STORAGE_KEY = 'portfolio-project-preview-v3';
+const PROJECT_PREVIEW_MAX_AGE = 2 * 60 * 1000;
+let activeProjectPreview = null;
+
+try {
+  window.sessionStorage.removeItem('portfolio-project-preview-v2');
+} catch (error) {
+  // Storage can be unavailable in privacy modes.
+}
 
 function storeProjectPreview(project, options = {}) {
   if (!project || !project.slug) return;
@@ -50,6 +58,7 @@ function storeProjectPreview(project, options = {}) {
 }
 
 function readProjectPreview(slug) {
+  if (activeProjectPreview?.slug === slug) return activeProjectPreview;
   try {
     const raw = window.sessionStorage.getItem(PROJECT_PREVIEW_STORAGE_KEY);
     if (!raw) return null;
@@ -62,9 +71,28 @@ function readProjectPreview(slug) {
   }
 }
 
+function consumeProjectPreview(slug) {
+  try {
+    const raw = window.sessionStorage.getItem(PROJECT_PREVIEW_STORAGE_KEY);
+    window.sessionStorage.removeItem(PROJECT_PREVIEW_STORAGE_KEY);
+    if (!raw) return null;
+    const preview = JSON.parse(raw);
+    const isFresh = Number(preview.savedAt) > Date.now() - PROJECT_PREVIEW_MAX_AGE;
+    const locale = window.portfolioI18n?.getLocale() || 'pt-BR';
+    if (preview.slug !== slug || !isFresh || (preview.locale || 'pt-BR') !== locale) return null;
+    activeProjectPreview = preview;
+    return preview;
+  } catch (error) {
+    return null;
+  }
+}
+
 function hydrateStoredProjectPreview() {
   const slug = getProjectSlugFromLocation();
-  const preview = readProjectPreview(slug);
+  // The handoff is intentionally consumed. It accelerates the click that
+  // created it, but a reload must wait for current data instead of replaying
+  // a cover or text cached by an older navigation.
+  const preview = consumeProjectPreview(slug);
   if (!preview || !preview.title) return false;
 
   const title = document.getElementById('project-detail-title');

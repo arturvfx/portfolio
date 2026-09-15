@@ -100,6 +100,30 @@ function applyMetadata(template, metadata) {
   return html;
 }
 
+function applyContentTheme(template, value) {
+  const theme = value === 'light' ? 'light' : 'dark';
+  const themeClass = `site-content-${theme}`;
+  const stampTag = (html, tag, includeMarker = false) => html.replace(
+    new RegExp(`<${tag}([^>]*)>`, 'i'),
+    (match, rawAttributes) => {
+      let attributes = rawAttributes
+        .replace(/\sdata-content-theme=["'][^"']*["']/i, '')
+        .replace(/\sclass=(["'])(.*?)\1/i, (classMatch, quote, classes) => {
+          const nextClasses = classes
+            .split(/\s+/)
+            .filter(Boolean)
+            .filter(className => !/^site-content-(?:light|dark)$/.test(className));
+          nextClasses.push(themeClass);
+          return ` class=${quote}${[...new Set(nextClasses)].join(' ')}${quote}`;
+        });
+      if (!/\sclass=["']/i.test(attributes)) attributes += ` class="${themeClass}"`;
+      if (includeMarker) attributes += ` data-content-theme="${theme}"`;
+      return `<${tag}${attributes}>`;
+    }
+  );
+  return stampTag(stampTag(template, 'html', true), 'body');
+}
+
 function applyAliasMetadata(template, metadata, destination) {
   let html = applyMetadata(template, metadata);
   html = upsertMeta(html, 'name', 'robots', 'noindex, follow');
@@ -291,6 +315,9 @@ async function generateSearchEntries() {
       readFile(path.join(outputRoot, 'project.html'), 'utf8')
     ]);
     await writeRuntimeSnapshot(sections, projects);
+    const themedGalleryTemplate = applyContentTheme(galleryTemplate, settings.contentTheme);
+    const themedProjectTemplate = applyContentTheme(projectTemplate, settings.contentTheme);
+    const themedContactTemplate = applyContentTheme(contactTemplate, settings.contentTheme);
     const firstCover = absoluteMediaUrl(projects.find(project => project.cover_image)?.cover_image);
     const landingTitle = plainText(settings.landingBrowserTitle) ||
       `${plainText(settings.landingTitle) || 'ARTUR ARAUJO'} | Portfolio`;
@@ -308,20 +335,11 @@ async function generateSearchEntries() {
     await writeFile(path.join(outputRoot, 'index.html'), landingHtml);
 
     const contactTitle = plainText(settings.contactBrowserTitle) || 'ARTUR ARAUJO | CONTATO';
-    const contactHtml = applyMetadata(contactTemplate, {
-      title: contactTitle,
-      description: truncate(settings.contactIntro || 'Entre em contato com Artur Araujo para projetos de VFX, edição e direção 3D.'),
-      canonical: `${publicOrigin}/contact`,
-      image: firstCover,
-      imageAlt: 'Contato de Artur Araujo'
-    });
-    await writeFile(path.join(outputRoot, 'contact.html'), contactHtml);
-
     const workDescription = truncate(
       settings.workIntroBody || settings.workIntroTitle ||
       'Seleção de trabalhos de VFX, composição, motion e edição de Artur Araujo.'
     );
-    const workHtml = applyMetadata(galleryTemplate, {
+    const workHtml = applyMetadata(themedGalleryTemplate, {
       title: plainText(settings.workBrowserTitle) || 'ARTUR ARAUJO | TRABALHOS SELECIONADOS',
       description: workDescription,
       canonical: `${publicOrigin}/work`,
@@ -343,7 +361,7 @@ async function generateSearchEntries() {
       const sectionCover = absoluteMediaUrl(
         projects.find(project => project.section_id === section.id && project.cover_image)?.cover_image
       ) || firstCover;
-      const html = applyMetadata(galleryTemplate, {
+      const html = applyMetadata(themedGalleryTemplate, {
         title: plainText(section.browser_title) || `ARTUR ARAUJO | ${plainText(section.title)}`,
         description: truncate(section.description || `Projetos selecionados de ${plainText(section.title)} por Artur Araujo.`),
         canonical: `${publicOrigin}${route}`,
@@ -359,7 +377,7 @@ async function generateSearchEntries() {
         if (!normalizedAlias || normalizedAlias === section.slug) continue;
         const aliasRoute = galleryPath(normalizedAlias);
         if (canonicalSectionRoutes.has(aliasRoute)) continue;
-        const aliasHtml = applyAliasMetadata(galleryTemplate, {
+        const aliasHtml = applyAliasMetadata(themedGalleryTemplate, {
           title: plainText(section.browser_title) || `ARTUR ARAUJO | ${plainText(section.title)}`,
           description: truncate(section.description || `Projetos selecionados de ${plainText(section.title)} por Artur Araujo.`),
           canonical: `${publicOrigin}${route}`,
@@ -378,7 +396,7 @@ async function generateSearchEntries() {
         project.project_summary || project.contribution ||
         [project.category, project.title].filter(Boolean).join(' — ')
       );
-      const html = applyMetadata(projectTemplate, {
+      const html = applyMetadata(themedProjectTemplate, {
         title: plainText(project.browser_title) || `ARTUR ARAUJO | ${plainText(project.title)}`,
         description,
         canonical: `${publicOrigin}${route}`,
@@ -389,7 +407,19 @@ async function generateSearchEntries() {
       urls.push(`${publicOrigin}${route}`);
     }
 
-    await writeFile(path.join(outputRoot, 'sitemap.xml'), buildSitemap(urls));
+    const contactHtml = applyMetadata(themedContactTemplate, {
+      title: contactTitle,
+      description: truncate(settings.contactIntro || 'Entre em contato com Artur Araujo para projetos de VFX, edição e direção 3D.'),
+      canonical: `${publicOrigin}/contact`,
+      image: firstCover,
+      imageAlt: 'Contato de Artur Araujo'
+    });
+    await Promise.all([
+      writeFile(path.join(outputRoot, 'gallery.html'), themedGalleryTemplate),
+      writeFile(path.join(outputRoot, 'project.html'), themedProjectTemplate),
+      writeFile(path.join(outputRoot, 'contact.html'), contactHtml),
+      writeFile(path.join(outputRoot, 'sitemap.xml'), buildSitemap(urls))
+    ]);
     console.log(`Generated SEO entries for ${sections.length} sections, ${projects.length} projects and ${aliasCount} legacy aliases.`);
   } catch (error) {
     if (process.env.VERCEL) throw error;

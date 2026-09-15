@@ -331,7 +331,10 @@ function renderProjectStills(project) {
 
 async function initProjectDetail() {
   const slug = getProjectSlugFromLocation();
-  const portfolioData = await getPublicPortfolioData();
+  const [portfolioData] = await Promise.all([
+    getPublicPortfolioData(),
+    window.siteSettingsReady || Promise.resolve(null)
+  ]);
   const project = portfolioData.projects.find(item =>
     item.slug === slug && item.published !== false
   );

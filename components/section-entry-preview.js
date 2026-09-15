@@ -1,14 +1,21 @@
 /**
  * Fast landing-to-work handoff.
  * Preloads the explicitly selected overview highlights and stores a short-lived
- * snapshot so /work can paint its first image before the full Supabase load.
+ * one-use snapshot so /work can paint its first image before the full Supabase
+ * load without replaying stale highlights on refresh.
  */
 (function () {
   'use strict';
 
-  const STORAGE_KEY = 'portfolio-work-entry-preview-v1';
-  const MAX_AGE = 10 * 60 * 1000;
+  const STORAGE_KEY = 'portfolio-work-entry-preview-v2';
+  const MAX_AGE = 2 * 60 * 1000;
   let pending = null;
+
+  try {
+    window.sessionStorage.removeItem('portfolio-work-entry-preview-v1');
+  } catch (error) {
+    // Storage can be unavailable in privacy modes.
+  }
 
   function normalizeFocus(value) {
     const number = Number(value);
@@ -141,6 +148,21 @@
     }
   }
 
+  function clear(viewId) {
+    if (viewId !== 'work') return;
+    try {
+      window.sessionStorage.removeItem(STORAGE_KEY);
+    } catch (error) {
+      // A blocked storage API simply disables the navigation preview.
+    }
+  }
+
+  function consume(viewId) {
+    const preview = read(viewId);
+    clear(viewId);
+    return preview;
+  }
+
   async function requestRows(table, params) {
     const config = window.SUPABASE_CONFIG || {};
     if (!config.url || !config.publishableKey || !window.fetch) return [];
@@ -240,5 +262,5 @@
     return pending;
   }
 
-  window.sectionEntryPreview = { preload, read };
+  window.sectionEntryPreview = { preload, read, consume, clear };
 }());

@@ -77,6 +77,11 @@ body.site-settings-loading .section-featured-hero {
   visibility: hidden;
 }
 
+body.site-settings-loading.contact-page .page-container,
+body.site-settings-loading .site-footer {
+  visibility: hidden;
+}
+
 /* Fullscreen Cinema Background Video & Overlays */
 .video-background-wrapper {
   position: fixed;

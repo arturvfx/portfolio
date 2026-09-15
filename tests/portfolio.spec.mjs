@@ -275,11 +275,50 @@ test('a custom browser title does not alter the visible landing heading', async 
   await expect(page.locator('#main-title')).toHaveText(visibleHeading.trim());
 });
 
+test('landing keeps its generated browser title until current admin settings arrive', async ({ page, isMobile }) => {
+  test.skip(isMobile, 'The title hydration behavior only needs one browser project');
+  let releaseSettings;
+  let markSettingsRequested;
+  const settingsRequested = new Promise(resolve => { markSettingsRequested = resolve; });
+  const settingsReleased = new Promise(resolve => { releaseSettings = resolve; });
+
+  await page.addInitScript(() => {
+    localStorage.setItem('portfolio-site-settings-v1', JSON.stringify({
+      landingTitle: 'OLD LOCAL TITLE',
+      landingBrowserTitle: 'OLD LOCAL TAB',
+      landingBackgroundVideo: 'https://old.example/landing.mp4'
+    }));
+  });
+
+  await page.route('**/rest/v1/portfolio_site_settings**', async route => {
+    markSettingsRequested();
+    await settingsReleased;
+    await route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify([{ settings: {
+        landingTitle: 'ARTUR ARAUJO',
+        landingBrowserTitle: 'CURRENT ADMIN TITLE'
+      } }])
+    });
+  });
+
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
+  await settingsRequested;
+  expect(await page.title()).not.toContain('Portfolio');
+  expect(await page.title()).not.toBe('OLD LOCAL TAB');
+  await expect(page.locator('#main-title')).not.toHaveText('OLD LOCAL TITLE');
+  await expect(page.locator('body')).not.toHaveClass(/landing-intro-ready/);
+  await expect(page.locator('[data-site-setting="landing-background-video"]')).not.toHaveAttribute('src');
+  releaseSettings();
+  await expect(page).toHaveTitle('CURRENT ADMIN TITLE');
+});
+
 test('enter opens the clean work route with the overview ready', async ({ page }) => {
   await page.goto('/');
   await page.locator('#enter-button').click();
   await expect(page).toHaveURL(/\/work$/);
   await waitForPortfolio(page);
+  expect(await page.evaluate(() => sessionStorage.getItem('portfolio-work-entry-preview-v2'))).toBeNull();
   await expect(page.locator('#portfolio-overview-view')).toBeVisible();
   await expect(page.locator('#work-section-index .work-section-link').first()).toBeVisible();
   expect(await page.title()).not.toBe('ARTUR ARAUJO | Portfolio');
@@ -369,6 +408,7 @@ test('a gallery project opens a populated clean project route and can return', a
 
   await expect(page).toHaveURL(/\/project\/[^/?#]+$/);
   await expect(page.locator('body')).toHaveClass(/project-data-ready/);
+  expect(await page.evaluate(() => sessionStorage.getItem('portfolio-project-preview-v3'))).toBeNull();
   await expect(page.locator('#project-detail-title')).toHaveText(expectedTitle.trim());
   expect(await page.title()).not.toBe('ARTUR ARAUJO | Project');
   await expect(page.locator('#project-back-link')).toBeVisible();
@@ -485,6 +525,7 @@ test('generated sitemap and project HTML expose crawlable production metadata', 
   expect(projectResponse.ok()).toBeTruthy();
   const projectHtml = await projectResponse.text();
   expect(projectHtml).toMatch(/<title>(?!ARTUR ARAUJO \| Project)[^<]+<\/title>/);
+  expect(projectHtml).toMatch(/<html[^>]+data-content-theme="(?:light|dark)"/);
   expect(projectHtml).toContain(`<link rel="canonical" href="https://arturaraujo.com${projectMatch[1]}">`);
   expect(projectHtml).toMatch(/<meta property="og:image" content="https:\/\//);
 
