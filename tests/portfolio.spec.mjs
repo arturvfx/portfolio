@@ -588,6 +588,11 @@ test('security headers protect the public document without blocking its scripts'
   expect(adminScript).toContain('field-browserTitle');
   expect(adminScript).toContain('Mobile Project Hero Framing');
   expect(adminScript).toContain('field-projectMobileFocusX');
+  expect(adminScript).toContain('fixed black header mask');
+  const adminStyles = await (await request.get('/admin/admin.css')).text();
+  expect(adminStyles).toContain('.project-mobile-cover-preview::after');
+  expect(adminStyles).toContain('aspect-ratio: 4 / 5');
+  expect(adminStyles).toContain('height: 16%');
   expect(adminScript).toContain('gallery-browser-title');
   expect(adminScript).toContain('Internal ID');
   expect(adminScript).toContain('URL Slug');

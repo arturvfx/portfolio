@@ -638,7 +638,8 @@ html, body {
 }
 
 .desktop-cover-focus .cover-focus-editor,
-.hero-cover-focus .cover-focus-editor {
+.hero-cover-focus .cover-focus-editor,
+.project-mobile-cover-focus .cover-focus-editor {
   grid-template-columns: minmax(12rem, 18rem) minmax(12rem, 18rem);
 }
 
@@ -657,8 +658,28 @@ html, body {
 }
 
 .project-mobile-cover-preview {
-  width: min(100%, 10rem);
-  aspect-ratio: 9 / 16;
+  width: min(100%, 14rem);
+  /* The public hero is 70svh and starts behind the fixed 4.25rem header.
+     A representative mobile viewport produces a roughly 4:5 full frame,
+     with the visible portion below the header landing close to square. */
+  aspect-ratio: 4 / 5;
+}
+
+.project-mobile-cover-preview::after {
+  content: '';
+  position: absolute;
+  z-index: 1;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 16%;
+  background: #030305;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  pointer-events: none;
+}
+
+.project-mobile-cover-preview .cover-focus-marker {
+  z-index: 2;
 }
 
 .desktop-cover-preview {
@@ -996,7 +1017,8 @@ select option { background: var(--bg-raised); }
   .gallery-media-workspace,
   .cover-focus-editor,
   .desktop-cover-focus .cover-focus-editor,
-  .hero-cover-focus .cover-focus-editor {
+  .hero-cover-focus .cover-focus-editor,
+  .project-mobile-cover-focus .cover-focus-editor {
     grid-template-columns: 1fr;
   }
 

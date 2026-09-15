@@ -1023,7 +1023,7 @@
                 <input id="field-projectMobileFocusY" type="range" min="0" max="100" step="1" value="${projectMobileFocusY}" data-field="projectMobileFocusY" />
                 <label for="field-projectMobileCoverScale">Scale <output id="project-mobile-cover-scale-value">${Math.round(projectMobileCoverScale)}%</output></label>
                 <input id="field-projectMobileCoverScale" type="range" min="100" max="200" step="1" value="${projectMobileCoverScale}" data-field="projectMobileCoverScale" />
-                  <span class="media-upload-note">Applied only to the hero image on the individual project page on mobile.</span>
+                  <span class="media-upload-note">Applied only to the individual project hero on mobile. The preview includes the fixed black header mask, matching the nearly square visible area.</span>
                 </div>
               </div>
             </div>
