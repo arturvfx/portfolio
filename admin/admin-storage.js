@@ -85,6 +85,12 @@
     clean.projectMobileFocusX = normalizeCoverFocus(clean.projectMobileFocusX ?? clean.mobileFocusX);
     clean.projectMobileFocusY = normalizeCoverFocus(clean.projectMobileFocusY ?? clean.mobileFocusY);
     clean.projectMobileCoverScale = normalizeCoverScale(clean.projectMobileCoverScale ?? clean.mobileCoverScale);
+    clean.projectDesktopFocusX = normalizeCoverFocus(clean.projectDesktopFocusX ?? clean.desktopFocusX);
+    clean.projectDesktopFocusY = normalizeCoverFocus(clean.projectDesktopFocusY ?? clean.desktopFocusY);
+    clean.projectDesktopCoverScale = normalizeCoverScale(clean.projectDesktopCoverScale ?? clean.desktopCoverScale);
+    clean.heroMobileFocusX = normalizeCoverFocus(clean.heroMobileFocusX ?? clean.mobileFocusX);
+    clean.heroMobileFocusY = normalizeCoverFocus(clean.heroMobileFocusY ?? clean.mobileFocusY);
+    clean.heroMobileCoverScale = normalizeCoverScale(clean.heroMobileCoverScale ?? clean.mobileCoverScale);
     clean.translations = normalizeTranslations(clean.translations, [
       'title', 'browserTitle', 'category', 'services', 'projectSummary', 'contribution'
     ]);
@@ -406,12 +412,12 @@
         errors.push(`${ref}: "coverImage" must be a string.`);
       }
       ['desktopFocusX', 'desktopFocusY', 'heroFocusX', 'heroFocusY', 'mobileFocusX', 'mobileFocusY',
-        'projectMobileFocusX', 'projectMobileFocusY'].forEach(field => {
+        'projectMobileFocusX', 'projectMobileFocusY', 'projectDesktopFocusX', 'projectDesktopFocusY', 'heroMobileFocusX', 'heroMobileFocusY'].forEach(field => {
         if (p[field] != null && (typeof p[field] !== 'number' || !Number.isFinite(p[field]) || p[field] < 0 || p[field] > 100)) {
           errors.push(`${ref}: "${field}" must be a number from 0 to 100.`);
         }
       });
-      ['desktopCoverScale', 'heroCoverScale', 'mobileCoverScale', 'projectMobileCoverScale'].forEach(field => {
+      ['desktopCoverScale', 'heroCoverScale', 'mobileCoverScale', 'projectMobileCoverScale', 'projectDesktopCoverScale', 'heroMobileCoverScale'].forEach(field => {
         if (p[field] != null && (
           typeof p[field] !== 'number' ||
           !Number.isFinite(p[field]) ||
@@ -625,6 +631,8 @@
       'desktop_focus_y', 'desktop_cover_scale', 'hero_focus_x', 'hero_focus_y',
       'hero_cover_scale', 'mobile_focus_x', 'mobile_focus_y', 'mobile_cover_scale',
       'project_mobile_focus_x', 'project_mobile_focus_y', 'project_mobile_cover_scale',
+      'project_desktop_focus_x', 'project_desktop_focus_y', 'project_desktop_cover_scale',
+      'hero_mobile_focus_x', 'hero_mobile_focus_y', 'hero_mobile_cover_scale',
       'preview_video', 'youtube_url', 'project_stills', 'section_id', 'size',
       'published', 'display_order', 'translations'
     ];
@@ -656,6 +664,12 @@
       sqlNumber(project.projectMobileFocusX ?? project.mobileFocusX, 50),
       sqlNumber(project.projectMobileFocusY ?? project.mobileFocusY, 50),
       sqlNumber(project.projectMobileCoverScale ?? project.mobileCoverScale, 100),
+      sqlNumber(project.projectDesktopFocusX ?? project.desktopFocusX, 50),
+      sqlNumber(project.projectDesktopFocusY ?? project.desktopFocusY, 50),
+      sqlNumber(project.projectDesktopCoverScale ?? project.desktopCoverScale, 100),
+      sqlNumber(project.heroMobileFocusX ?? project.mobileFocusX, 50),
+      sqlNumber(project.heroMobileFocusY ?? project.mobileFocusY, 50),
+      sqlNumber(project.heroMobileCoverScale ?? project.mobileCoverScale, 100),
       sqlText(project.previewVideo || ''),
       sqlText(project.youtubeUrl || ''),
       sqlJson(project.projectStills || []),

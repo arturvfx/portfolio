@@ -17,6 +17,10 @@ try {
 
 function storeProjectPreview(project, options = {}) {
   if (!project || !project.slug) return;
+  project = { ...project,
+    desktopFocusX: project.projectDesktopFocusX ?? project.desktopFocusX,
+    desktopFocusY: project.projectDesktopFocusY ?? project.desktopFocusY,
+    desktopCoverScale: project.projectDesktopCoverScale ?? project.desktopCoverScale };
 
   const preview = {
     version: 5,

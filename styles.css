@@ -2014,6 +2014,7 @@ body.portfolio-overview .page-container {
 .project-detail-hero {
   position: relative;
   width: 100%;
+  padding-top: 4.25rem;
   background: #030305;
 }
 
@@ -2248,7 +2249,7 @@ body.project-page .project-detail-title::after {
 }
 
 .project-detail-hero .project-detail-media.detail-ratio-16-9 {
-  height: min(82svh, 56.25vw);
+  height: calc(min(82svh, 56.25vw) - 4.25rem);
   aspect-ratio: auto;
 }
 
@@ -3355,6 +3356,25 @@ body.contact-page {
   }
 }
 
+@media (max-width: 900px) {
+  .project-detail-hero .project-detail-media.detail-ratio-16-9 {
+    height: calc(70svh - 4.25rem);
+    aspect-ratio: auto;
+  }
+  .project-detail-hero .project-detail-media img,
+  .project-detail-hero .project-detail-media video {
+    object-position: var(--project-mobile-focus-x, 50%) var(--project-mobile-focus-y, 50%);
+    transform: scale(var(--project-mobile-cover-scale, 1));
+    transform-origin: var(--project-mobile-focus-x, 50%) var(--project-mobile-focus-y, 50%);
+  }
+  .project-youtube-cover:hover img,
+  .project-youtube-cover:hover video,
+  .project-youtube-cover:focus-visible img,
+  .project-youtube-cover:focus-visible video {
+    transform: scale(var(--project-mobile-cover-scale, 1)) scale(1.008);
+  }
+}
+
 @media (max-width: 768px) {
   .site-footer {
     grid-template-columns: 1fr;
@@ -3430,29 +3450,6 @@ body.contact-page {
   .project-detail-header {
     align-items: start;
     gap: 2.5rem 1.5rem;
-  }
-
-  .project-detail-hero {
-    padding-top: 4.25rem;
-  }
-
-  .project-detail-hero .project-detail-media.detail-ratio-16-9 {
-    height: calc(70svh - 4.25rem);
-    aspect-ratio: auto;
-  }
-
-  .project-detail-hero .project-detail-media img,
-  .project-detail-hero .project-detail-media video {
-    object-position: var(--project-mobile-focus-x, var(--mobile-focus-x, 50%)) var(--project-mobile-focus-y, var(--mobile-focus-y, 50%));
-    transform: scale(var(--project-mobile-cover-scale, var(--mobile-cover-scale, 1)));
-    transform-origin: var(--project-mobile-focus-x, var(--mobile-focus-x, 50%)) var(--project-mobile-focus-y, var(--mobile-focus-y, 50%));
-  }
-
-  .project-youtube-cover:hover img,
-  .project-youtube-cover:hover video,
-  .project-youtube-cover:focus-visible img,
-  .project-youtube-cover:focus-visible video {
-    transform: scale(var(--mobile-cover-scale, 1)) scale(1.008);
   }
 
   .project-detail-information {

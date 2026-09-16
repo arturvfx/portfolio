@@ -673,8 +673,8 @@
   }
 
   function bindCoverFocusControls(mode) {
-    const fieldPrefix = mode === 'project-mobile' ? 'projectMobile' : mode;
-    const idPrefix = mode === 'project-mobile' ? 'project-mobile' : mode;
+    const fieldPrefix = mode.replace(/-([a-z])/g, (_, letter) => letter.toUpperCase());
+    const idPrefix = mode;
     const preview = document.getElementById(`${idPrefix}-focus-preview`);
     const mediaHost = document.getElementById(`${idPrefix}-focus-media`);
     const marker = document.getElementById(`${idPrefix}-focus-marker`);
@@ -687,6 +687,8 @@
     const resetButton = document.getElementById(`btn-reset-${idPrefix}-focus`);
     const coverInput = document.getElementById('field-coverImage');
     const videoInput = document.getElementById('field-previewVideo');
+    const youtubeInput = document.getElementById('field-youtubeUrl');
+    const stillInputs = [...dom.form.querySelectorAll('[data-still-url]')];
     const sizeInput = document.getElementById('field-size');
     if (!preview || !mediaHost || !marker || !xInput || !yInput || !scaleInput) return;
 
@@ -710,14 +712,20 @@
     const renderMedia = () => {
       const coverUrl = coverInput ? coverInput.value.trim() : '';
       const videoUrl = videoInput ? videoInput.value.trim() : '';
-      if (coverUrl) {
+      const highlight = mode === 'hero' || mode === 'hero-mobile';
+      const stillUrl = stillInputs.map(input => input.value.trim()).find(Boolean) || '';
+      const imageUrl = coverUrl || (highlight ? stillUrl : '');
+      const projectVideo = mode.startsWith('project-') && videoUrl &&
+        !getYouTubeWatchUrl(youtubeInput?.value || '');
+      if (imageUrl && !projectVideo) {
         const image = document.createElement('img');
-        image.src = coverUrl;
+        image.src = imageUrl;
         image.alt = '';
         mediaHost.replaceChildren(image);
       } else if (videoUrl) {
         const video = document.createElement('video');
         video.src = videoUrl;
+        if (projectVideo && coverUrl) video.poster = coverUrl;
         video.muted = true;
         video.playsInline = true;
         video.preload = 'metadata';
@@ -732,9 +740,10 @@
     };
 
     const updatePreviewRatio = () => {
-      if (fieldPrefix !== 'desktop' || !sizeInput) return;
+      if (!['desktop', 'mobile'].includes(fieldPrefix) || !sizeInput) return;
       preview.classList.remove('ratio-16-9', 'ratio-4-3', 'ratio-9-16');
       preview.classList.add(`ratio-${SUPPORTED_SIZES.includes(sizeInput.value) ? sizeInput.value : '16-9'}`);
+      preview.style.aspectRatio = (SUPPORTED_SIZES.includes(sizeInput.value) ? sizeInput.value : '16-9').replace('-', ' / ');
     };
 
     const setFromPointer = event => {
@@ -761,7 +770,9 @@
     }
     if (coverInput) coverInput.addEventListener('input', renderMedia);
     if (videoInput) videoInput.addEventListener('input', renderMedia);
-    if (sizeInput && fieldPrefix === 'desktop') sizeInput.addEventListener('change', updatePreviewRatio);
+    if (youtubeInput) youtubeInput.addEventListener('input', renderMedia);
+    stillInputs.forEach(input => input.addEventListener('input', renderMedia));
+    if (sizeInput && ['desktop', 'mobile'].includes(fieldPrefix)) sizeInput.addEventListener('change', updatePreviewRatio);
     preview.addEventListener('pointerdown', event => {
       preview.setPointerCapture(event.pointerId);
       setFromPointer(event);
@@ -771,6 +782,51 @@
     });
     updatePreviewRatio();
     renderMedia();
+    if (!['desktop', 'mobile'].includes(fieldPrefix)) {
+      const mobile = mode.includes('mobile');
+      const label = document.createElement('label');
+      label.textContent = 'Preview screen';
+      const select = document.createElement('select');
+      select.setAttribute('aria-label', mode + ' preview screen');
+      const screens = mobile ? [[360, 640], [390, 844], [412, 915], [820, 1180]]
+        : [[1366, 768], [1440, 900], [1920, 1080]];
+      screens.forEach(([w, h]) => select.add(new Option(w + ' × ' + h, w + 'x' + h)));
+      label.append(select);
+      preview.closest('.cover-focus-editor').querySelector('.cover-focus-controls').prepend(label);
+      const resizePreview = () => {
+        const [w, h] = select.value.split('x').map(Number);
+        const projectHero = mode.startsWith('project-');
+        const height = projectHero
+          ? (mobile ? h * 0.7 - 68 : Math.min(h * 0.82, w * 0.5625) - 68)
+          : (mobile ? h : Math.max(h, 672));
+        preview.style.aspectRatio = w + ' / ' + height;
+      };
+      select.addEventListener('change', resizePreview);
+      resizePreview();
+    }
+  }
+
+  function renderIndependentFraming(project, mode, title, fallback) {
+    const prefix = mode.replace(/-([a-z])/g, (_, letter) => letter.toUpperCase());
+    return `<div class="cover-focus-panel independent-cover-focus">
+      <div class="cover-focus-header"><span class="form-subsection-heading">${title}</span>
+      <button id="btn-reset-${mode}-focus" class="btn btn-secondary cover-focus-reset" type="button">Reset</button></div>
+      <div class="cover-focus-editor">
+        <div id="${mode}-focus-preview" class="cover-focus-preview independent-cover-preview" aria-label="Drag to adjust framing">
+          <div id="${mode}-focus-media" class="cover-focus-media"></div>
+          <span id="${mode}-focus-marker" class="cover-focus-marker" aria-hidden="true"></span>
+        </div>
+        <div class="cover-focus-controls">${[
+          ['FocusX', 'Horizontal', 'focus-x', 0, 100],
+          ['FocusY', 'Vertical', 'focus-y', 0, 100],
+          ['CoverScale', 'Scale', 'cover-scale', 100, 200]
+        ].map(([suffix, label, id, min, max]) => {
+          const value = suffix === 'CoverScale' ? normalizeCoverScale(project[prefix + suffix] ?? project[fallback + suffix])
+            : normalizeCoverFocus(project[prefix + suffix] ?? project[fallback + suffix]);
+          return `<label for="field-${prefix + suffix}">${label} <output id="${mode}-${id}-value">${value}%</output></label>
+            <input id="field-${prefix + suffix}" data-field="${prefix + suffix}" type="range" min="${min}" max="${max}" value="${value}" step="1">`;
+        }).join('')}</div>
+      </div></div>`;
   }
 
   function renderEditForm(project) {
@@ -903,7 +959,7 @@
         </div>
 
         <div class="form-group">
-          <label for="field-size">Aspect Ratio / Size</label>
+          <label for="field-size">Gallery Aspect Ratio / Size</label>
           <select id="field-size" data-field="size">
             ${SUPPORTED_SIZES.map(s =>
               `<option value="${s}" ${project.size === s ? 'selected' : ''}>${s} ${s === '16-9' ? '— Widescreen' : s === '9-16' ? '— Portrait' : '— Classic 4:3'}</option>`
@@ -957,7 +1013,7 @@
                   <input id="field-desktopFocusY" type="range" min="0" max="100" step="1" value="${desktopFocusY}" data-field="desktopFocusY" />
                   <label for="field-desktopCoverScale">Scale <output id="desktop-cover-scale-value">${Math.round(desktopCoverScale)}%</output></label>
                   <input id="field-desktopCoverScale" type="range" min="100" max="200" step="1" value="${desktopCoverScale}" data-field="desktopCoverScale" />
-                  <span class="media-upload-note">Preview follows the selected aspect ratio. Applied to gallery thumbnails and the desktop project page.</span>
+                  <span class="media-upload-note">Gallery thumbnails only. Preview follows the selected aspect ratio.</span>
                 </div>
               </div>
             </div>
@@ -979,14 +1035,14 @@
                   <input id="field-heroFocusY" type="range" min="0" max="100" step="1" value="${heroFocusY}" data-field="heroFocusY" />
                   <label for="field-heroCoverScale">Scale <output id="hero-cover-scale-value">${Math.round(heroCoverScale)}%</output></label>
                   <input id="field-heroCoverScale" type="range" min="100" max="200" step="1" value="${heroCoverScale}" data-field="heroCoverScale" />
-                  <span class="media-upload-note">Always previews the horizontal Featured Hero crop and does not change the gallery thumbnail.</span>
+                  <span class="media-upload-note">Desktop opening highlight. Select a screen size to preview the crop.</span>
                 </div>
               </div>
             </div>
 
             <div class="cover-focus-panel mobile-cover-focus">
               <div class="cover-focus-header">
-                <span class="form-subsection-heading">Mobile Cover Framing</span>
+                <span class="form-subsection-heading">Mobile Thumbnail Framing</span>
                 <button id="btn-reset-mobile-focus" class="btn btn-secondary cover-focus-reset" type="button">Reset</button>
               </div>
               <div class="cover-focus-editor">
@@ -1001,7 +1057,7 @@
                 <input id="field-mobileFocusY" type="range" min="0" max="100" step="1" value="${mobileFocusY}" data-field="mobileFocusY" />
                 <label for="field-mobileCoverScale">Scale <output id="mobile-cover-scale-value">${Math.round(mobileCoverScale)}%</output></label>
                 <input id="field-mobileCoverScale" type="range" min="100" max="200" step="1" value="${mobileCoverScale}" data-field="mobileCoverScale" />
-                  <span class="media-upload-note">Applied to gallery thumbnails and the mobile opening highlight.</span>
+                  <span class="media-upload-note">Mobile gallery thumbnails only. Preview follows the selected aspect ratio.</span>
                 </div>
               </div>
             </div>
@@ -1081,6 +1137,10 @@
       </div>
     `;
 
+    form.querySelector('.cover-focus-panels').insertAdjacentHTML('beforeend',
+      renderIndependentFraming(project, 'project-desktop', 'Desktop Project Hero Framing', 'desktop') +
+      renderIndependentFraming(project, 'hero-mobile', 'Mobile Featured Hero Framing', 'mobile'));
+
     // Mark form dirty on any change
     form.querySelectorAll('[data-field]').forEach(el => {
       el.addEventListener('input', markProjectFormDirty);
@@ -1144,6 +1204,8 @@
     bindCoverFocusControls('hero');
     bindCoverFocusControls('mobile');
     bindCoverFocusControls('project-mobile');
+    bindCoverFocusControls('project-desktop');
+    bindCoverFocusControls('hero-mobile');
     [0, 1, 2].forEach(index => bindProjectStillControls(project.id, index));
   }
 
@@ -1421,12 +1483,15 @@
         field === 'desktopFocusX' || field === 'desktopFocusY' ||
         field === 'heroFocusX' || field === 'heroFocusY' ||
         field === 'mobileFocusX' || field === 'mobileFocusY' ||
-        field === 'projectMobileFocusX' || field === 'projectMobileFocusY'
+        field === 'projectMobileFocusX' || field === 'projectMobileFocusY' ||
+        field === 'projectDesktopFocusX' || field === 'projectDesktopFocusY' ||
+        field === 'heroMobileFocusX' || field === 'heroMobileFocusY'
       ) {
         updated[field] = Math.max(0, Math.min(100, Number(raw) || 0));
       } else if (
         field === 'desktopCoverScale' || field === 'heroCoverScale' ||
-        field === 'mobileCoverScale' || field === 'projectMobileCoverScale'
+        field === 'mobileCoverScale' || field === 'projectMobileCoverScale' ||
+        field === 'projectDesktopCoverScale' || field === 'heroMobileCoverScale'
       ) {
         updated[field] = normalizeCoverScale(raw);
       } else if (field === 'published' || field === 'watchNowEnabled') {

@@ -652,6 +652,10 @@ html, body {
   user-select: none;
 }
 
+.independent-cover-preview {
+  width: min(100%, 14rem);
+}
+
 .mobile-cover-preview {
   width: min(100%, 10rem);
   aspect-ratio: 9 / 16;

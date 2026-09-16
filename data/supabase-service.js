@@ -117,6 +117,12 @@
       projectMobileFocusX: normalizeCoverFocus(row.project_mobile_focus_x ?? row.mobile_focus_x),
       projectMobileFocusY: normalizeCoverFocus(row.project_mobile_focus_y ?? row.mobile_focus_y),
       projectMobileCoverScale: normalizeCoverScale(row.project_mobile_cover_scale ?? row.mobile_cover_scale),
+      projectDesktopFocusX: normalizeCoverFocus(row.project_desktop_focus_x ?? row.desktop_focus_x),
+      projectDesktopFocusY: normalizeCoverFocus(row.project_desktop_focus_y ?? row.desktop_focus_y),
+      projectDesktopCoverScale: normalizeCoverScale(row.project_desktop_cover_scale ?? row.desktop_cover_scale),
+      heroMobileFocusX: normalizeCoverFocus(row.hero_mobile_focus_x ?? row.mobile_focus_x),
+      heroMobileFocusY: normalizeCoverFocus(row.hero_mobile_focus_y ?? row.mobile_focus_y),
+      heroMobileCoverScale: normalizeCoverScale(row.hero_mobile_cover_scale ?? row.mobile_cover_scale),
       previewVideo: row.preview_video || '',
       youtubeUrl: row.youtube_url || '',
       projectStills: normalizeProjectStills(row.project_stills),
@@ -157,6 +163,12 @@
       project_mobile_focus_x: normalizeCoverFocus(project.projectMobileFocusX ?? project.mobileFocusX),
       project_mobile_focus_y: normalizeCoverFocus(project.projectMobileFocusY ?? project.mobileFocusY),
       project_mobile_cover_scale: normalizeCoverScale(project.projectMobileCoverScale ?? project.mobileCoverScale),
+      project_desktop_focus_x: normalizeCoverFocus(project.projectDesktopFocusX ?? project.desktopFocusX),
+      project_desktop_focus_y: normalizeCoverFocus(project.projectDesktopFocusY ?? project.desktopFocusY),
+      project_desktop_cover_scale: normalizeCoverScale(project.projectDesktopCoverScale ?? project.desktopCoverScale),
+      hero_mobile_focus_x: normalizeCoverFocus(project.heroMobileFocusX ?? project.mobileFocusX),
+      hero_mobile_focus_y: normalizeCoverFocus(project.heroMobileFocusY ?? project.mobileFocusY),
+      hero_mobile_cover_scale: normalizeCoverScale(project.heroMobileCoverScale ?? project.mobileCoverScale),
       preview_video: project.previewVideo || '',
       youtube_url: project.youtubeUrl || '',
       project_stills: normalizeProjectStills(project.projectStills),
@@ -259,6 +271,32 @@
     return Boolean(result.data);
   }
 
+  async function prepareFramingForSchema(supabaseClient, rows) {
+    if (!rows.length) return;
+    const groups = [
+      { migration: '019_project_mobile_hero_framing.sql', prefixes: [['project_mobile', 'mobile']] },
+      { migration: '020_independent_hero_framing.sql', prefixes: [['project_desktop', 'desktop'], ['hero_mobile', 'mobile']] }
+    ];
+    for (const group of groups) {
+      const pairs = group.prefixes.flatMap(([prefix, fallback]) =>
+        ['focus_x', 'focus_y', 'cover_scale'].map(suffix => [prefix + '_' + suffix, fallback + '_' + suffix]));
+      const result = await supabaseClient.from('portfolio_projects')
+        .select(pairs.map(([column]) => column).join(',')).limit(0);
+      if (!result.error) continue;
+      // Only absent columns permit legacy writes; authentication/network errors
+      // must never be mistaken for an older schema.
+      if (!['42703', 'PGRST204'].includes(result.error.code)) throw result.error;
+      const custom = rows.some(row => pairs.some(([column, fallback]) => row[column] !== row[fallback]));
+      if (custom) {
+        throw new Error('Independent framing requires Supabase migration ' + group.migration +
+          '. Your local changes are preserved; no portfolio data was written to Supabase.');
+      }
+      // These values only repeat the legacy framing, so omitting them preserves
+      // behavior and lets ordinary content edits work before the migration.
+      rows.forEach(row => pairs.forEach(([column]) => { delete row[column]; }));
+    }
+  }
+
   async function importPortfolio(galleries, projects) {
     const supabaseClient = getClient();
     if (!supabaseClient) throw new Error('Supabase is not configured.');
@@ -272,6 +310,8 @@
         `Some projects reference a missing section: ${invalidProjects.map(row => row.title).join(', ')}`
       );
     }
+
+    await prepareFramingForSchema(supabaseClient, projectRows);
 
     if (galleryRows.length) {
       const galleriesResult = await supabaseClient

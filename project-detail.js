@@ -110,6 +110,10 @@ function openYouTubeModal(project) {
 }
 
 function renderProjectDetailMedia(project) {
+  project = { ...project,
+    desktopFocusX: project.projectDesktopFocusX ?? project.desktopFocusX,
+    desktopFocusY: project.projectDesktopFocusY ?? project.desktopFocusY,
+    desktopCoverScale: project.projectDesktopCoverScale ?? project.desktopCoverScale };
   const container = document.getElementById('project-detail-media');
   if (!container) return;
   container.innerHTML = '';

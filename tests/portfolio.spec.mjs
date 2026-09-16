@@ -487,7 +487,7 @@ test('a project without YouTube keeps the same hero frame without a play control
   expect(frames.projectMobileFocusX).toBe('31%');
   expect(frames.projectMobileFocusY).toBe('64%');
   expect(frames.projectMobileCoverScale).toBe('1.23');
-  if (isMobile) expect(frames.mediaTop).toBeCloseTo(frames.headerBottom, 1);
+  expect(frames.mediaTop).toBeCloseTo(frames.headerBottom, 1);
   expect(frames.playControls).toBe(0);
   expect(frames.staticWidth).toBeCloseTo(frames.youtubeWidth, 1);
   expect(frames.staticHeight).toBeCloseTo(frames.youtubeHeight, 1);
@@ -507,6 +507,89 @@ test('a project without YouTube keeps the same hero frame without a play control
   });
   expect(previewClassName).toContain('detail-ratio-16-9');
   expect(previewClassName).not.toContain('detail-ratio-9-16');
+});
+
+test('framing previews follow thumbnail ratios and simulated hero screens', async ({ page }) => {
+  // Offline fixture: editing and saving cannot touch production content.
+  await page.route('**/config/supabase-config.js*', route => route.fulfill({
+    contentType: 'application/javascript', body: 'window.SUPABASE_CONFIG = {};'
+  }));
+  await page.goto('/admin');
+  await page.locator('#btn-new-project').click();
+  for (const [size, ratio] of [['16-9', 16 / 9], ['4-3', 4 / 3], ['9-16', 9 / 16]]) {
+    await page.locator('#field-size').selectOption(size);
+    for (const mode of ['desktop', 'mobile']) {
+      const actual = await page.locator('#' + mode + '-focus-preview').evaluate(el => {
+        const r = el.getBoundingClientRect(); return r.width / r.height;
+      });
+      expect(actual).toBeCloseTo(ratio, 2);
+    }
+  }
+  await page.getByLabel('project-mobile preview screen', { exact: true }).selectOption('412x915');
+  const ratio = await page.locator('#project-mobile-focus-preview').evaluate(el => {
+    const r = el.getBoundingClientRect(); return r.width / r.height;
+  });
+  expect(ratio).toBeCloseTo(412 / (915 * 0.7 - 68), 2);
+  await page.locator('#field-projectDesktopFocusX').fill('23');
+  await page.locator('#field-heroMobileFocusX').fill('78');
+  await page.locator('#btn-save').click();
+  const saved = await page.evaluate(() => window.adminStorage.load().projects.find(p => p.title === 'UNTITLED PROJECT'));
+  expect(saved.projectDesktopFocusX).toBe(23);
+  expect(saved.heroMobileFocusX).toBe(78);
+  expect(saved.desktopFocusX).toBe(50);
+  expect(saved.mobileFocusX).toBe(50);
+  await page.locator('#btn-reset-hero-mobile-focus').click();
+  await expect(page.locator('#field-heroMobileFocusX')).toHaveValue('50');
+  await expect(page.locator('#field-projectDesktopFocusX')).toHaveValue('23');
+});
+
+test('hero previews use the same fallback media as their public surfaces', async ({ page }) => {
+  await page.route('**/config/supabase-config.js*', route => route.fulfill({
+    contentType: 'application/javascript', body: 'window.SUPABASE_CONFIG = {};'
+  }));
+  await page.goto('/admin');
+  await page.locator('#btn-new-project').click();
+  const still = 'data:image/gif;base64,R0lGODlhAQABAAAAACw=';
+  await page.locator('[data-still-url]').first().fill(still);
+  await expect(page.locator('#hero-focus-media img')).toHaveAttribute('src', still);
+  await expect(page.locator('#hero-mobile-focus-media img')).toHaveAttribute('src', still);
+  await expect(page.locator('#mobile-focus-media img')).toHaveCount(0);
+  await expect(page.locator('#project-mobile-focus-media img')).toHaveCount(0);
+  await page.locator('#field-previewVideo').fill('/assets/videos/fixture.mp4');
+  await expect(page.locator('#hero-mobile-focus-media img')).toHaveAttribute('src', still);
+  await expect(page.locator('#project-mobile-focus-media video')).toHaveCount(1);
+  await page.locator('#field-coverImage').fill(still);
+  await expect(page.locator('#project-mobile-focus-media video')).toHaveAttribute('poster', still);
+  await page.locator('#field-youtubeUrl').fill('https://www.youtube.com/watch?v=dQw4w9WgXcQ');
+  await expect(page.locator('#project-mobile-focus-media img')).toHaveAttribute('src', still);
+  await page.getByLabel('project-desktop preview screen', { exact: true }).selectOption('1440x900');
+  const ratio = await page.locator('#project-desktop-focus-preview').evaluate(el => {
+    const r = el.getBoundingClientRect(); return r.width / r.height;
+  });
+  expect(ratio).toBeCloseTo(1440 / (Math.min(900 * 0.82, 1440 * 0.5625) - 68), 2);
+});
+
+test('project framing switches at 900px and interaction retains its own zoom', async ({ page, isMobile }) => {
+  test.skip(isMobile, 'Explicit viewport coverage in the desktop browser');
+  await page.goto('/project/guerra-verde');
+  await expect(page.locator('body')).toHaveClass(/project-data-ready/);
+  await page.evaluate(() => renderProjectDetailMedia({
+    title: 'Framing fixture', coverImage: 'data:image/gif;base64,R0lGODlhAQABAAAAACw=',
+    youtubeUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+    desktopFocusX: 50, desktopCoverScale: 100,
+    mobileFocusX: 50, mobileCoverScale: 100,
+    projectDesktopFocusX: 23, projectDesktopFocusY: 40, projectDesktopCoverScale: 140,
+    projectMobileFocusX: 78, projectMobileFocusY: 60, projectMobileCoverScale: 123
+  }));
+  for (const width of [390, 820, 900, 901, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.mouse.move(0, 899);
+    const img = page.locator('#project-detail-media img');
+    await expect(img).toHaveCSS('object-position', width <= 900 ? '78% 60%' : '23% 40%');
+    await page.locator('.project-youtube-cover').hover();
+    await expect.poll(() => img.evaluate(el => new DOMMatrix(getComputedStyle(el).transform).a))
+      .toBeCloseTo((width <= 900 ? 1.23 : 1.4) * 1.008, 3);
+  }
 });
 
 test('contact form validates locally without sending an empty request', async ({ page }) => {

@@ -82,9 +82,9 @@ function renderSectionHero(projects, container, options = {}) {
     item.style.setProperty('--hero-focus-x', `${getCoverFocus(project.heroFocusX)}%`);
     item.style.setProperty('--hero-focus-y', `${getCoverFocus(project.heroFocusY)}%`);
     item.style.setProperty('--hero-cover-scale', String(getCoverScale(project.heroCoverScale) / 100));
-    item.style.setProperty('--mobile-focus-x', `${getCoverFocus(project.mobileFocusX)}%`);
-    item.style.setProperty('--mobile-focus-y', `${getCoverFocus(project.mobileFocusY)}%`);
-    item.style.setProperty('--mobile-cover-scale', String(getCoverScale(project.mobileCoverScale) / 100));
+    item.style.setProperty('--mobile-focus-x', `${getCoverFocus(project.heroMobileFocusX ?? project.mobileFocusX)}%`);
+    item.style.setProperty('--mobile-focus-y', `${getCoverFocus(project.heroMobileFocusY ?? project.mobileFocusY)}%`);
+    item.style.setProperty('--mobile-cover-scale', String(getCoverScale(project.heroMobileCoverScale ?? project.mobileCoverScale) / 100));
     const imageUrl = getSectionHeroImage(project);
     if (imageUrl) {
       const image = document.createElement('img');
