@@ -723,7 +723,7 @@
       const stillUrl = stillInputs.map(input => input.value.trim()).find(Boolean) || '';
       const imageUrl = coverUrl || (highlight ? stillUrl : '');
       const projectVideo = mode.startsWith('project-') && videoUrl &&
-        !getYouTubeWatchUrl(youtubeInput?.value || '');
+        !getProjectVideo(youtubeInput?.value || '');
       if (imageUrl && !projectVideo) {
         const image = document.createElement('img');
         image.src = imageUrl;
@@ -1104,9 +1104,13 @@
           <div class="form-card-grid">
 
         <div class="form-group span-2">
-          <label for="field-youtubeUrl">YouTube Video URL</label>
-          <input id="field-youtubeUrl" type="text" value="${escAdm(project.youtubeUrl || '')}" data-field="youtubeUrl" placeholder="https://www.youtube.com/watch?v=..." />
-          <span class="media-upload-note">Optional full video for the individual project page. Public, unlisted, Shorts and youtu.be links are accepted.</span>
+          <label for="field-youtubeUrl">Project Video URL</label>
+          <div class="media-input-row">
+            <input id="field-youtubeUrl" type="text" value="${escAdm(project.youtubeUrl || '')}" data-field="youtubeUrl" placeholder="YouTube, Vimeo or https://…/video.mp4" />
+            <button id="btn-upload-youtubeUrl" class="btn btn-secondary" type="button">Upload Video to Supabase</button>
+          </div>
+          <input id="file-youtubeUrl" class="media-file-input" type="file" accept="video/mp4,video/webm" />
+          <span class="media-upload-note">Optional full video, separate from the hover preview. YouTube, Vimeo (including full unlisted links), and direct MP4/WebM URLs are accepted. Upload an MP4/WebM to Supabase, then Save Changes. Videos must allow public playback and embedding; other website links belong in Watch Now.</span>
         </div>
 
         <h4 class="form-subsection-heading span-2">Project Page Stills</h4>
@@ -1180,6 +1184,7 @@
 
     bindMediaUpload(project.id, 'coverImage');
     bindMediaUpload(project.id, 'previewVideo');
+    bindMediaUpload(project.id, 'youtubeUrl');
     bindLocaleSwitcher('project', locale => {
       if (locale === projectEditingLocale) return;
       const currentIndex = workingProjects.findIndex(item => item.id === project.id);
@@ -1329,8 +1334,8 @@
       showStatus('ERROR: The cover must be an image file.', 'error');
       return;
     }
-    if (field === 'previewVideo' && !isVideo) {
-      showStatus('ERROR: The hover preview must be an MP4 or WebM video.', 'error');
+    if (field !== 'coverImage' && (!isVideo || (field === 'youtubeUrl' && !/\.(mp4|webm)$/i.test(file.name)))) {
+      showStatus('ERROR: The video must be an MP4 or WebM file.', 'error');
       return;
     }
 
@@ -1342,9 +1347,13 @@
       const safeProjectId = String(projectId || 'project').replace(/[^a-zA-Z0-9_-]+/g, '-');
       const publicUrl = await portfolioBackend.uploadMedia(
         file,
-        `projects/${safeProjectId}/${field === 'coverImage' ? 'cover' : 'preview-video'}`
+        `projects/${safeProjectId}/${field === 'coverImage' ? 'cover' : field === 'youtubeUrl' ? 'full-video' : 'preview-video'}`
       );
       const fieldInput = document.getElementById(`field-${field}`);
+      if (selectedId !== projectId) {
+        showStatus('Upload complete, but the selected project changed. Return to the original project and paste this URL: ' + publicUrl, 'info');
+        return;
+      }
       if (!fieldInput) throw new Error('The media URL field is no longer available.');
       fieldInput.value = publicUrl;
       fieldInput.dispatchEvent(new Event('input', { bubbles: true }));
@@ -1533,12 +1542,12 @@
       return;
     }
     if (updated.youtubeUrl) {
-      const youtubeUrl = getYouTubeWatchUrl(updated.youtubeUrl);
-      if (!youtubeUrl) {
-        showStatus('ERROR: Enter a valid YouTube video URL.', 'error');
+      const video = getProjectVideo(updated.youtubeUrl);
+      if (!video) {
+        showStatus('ERROR: Enter a YouTube, Vimeo or direct MP4/WebM video URL. Use Watch Now for other website links.', 'error');
         return;
       }
-      updated.youtubeUrl = youtubeUrl;
+      updated.youtubeUrl = video.url;
     }
     if (updated.watchNowUrl) {
       let watchNowUrl;

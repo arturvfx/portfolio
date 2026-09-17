@@ -1,6 +1,83 @@
 import { expect, test } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 
+test('project video supports Vimeo and direct files without changing the hero frame', async ({ page }) => {
+  await page.route('https://example.com/full.mp4', route => route.fulfill({ contentType: 'video/mp4', path: 'assets/videos/bg-cinema.mp4' }));
+  await page.route('https://player.vimeo.com/**', route => route.fulfill({ contentType: 'text/html', body: '<html><body>Mock Vimeo player</body></html>' }));
+  await page.goto('/featured-work');
+  await waitForPortfolio(page);
+  await page.locator('.project-link').first().click();
+  await expect(page.locator('body')).toHaveClass(/project-data-ready/);
+  const frames = [];
+  for (const url of ['https://vimeo.com/123456/abc123', 'https://example.com/full.mp4']) {
+    await page.evaluate(url => renderProjectDetailMedia({
+      title: 'Video test', youtubeUrl: url, size: '9-16',
+      coverImage: 'data:image/gif;base64,R0lGODlhAQABAAAAACw=', projectMobileFocusX: 25
+    }), url);
+    frames.push(await page.locator('#project-detail-media').boundingBox());
+    const cover = page.locator('.project-youtube-cover');
+    await cover.click();
+    const modal = page.locator('.project-video-modal');
+    await expect(modal).toBeVisible();
+    if (url.includes('vimeo')) {
+      await expect(modal.locator('iframe')).toHaveAttribute('src', 'https://player.vimeo.com/video/123456?h=abc123&playsinline=1&autoplay=1');
+    } else {
+      await expect(modal.locator('video')).toHaveAttribute('src', url);
+      await expect(modal.locator('video')).toHaveJSProperty('controls', true);
+      await expect(modal.locator('video')).toHaveCSS('object-fit', 'contain');
+      await expect.poll(() => modal.locator('video').evaluate(video => video.currentTime)).toBeGreaterThan(0);
+    }
+    await page.keyboard.press('Escape');
+    await expect(modal).toHaveCount(0);
+    await expect(cover).toBeFocused();
+  }
+  expect(frames[0].height).toBeCloseTo(frames[1].height, 1);
+});
+
+test('admin saves multiple video providers and includes uploaded files in backups', async ({ page }) => {
+  await page.route('**/config/supabase-config.js*', route => route.fulfill({ contentType: 'application/javascript', body: 'window.SUPABASE_CONFIG = {};' }));
+  await page.goto('/admin');
+  await page.locator('#btn-new-project').click();
+  await expect(page.locator('#btn-upload-youtubeUrl')).toBeVisible();
+  const preview = 'https://example.com/preview.webm';
+  await page.locator('#field-previewVideo').fill(preview);
+  for (const url of ['https://vimeo.com/123456/abc123', 'https://example.supabase.co/storage/v1/object/public/portfolio-media/full.mp4']) {
+    await page.locator('#field-youtubeUrl').fill(url);
+    await page.locator('#btn-save').click();
+    const saved = await page.evaluate(() => window.adminStorage.load().projects.find(p => p.title === 'UNTITLED PROJECT'));
+    expect(saved.youtubeUrl).toBe(url.includes('vimeo') ? 'https://player.vimeo.com/video/123456?h=abc123' : url);
+    expect(saved.previewVideo).toBe(preview);
+    const manifest = await page.evaluate(project => adminStorage.collectMediaManifest([], [project], {}), saved);
+    expect(manifest.some(item => item.url === saved.youtubeUrl)).toBe(!url.includes('vimeo'));
+  }
+  await page.locator('#field-youtubeUrl').fill('https://example.com/watch');
+  await page.locator('#btn-save').click();
+  await expect(page.locator('#admin-status')).toContainText('Enter a YouTube, Vimeo or direct MP4/WebM');
+});
+
+test('admin full video upload uses Supabase independently of hover media', async ({ page }) => {
+  await page.route('**/data/supabase-service.js*', route => route.fulfill({ contentType: 'application/javascript', body: `
+    window.portfolioBackend = {
+      hasCredentials: () => true, isConfigured: () => true,
+      getSession: async () => ({ user: { email: 'test@example.com' } }), isAdmin: async () => true,
+      loadPortfolio: async () => null, loadSiteSettings: async () => null,
+      uploadMedia: async (file, folder) => {
+        window.__upload = { name: file.name, folder };
+        return 'https://example.supabase.co/storage/v1/object/public/portfolio-media/full.mp4';
+      }
+    };` }));
+  await page.goto('/admin');
+  await page.locator('.project-list-item').first().click();
+  const previousPreview = await page.locator('#field-previewVideo').inputValue();
+  await page.locator('#file-youtubeUrl').setInputFiles({ name: 'full.mp4', mimeType: 'video/mp4', buffer: Buffer.from('mock upload') });
+  await expect(page.locator('#field-youtubeUrl')).toHaveValue('https://example.supabase.co/storage/v1/object/public/portfolio-media/full.mp4');
+  expect((await page.evaluate(() => window.__upload)).folder).toMatch(/^projects\/.+\/full-video$/);
+  await expect(page.locator('#field-previewVideo')).toHaveValue(previousPreview);
+  await expect(page.locator('#admin-status')).toContainText('Click Save Changes');
+  await page.locator('#file-youtubeUrl').setInputFiles({ name: 'image.png', mimeType: 'image/png', buffer: Buffer.from('not video') });
+  await expect(page.locator('#admin-status')).toContainText('MP4 or WebM');
+});
+
 async function expectNoHorizontalOverflow(page) {
   await expect.poll(() => page.evaluate(() =>
     document.documentElement.scrollWidth <= document.documentElement.clientWidth

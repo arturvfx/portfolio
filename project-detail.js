@@ -54,9 +54,9 @@ function markProjectDataReady() {
   document.body.classList.add('project-data-ready');
 }
 
-function openYouTubeModal(project) {
-  const embedUrl = getYouTubeEmbedUrl(project.youtubeUrl, true);
-  if (!embedUrl || document.querySelector('.project-video-modal')) return;
+function openProjectVideoModal(project) {
+  const source = getProjectVideo(project.youtubeUrl, true);
+  if (!source || document.querySelector('.project-video-modal')) return;
 
   const previousFocus = document.activeElement;
   const modal = document.createElement('div');
@@ -68,12 +68,20 @@ function openYouTubeModal(project) {
   const player = document.createElement('div');
   player.className = 'project-video-modal-player';
 
-  const iframe = document.createElement('iframe');
-  iframe.src = embedUrl;
-  iframe.title = `${project.title || 'Project'} — YouTube video`;
-  iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
-  iframe.referrerPolicy = 'strict-origin-when-cross-origin';
-  iframe.allowFullscreen = true;
+  const media = document.createElement(source.type === 'file' ? 'video' : 'iframe');
+  if (source.type === 'file') {
+    media.src = source.url;
+    media.controls = true;
+    media.playsInline = true;
+    media.preload = 'metadata';
+    media.setAttribute('aria-label', `${project.title || 'Project'} video`);
+  } else {
+    media.src = source.embedUrl;
+    media.title = `${project.title || 'Project'} — ${source.type} video`;
+    media.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen';
+    media.referrerPolicy = 'strict-origin-when-cross-origin';
+    media.allowFullscreen = true;
+  }
 
   const closeButton = document.createElement('button');
   closeButton.className = 'project-video-modal-close';
@@ -82,6 +90,11 @@ function openYouTubeModal(project) {
   closeButton.innerHTML = '<span aria-hidden="true"></span>';
 
   const closeModal = () => {
+    if (source.type === 'file') {
+      media.pause();
+      media.removeAttribute('src');
+      media.load();
+    }
     document.removeEventListener('keydown', handleKeydown);
     document.body.classList.remove('project-video-open');
     modal.remove();
@@ -90,9 +103,10 @@ function openYouTubeModal(project) {
 
   const handleKeydown = event => {
     if (event.key === 'Escape') closeModal();
-    if (event.key === 'Tab') {
+    if (event.key === 'Tab' && ((event.shiftKey && document.activeElement === media) ||
+        (!event.shiftKey && document.activeElement === closeButton))) {
       event.preventDefault();
-      closeButton.focus();
+      (event.shiftKey ? closeButton : media).focus();
     }
   };
 
@@ -102,11 +116,12 @@ function openYouTubeModal(project) {
   });
   document.addEventListener('keydown', handleKeydown);
 
-  player.appendChild(iframe);
+  player.appendChild(media);
   modal.append(player, closeButton);
   document.body.appendChild(modal);
   document.body.classList.add('project-video-open');
   closeButton.focus();
+  if (source.type === 'file') media.play().catch(() => { /* Native controls remain available. */ });
 }
 
 function renderProjectDetailMedia(project) {
@@ -157,14 +172,14 @@ function renderProjectDetailMedia(project) {
   container.style.setProperty('--project-mobile-focus-y', `${projectMobileFocusY}%`);
   container.style.setProperty('--project-mobile-cover-scale', String(projectMobileCoverScale / 100));
 
-  const youtubeUrl = getYouTubeWatchUrl(project.youtubeUrl);
-  if (youtubeUrl) {
+  const projectVideo = getProjectVideo(project.youtubeUrl);
+  if (projectVideo) {
     container.className = 'project-detail-media detail-ratio-16-9 has-youtube-cover';
     const link = document.createElement('button');
     link.className = 'project-youtube-cover';
     link.type = 'button';
     link.setAttribute('aria-label', `${window.portfolioI18n?.t('playVideo') || 'Reproduzir vídeo'} — ${project.title || ''}`);
-    link.addEventListener('click', () => openYouTubeModal(project));
+    link.addEventListener('click', () => openProjectVideoModal(project));
 
     if (project.coverImage) {
       const image = document.createElement('img');
@@ -186,7 +201,7 @@ function renderProjectDetailMedia(project) {
     } else {
       const fallback = document.createElement('span');
       fallback.className = 'project-youtube-cover-empty';
-      fallback.textContent = project.title || 'WATCH ON YOUTUBE';
+      fallback.textContent = project.title || 'PLAY VIDEO';
       link.appendChild(fallback);
     }
 

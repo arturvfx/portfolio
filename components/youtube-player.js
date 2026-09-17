@@ -1,4 +1,36 @@
-/** YouTube URL parsing shared by the admin and public project page. */
+/** Project video parsing shared by admin, backups and the public player.
+ * The legacy youtubeUrl / youtube_url field stores all supported video URLs.
+ */
+
+function getProjectVideo(value, autoplay = false) {
+  const input = String(value || '').trim();
+  if (!input) return null;
+  let url;
+  try { url = new URL(input); } catch (_) {
+    if (!/^[a-zA-Z0-9_-]{11}$/.test(input)) return null;
+  }
+  if (url && (!['http:', 'https:'].includes(url.protocol) || url.username || url.password)) return null;
+  const youtube = getYouTubeWatchUrl(input);
+  if (youtube) return { type: 'youtube', url: youtube, embedUrl: getYouTubeEmbedUrl(input, autoplay) };
+  if (!url) return null;
+  const host = url.hostname.toLowerCase().replace(/^www\./, '');
+  if (host === 'vimeo.com' || host === 'player.vimeo.com') {
+    const match = url.pathname.match(host === 'player.vimeo.com'
+      ? /^\/video\/(\d+)\/?$/
+      : /^\/(\d+)(?:\/([a-zA-Z0-9]+))?\/?$/);
+    if (!match) return null;
+    const hash = match[2] || url.searchParams.get('h') || '';
+    if (hash && !/^[a-zA-Z0-9]+$/.test(hash)) return null;
+    const canonical = new URL(`https://player.vimeo.com/video/${match[1]}`);
+    if (hash) canonical.searchParams.set('h', hash);
+    const embed = new URL(canonical);
+    embed.searchParams.set('playsinline', '1');
+    if (autoplay) embed.searchParams.set('autoplay', '1');
+    return { type: 'vimeo', url: canonical.href, embedUrl: embed.href };
+  }
+  if (/\.(mp4|webm)$/i.test(url.pathname)) return { type: 'file', url: url.href };
+  return null;
+}
 
 function getYouTubeVideoId(value) {
   const input = String(value || '').trim();

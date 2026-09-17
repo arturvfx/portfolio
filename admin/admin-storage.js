@@ -498,6 +498,8 @@
       const identity = project.id || project.slug || 'unknown';
       addMediaReference(manifest, project.coverImage, `project.${identity}.coverImage`);
       addMediaReference(manifest, project.previewVideo, `project.${identity}.previewVideo`);
+      const fullVideo = getProjectVideo(project.youtubeUrl);
+      if (fullVideo?.type === 'file') addMediaReference(manifest, fullVideo.url, `project.${identity}.youtubeUrl`);
       normalizeProjectStills(project.projectStills).forEach((still, index) => {
         addMediaReference(manifest, still.url, `project.${identity}.projectStills.${index}`);
       });
