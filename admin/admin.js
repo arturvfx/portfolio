@@ -1988,13 +1988,13 @@
 
         <h3 class="form-section-heading">Section Pages</h3>
         <div class="form-group span-2">
-          <label for="setting-galleryBackgroundVideo">Default Gallery Background Video Path / URL</label>
+          <label for="setting-galleryBackgroundVideo">Default Gallery Background Video Path / URL — Optional</label>
           <div class="media-input-row">
             <input id="setting-galleryBackgroundVideo" type="text" value="${escAdm(settings.galleryBackgroundVideo)}" data-site-field="galleryBackgroundVideo" />
             <button id="btn-upload-gallery-video" class="btn btn-secondary" type="button">Upload Video</button>
           </div>
           <input id="file-gallery-video" class="media-file-input" type="file" accept="video/mp4,video/webm" />
-          <span class="media-upload-note">Used by sections set to “Project Selection default”. Individual sections can instead use the global solid theme, the homepage video or a custom/reused video.</span>
+          <span class="media-upload-note">Optional. Leave empty for no default gallery video. Used by sections set to “Project Selection default”. Individual sections can instead use the global solid theme, the homepage video or a custom/reused video.</span>
         </div>
 
         <h3 class="form-section-heading">Solid Content Theme</h3>
@@ -2220,7 +2220,7 @@
       return;
     }
     const required = [
-      'landingTitle', 'landingEnterLabel', 'landingWatchReelLabel', 'galleryBackgroundVideo', 'contentTheme',
+      'landingTitle', 'landingEnterLabel', 'landingWatchReelLabel', 'contentTheme',
       'contactTitle', 'contactIntro', 'contactAvailability', 'contactLocation', 'contactSubmitLabel',
       'contactCategoryVfx', 'contactCategoryEditing', 'contactCategoryAlchemy', 'contactCategoryFull',
       'contactCategoryOther',

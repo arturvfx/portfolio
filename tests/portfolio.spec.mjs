@@ -1,6 +1,25 @@
 import { expect, test } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 
+test('site settings saves reel with an empty optional gallery background', async ({ page }) => {
+  await page.route('**/config/supabase-config.js*', route => route.fulfill({
+    contentType: 'application/javascript', body: 'window.SUPABASE_CONFIG = {};'
+  }));
+  await page.goto('/admin');
+  await page.locator('#btn-site-settings').click();
+  await page.locator('#setting-galleryBackgroundVideo').fill('');
+  const reel = 'https://media.example.com/reel-v2.mp4';
+  await page.locator('#setting-landingReelVideo').fill(reel);
+  await page.locator('#btn-save-site-settings').click();
+  await expect(page.locator('#admin-status')).toContainText('Site settings saved locally.');
+  const saved = await page.evaluate(() => siteSettings.loadLocal());
+  expect(saved.galleryBackgroundVideo).toBe('');
+  expect(saved.landingReelVideo).toBe(reel);
+  await page.locator('#setting-landingTitle').fill('');
+  await page.locator('#btn-save-site-settings').click();
+  await expect(page.locator('#admin-status')).toContainText('Complete all required');
+});
+
 test('project video supports Vimeo and direct files without changing the hero frame', async ({ page }) => {
   await page.route('https://example.com/full.mp4', route => route.fulfill({ contentType: 'video/mp4', path: 'assets/videos/bg-cinema.mp4' }));
   await page.route('https://player.vimeo.com/**', route => route.fulfill({ contentType: 'text/html', body: '<html><body>Mock Vimeo player</body></html>' }));
