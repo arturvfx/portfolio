@@ -537,8 +537,12 @@
       item.classList.toggle('drag-before', position === 'drag-before');
       item.classList.toggle('drag-after', position === 'drag-after');
 
-      if (event.clientY < 80) window.scrollBy(0, -12);
-      if (event.clientY > window.innerHeight - 80) window.scrollBy(0, 12);
+      const scrollHost = window.matchMedia('(min-width: 761px)').matches
+        ? document.getElementById('admin-project-list')
+        : document.querySelector('.sidebar');
+      const bounds = scrollHost.getBoundingClientRect();
+      if (event.clientY < bounds.top + 40) scrollHost.scrollBy(0, -12);
+      if (event.clientY > bounds.bottom - 40) scrollHost.scrollBy(0, 12);
     });
 
     item.addEventListener('drop', event => {
@@ -573,6 +577,9 @@
 
     renderProjectList();
     renderEditForm(project);
+    if (window.matchMedia('(min-width: 761px)').matches) {
+      document.querySelector('.main-panel').scrollTop = 0;
+    }
   }
 
   function renderProjectStillSlots(project) {

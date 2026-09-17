@@ -509,6 +509,47 @@ test('a project without YouTube keeps the same hero frame without a play control
   expect(previewClassName).not.toContain('detail-ratio-9-16');
 });
 
+test('desktop admin keeps project navigation accessible with independent scrolling', async ({ page, isMobile }) => {
+  test.skip(isMobile, 'Desktop split-pane behavior');
+  await page.route('**/config/supabase-config.js*', route => route.fulfill({
+    contentType: 'application/javascript', body: 'window.SUPABASE_CONFIG = {};'
+  }));
+  await page.route('**/data/projects-data.js*', route => route.fulfill({
+    contentType: 'application/javascript',
+    body: 'const PROJECTS_DATA = ' + JSON.stringify(Array.from({ length: 30 }, (_, i) => ({
+      id: 'scroll-' + i, slug: 'scroll-' + i, title: 'SCROLL PROJECT ' + i,
+      section: 'featured-work', order: i + 1, size: '16-9', published: true
+    }))) + ';'
+  }));
+  await page.goto('/admin');
+  await page.locator('.project-list-item').first().click();
+  for (const width of [1440, 980]) {
+    await page.setViewportSize({ width, height: 850 });
+    const pane = page.locator('.main-panel');
+    const list = page.locator('#admin-project-list');
+    const before = await list.boundingBox();
+    await page.locator('#field-youtubeUrl').scrollIntoViewIfNeeded();
+    await page.locator('#btn-save').click();
+    expect(await pane.evaluate(el => el.scrollTop)).toBeGreaterThan(300);
+    const after = await list.boundingBox();
+    expect(after.y).toBeCloseTo(before.y, 1);
+    expect(after.y + after.height).toBeLessThanOrEqual(851);
+    const editorScroll = await pane.evaluate(el => el.scrollTop);
+    await list.hover();
+    await page.mouse.wheel(0, 900);
+    await expect.poll(() => list.evaluate(el => el.scrollTop)).toBeGreaterThan(0);
+    expect(await pane.evaluate(el => el.scrollTop)).toBe(editorScroll);
+    await list.locator('.project-list-item').last().click();
+    await expect(page.locator('#field-title')).toHaveValue('SCROLL PROJECT 29');
+    expect(await pane.evaluate(el => el.scrollTop)).toBe(0);
+    expect(await page.evaluate(() => window.scrollY)).toBe(0);
+    await expectNoHorizontalOverflow(page);
+  }
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(page.locator('.main-panel')).toHaveCSS('overflow-y', 'visible');
+  await expectNoHorizontalOverflow(page);
+});
+
 test('framing previews follow thumbnail ratios and simulated hero screens', async ({ page }) => {
   // Offline fixture: editing and saving cannot touch production content.
   await page.route('**/config/supabase-config.js*', route => route.fulfill({
