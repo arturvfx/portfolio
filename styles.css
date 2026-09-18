@@ -1178,11 +1178,11 @@ body.portfolio-ready .page-container {
 }
 
 .nav-overview-link.active .nav-overview-symbol {
-  filter: blur(0.1px);
+  filter: none;
 }
 
 .nav-overview-link:is(:hover, :focus-visible) .nav-overview-symbol {
-  filter: blur(0);
+  filter: none;
 }
 
 .nav-overview-link.active .nav-overview-cell::before,
@@ -1259,17 +1259,18 @@ body.portfolio-ready .page-container {
 
 .nav-link.active .nav-link-label {
   font-weight: 800;
-  filter: blur(0.1px);
+  filter: none;
   text-shadow: none;
 }
 
 .nav-link.active .nav-link-label::before,
 .nav-link.active .nav-link-label::after {
   opacity: 0.56;
+  filter: blur(0.25px);
 }
 
 .nav-link:is(:hover, :focus-visible) .nav-link-label {
-  filter: blur(0);
+  filter: none;
   text-shadow: none;
 }
 
@@ -1297,6 +1298,13 @@ body.portfolio-ready .page-container {
   opacity: 0.9;
   filter: blur(0.46px) brightness(1.12);
   text-shadow: none;
+}
+
+/* Selected navigation stays sharp, including during projector light pulses.
+   Keep these more specific than interaction and mobile label rules. */
+.nav-link.active:is(.is-nav-light-dip, .is-nav-light-flare, .is-nav-light-pulse) .nav-link-label,
+.nav-overview-link.active:is(.is-nav-light-dip, .is-nav-light-flare, .is-nav-light-pulse) .nav-overview-symbol {
+  filter: none;
 }
 
 @media (prefers-reduced-motion: reduce) {

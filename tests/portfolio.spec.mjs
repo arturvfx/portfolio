@@ -1,6 +1,30 @@
 import { expect, test } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 
+test('selected navigation stays sharp through flicker on desktop and mobile', async ({ page, isMobile }) => {
+  await page.goto('/featured-work');
+  await waitForPortfolio(page);
+  if (isMobile) await page.locator('.nav-toggle').click();
+  const active = page.locator('.nav-link.active .nav-link-label');
+  await expect(active).toBeVisible();
+  await expect(active).toHaveCSS('filter', 'none');
+  expect(await active.evaluate(el => getComputedStyle(el, '::before').filter)).toBe('blur(0.25px)');
+  for (const state of ['is-nav-light-dip', 'is-nav-light-flare', 'is-nav-light-pulse']) {
+    await active.evaluate((el, state) => el.closest('.nav-link').classList.add(state), state);
+    await expect(active).toHaveCSS('filter', 'none');
+    await active.evaluate((el, state) => el.closest('.nav-link').classList.remove(state), state);
+  }
+  await page.goto('/work');
+  await waitForPortfolio(page);
+  const symbol = page.locator('.nav-overview-link.active .nav-overview-symbol');
+  await expect(symbol).toHaveCSS('filter', 'none');
+  for (const state of ['is-nav-light-dip', 'is-nav-light-flare', 'is-nav-light-pulse']) {
+    await symbol.evaluate((el, state) => el.closest('.nav-link').classList.add(state), state);
+    await expect(symbol).toHaveCSS('filter', 'none');
+    await symbol.evaluate((el, state) => el.closest('.nav-link').classList.remove(state), state);
+  }
+});
+
 test('site settings saves reel with an empty optional gallery background', async ({ page }) => {
   await page.route('**/config/supabase-config.js*', route => route.fulfill({
     contentType: 'application/javascript', body: 'window.SUPABASE_CONFIG = {};'
