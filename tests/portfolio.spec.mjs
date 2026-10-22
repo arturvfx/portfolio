@@ -1,6 +1,10 @@
 import { expect, test } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 
+async function openMediaLink(page, field) {
+  await page.locator('.visual-asset').filter({has:page.locator(`#field-${field}`)}).getByText('Use or edit a link', {exact:true}).click();
+}
+
 test('selected navigation stays sharp through flicker on desktop and mobile', async ({ page, isMobile }) => {
   await page.goto('/featured-work');
   await waitForPortfolio(page);
@@ -87,6 +91,8 @@ test('admin saves multiple video providers and includes uploaded files in backup
   await page.getByRole('tab', { name: 'Media', exact: true }).click();
   await expect(page.locator('#btn-upload-youtubeUrl')).toBeVisible();
   const preview = 'https://example.com/preview.webm';
+  await openMediaLink(page, 'previewVideo');
+  await openMediaLink(page, 'youtubeUrl');
   await page.locator('#field-previewVideo').fill(preview);
   for (const url of ['https://vimeo.com/123456/abc123', 'https://example.supabase.co/storage/v1/object/public/portfolio-media/full.mp4']) {
     await page.locator('#field-youtubeUrl').fill(url);
@@ -688,22 +694,26 @@ test('framing previews follow thumbnail ratios and simulated hero screens', asyn
     await page.getByRole('tab', { name: 'Media', exact: true }).click();
     await page.locator('#field-size').selectOption(size);
     for (const mode of ['desktop', 'mobile']) {
-      await page.locator('#framing-context').selectOption(mode === 'desktop' ? '0' : '2');
+      await page.locator('#frame-surface').selectOption('thumbnail');
+      await page.locator('#frame-device').selectOption(mode);
       const actual = await page.locator('#' + mode + '-focus-preview').evaluate(el => {
         const r = el.getBoundingClientRect(); return r.width / r.height;
       });
       expect(actual).toBeCloseTo(ratio, 2);
     }
   }
-  await page.locator('#framing-context').selectOption('3');
+  await page.locator('#frame-surface').selectOption('project');
+  await page.locator('#frame-device').selectOption('mobile');
   await page.getByLabel('project-mobile preview screen', { exact: true }).selectOption('412x915');
   const ratio = await page.locator('#project-mobile-focus-preview').evaluate(el => {
     const r = el.getBoundingClientRect(); return r.width / r.height;
   });
   expect(ratio).toBeCloseTo(412 / (915 * 0.7 - 68), 2);
-  await page.locator('#framing-context').selectOption('4');
+  await page.locator('#frame-surface').selectOption('project');
+  await page.locator('#frame-device').selectOption('desktop');
   await page.locator('#field-projectDesktopFocusX').fill('23');
-  await page.locator('#framing-context').selectOption('5');
+  await page.locator('#frame-surface').selectOption('featured');
+  await page.locator('#frame-device').selectOption('mobile');
   await page.locator('#field-heroMobileFocusX').fill('78');
   await page.locator('#btn-save').click();
   const saved = await page.evaluate(() => window.adminStorage.load().projects.find(p => p.title === 'UNTITLED PROJECT'));
@@ -724,11 +734,16 @@ test('hero previews use the same fallback media as their public surfaces', async
   await page.locator('#btn-new-project').click();
   const still = 'data:image/gif;base64,R0lGODlhAQABAAAAACw=';
   await page.getByRole('tab', { name: 'Media', exact: true }).click();
+  await page.getByRole('button', {name:'＋ Add image',exact:true}).click();
+  await page.getByText('Use or edit image link', {exact:true}).first().click();
   await page.locator('[data-still-url]').first().fill(still);
   await expect(page.locator('#hero-focus-media img')).toHaveAttribute('src', still);
   await expect(page.locator('#hero-mobile-focus-media img')).toHaveAttribute('src', still);
   await expect(page.locator('#mobile-focus-media img')).toHaveCount(0);
   await expect(page.locator('#project-mobile-focus-media img')).toHaveCount(0);
+  await openMediaLink(page, 'previewVideo');
+  await openMediaLink(page, 'coverImage');
+  await openMediaLink(page, 'youtubeUrl');
   await page.locator('#field-previewVideo').fill('/assets/videos/fixture.mp4');
   await expect(page.locator('#hero-mobile-focus-media img')).toHaveAttribute('src', still);
   await expect(page.locator('#project-mobile-focus-media video')).toHaveCount(1);
@@ -736,7 +751,8 @@ test('hero previews use the same fallback media as their public surfaces', async
   await expect(page.locator('#project-mobile-focus-media video')).toHaveAttribute('poster', still);
   await page.locator('#field-youtubeUrl').fill('https://www.youtube.com/watch?v=dQw4w9WgXcQ');
   await expect(page.locator('#project-mobile-focus-media img')).toHaveAttribute('src', still);
-  await page.locator('#framing-context').selectOption('4');
+  await page.locator('#frame-surface').selectOption('project');
+  await page.locator('#frame-device').selectOption('desktop');
   await page.getByLabel('project-desktop preview screen', { exact: true }).selectOption('1440x900');
   const ratio = await page.locator('#project-desktop-focus-preview').evaluate(el => {
     const r = el.getBoundingClientRect(); return r.width / r.height;
