@@ -783,7 +783,9 @@ html, body {
 .project-still-preview {
   display: grid;
   width: 100%;
-  height: 132px;
+  height: auto;
+  min-height: 0;
+  align-self: center;
   place-items: center;
   overflow: hidden;
   border: 1px solid var(--border);
@@ -795,7 +797,7 @@ html, body {
   display: block;
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  object-fit: cover;
 }
 
 .project-still-preview-empty {
@@ -942,33 +944,6 @@ select option { background: var(--bg-raised); }
 .form-actions { flex-wrap: wrap; background: var(--bg); }
 .form-card-grid { gap: 0.85rem; }
 .project-list-item { padding-block: 0.65rem; }
-
-.visual-media .gallery-media-workspace { grid-template-columns: minmax(0, 1fr); }
-.visual-media .gallery-media-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-.visual-media .gallery-media-fields > .form-group:first-child { grid-column: 1 / -1; }
-.visual-asset { padding: 1rem; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; gap: 0.65rem; min-width: 0; }
-.asset-preview { display: grid; place-items: center; aspect-ratio: 16 / 9; overflow: hidden; background: #080908; color: var(--text-muted); border-radius: 5px; text-align: center; }
-.asset-preview img, .asset-preview video, .asset-preview iframe { width: 100%; height: 100%; object-fit: contain; border: 0; min-height: 0; }
-.asset-caption { color: var(--text-secondary); font-size: 12px; line-height: 1.5; }
-.media-details summary { cursor: pointer; color: var(--text-secondary); font-size: 12px; padding: 0.5rem 0; }
-.media-details[open] > :not(summary) { margin-top: 0.4rem; }
-.media-details .media-input-row { grid-template-columns: minmax(0, 1fr); }
-.frame-toolbar { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-.frame-toolbar label { display: grid; gap: 0.4rem; color: var(--text-secondary); }
-.visual-media .cover-focus-editor { grid-template-columns: minmax(0, 2fr) minmax(180px, 1fr); }
-.visual-media .cover-focus-preview { max-width: 100%; max-height: 480px; justify-self: center; }
-.visual-media .project-stills-editor { align-items: start; }
-.visual-media .project-still-preview { width: min(100%, 160px); align-self: center; height: auto; max-height: none; cursor: pointer; }
-.visual-media .project-still-preview img { object-fit: cover; }
-.project-still-slot.is-selected { border-color: var(--border-focus); }
-.still-inspector { display: grid; gap: 0.65rem; }
-.add-still { min-height: 150px; border: 1px dashed var(--text-muted); background: transparent; }
-.project-danger-menu { margin-left: 0.5rem; }
-.form-title span { font-size: 18px; }
-@media (max-width: 760px) {
-  .visual-media .gallery-media-fields, .visual-media .cover-focus-editor { grid-template-columns: minmax(0, 1fr); }
-  .frame-toolbar { gap: 0.5rem; }
-}
 
 /* Keep navigation accessible while the project editor scrolls independently. */
 @media (min-width: 761px) {

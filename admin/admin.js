@@ -1269,6 +1269,12 @@
     if (!uploadButton || !clearButton || !fileInput || !urlInput || !sizeInput || !preview) return;
 
     let previewTimer = null;
+    const updateStillRatio = () => {
+      const size = SUPPORTED_SIZES.includes(sizeInput.value) ? sizeInput.value : '16-9';
+      const [width, height] = size.split('-').map(Number);
+      preview.style.aspectRatio = `${width} / ${height}`;
+      preview.style.width = `min(100%, ${132 * width / height}px)`;
+    };
     const showPreviewMessage = message => {
       const empty = document.createElement('span');
       empty.className = 'project-still-preview-empty';
@@ -1277,6 +1283,7 @@
     };
     const updatePreview = () => {
       clearTimeout(previewTimer);
+      updateStillRatio();
       const url = urlInput.value.trim();
       if (!url) {
         showPreviewMessage('No image selected');
@@ -1296,6 +1303,7 @@
       previewTimer = setTimeout(updatePreview, 300);
     };
     urlInput.addEventListener('input', schedulePreview);
+    sizeInput.addEventListener('change', updateStillRatio);
     updatePreview();
 
     uploadButton.addEventListener('click', () => {
