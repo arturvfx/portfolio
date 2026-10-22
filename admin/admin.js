@@ -433,12 +433,18 @@
     const listEl = dom.list;
     if (!listEl) return;
 
-    const projects = getSectionProjects();
+    const allProjects = getSectionProjects();
+    const query = (document.getElementById('project-search')?.value || '').trim().toLocaleLowerCase();
+    const visibility = document.getElementById('project-visibility')?.value || 'all';
+    const filtering = Boolean(query) || visibility !== 'all';
+    const projects = allProjects.filter(project =>
+      (!query || `${project.title} ${project.client || ''} ${project.category || ''}`.toLocaleLowerCase().includes(query)) &&
+      (visibility === 'all' || Boolean(project.published) === (visibility === 'published')));
     listEl.innerHTML = '';
     const sectionLabel = getSectionLabel(managedSection);
     listEl.setAttribute('aria-label', `${sectionLabel} project list`);
     if (dom.sidebarHeader) {
-      dom.sidebarHeader.textContent = `${sectionLabel} — click to edit · drag to reorder`;
+      dom.sidebarHeader.textContent = `${sectionLabel} · ${projects.length}/${allProjects.length}`;
     }
 
     if (projects.length === 0) {
@@ -487,7 +493,15 @@
         selectProject(project.id);
       });
 
-      bindProjectDragItem(li, project, idx, projects);
+      if (!filtering) bindProjectDragItem(li, project, idx, projects);
+      else li.querySelector('.project-drag-handle').remove();
+      li.querySelector('.list-item-title').tabIndex = 0;
+      li.querySelector('.list-item-title').setAttribute('role', 'button');
+      li.querySelector('.list-item-title').addEventListener('keydown', event => {
+        if (event.key !== 'Enter' && event.key !== ' ') return;
+        event.preventDefault();
+        selectProject(project.id);
+      });
 
       listEl.appendChild(li);
     });
@@ -1219,6 +1233,7 @@
     bindCoverFocusControls('project-desktop');
     bindCoverFocusControls('hero-mobile');
     [0, 1, 2].forEach(index => bindProjectStillControls(project.id, index));
+    window.adminWorkspace.project(form);
   }
 
   // ─── Create, Duplicate & Delete ─────────────────────────────
@@ -1534,16 +1549,19 @@
       })
     );
     if (!updated.title) {
+      window.adminWorkspace.focusField('field-title');
       showStatus('ERROR: Title cannot be empty.', 'error');
       return;
     }
     if (!updated.slug) {
+      window.adminWorkspace.focusField('field-slug');
       showStatus('ERROR: Slug cannot be empty.', 'error');
       return;
     }
     if (updated.youtubeUrl) {
       const video = getProjectVideo(updated.youtubeUrl);
       if (!video) {
+        window.adminWorkspace.focusField('field-youtubeUrl');
         showStatus('ERROR: Enter a YouTube, Vimeo or direct MP4/WebM video URL. Use Watch Now for other website links.', 'error');
         return;
       }
@@ -1555,15 +1573,18 @@
         watchNowUrl = new URL(updated.watchNowUrl);
       } catch (error) {
         showStatus('ERROR: Enter a valid Watch Now URL.', 'error');
+        window.adminWorkspace.focusField('field-watchNowUrl');
         return;
       }
       if (!['http:', 'https:'].includes(watchNowUrl.protocol)) {
+        window.adminWorkspace.focusField('field-watchNowUrl');
         showStatus('ERROR: Watch Now must use an http:// or https:// URL.', 'error');
         return;
       }
       updated.watchNowUrl = watchNowUrl.toString();
     }
     if (updated.watchNowEnabled && !updated.watchNowUrl) {
+      window.adminWorkspace.focusField('field-watchNowUrl');
       showStatus('ERROR: Add a Watch Now URL before enabling the button.', 'error');
       return;
     }
@@ -1571,10 +1592,12 @@
       project.id !== id && project.slug === updated.slug
     );
     if (duplicateSlug) {
+      window.adminWorkspace.focusField('field-slug');
       showStatus(`ERROR: Slug “${updated.slug}” is already in use.`, 'error');
       return;
     }
     if (!Number.isInteger(updated.order) || updated.order < 1) {
+      window.adminWorkspace.focusField('field-order');
       showStatus('ERROR: Display Order must be a whole number greater than 0.', 'error');
       return;
     }
@@ -2125,6 +2148,7 @@
     bindSiteVideoUpload('landing', 'landingBackgroundVideo');
     bindSiteVideoUpload('landing-mobile-reel', 'landingMobileReelVideo');
     bindSiteVideoUpload('gallery', 'galleryBackgroundVideo');
+    window.adminWorkspace.settings(dom.form);
   }
 
   function bindSiteVideoUpload(kind, field) {
@@ -2212,10 +2236,12 @@
       .map(input => input.value.trim())
       .filter(Boolean);
     if (!updated.workHeroProjectIds.length) {
+      window.adminWorkspace.focusField('setting-workHeroProject1');
       showStatus('ERROR: Choose at least one Work Overview highlight.', 'error');
       return;
     }
     if (new Set(updated.workHeroProjectIds).size !== updated.workHeroProjectIds.length) {
+      window.adminWorkspace.focusField('setting-workHeroProject1');
       showStatus('ERROR: Each Work Overview highlight must use a different project.', 'error');
       return;
     }
@@ -2226,7 +2252,9 @@
       'contactCategoryOther',
       'footerTitle', 'footerContactLabel', 'footerInstagramLabel', 'footerInstagramUrl', 'footerCopyright'
     ];
-    if (required.some(field => !updated[field])) {
+    const missingField = required.find(field => !updated[field]);
+    if (missingField) {
+      window.adminWorkspace.focusField(`setting-${missingField}`);
       showStatus('ERROR: Complete all required site settings fields.', 'error');
       return;
     }
@@ -2236,6 +2264,7 @@
       updated.footerInstagramUrl = instagramUrl.toString();
     } catch (error) {
       showStatus('ERROR: Enter a valid Instagram http:// or https:// URL.', 'error');
+      window.adminWorkspace.focusField('setting-footerInstagramUrl');
       return;
     }
 
@@ -2672,6 +2701,8 @@
   // ─── Bind Top-Level Actions ──────────────────────────────────
 
   function bindActions() {
+    document.getElementById('project-search').addEventListener('input', renderProjectList);
+    document.getElementById('project-visibility').addEventListener('change', renderProjectList);
     const newProjectBtn = dom.newProjectBtn;
     if (newProjectBtn) newProjectBtn.addEventListener('click', createProject);
 

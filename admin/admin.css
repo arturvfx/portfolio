@@ -2,18 +2,18 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --bg:         #0f1014;
-  --bg-surface: #181a20;
-  --bg-raised:  #1f2128;
-  --bg-hover:   #272a33;
-  --bg-selected:#252b3a;
+  --bg:         #111211;
+  --bg-surface: #191a19;
+  --bg-raised:  #222321;
+  --bg-hover:   #2d2e2b;
+  --bg-selected:#30312d;
   --border:     rgba(255,255,255,0.08);
-  --border-focus: rgba(99,140,255,0.6);
-  --text-primary:   #e8eaf0;
-  --text-secondary: #8a8ea8;
-  --text-muted:     #555870;
-  --accent:     #638cff;
-  --accent-dim: rgba(99,140,255,0.15);
+  --border-focus: rgba(232,230,219,0.65);
+  --text-primary:   #eeeee8;
+  --text-secondary: #b4b5ac;
+  --text-muted:     #94968d;
+  --accent:     #e8e6db;
+  --accent-dim: rgba(232,230,219,0.12);
   --success:    #3ecf8e;
   --success-dim:rgba(62,207,142,0.12);
   --warning:    #f5a623;
@@ -486,7 +486,7 @@ html, body {
 .admin-locale-switcher button.active {
   border-color: var(--accent);
   background: var(--accent);
-  color: #fff;
+  color: var(--bg);
 }
 
 .admin-locale-switcher span {
@@ -898,10 +898,10 @@ select option { background: var(--bg-raised); }
 
 .btn-primary {
   background: var(--accent);
-  color: #fff;
+  color: var(--bg);
   border-color: var(--accent);
 }
-.btn-primary:hover { background: #7aa5ff; }
+.btn-primary:hover { background: #fffef5; }
 .btn:disabled { cursor: wait; opacity: 0.62; }
 
 .btn-secondary {
@@ -923,6 +923,25 @@ select option { background: var(--bg-raised); }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.15); }
+
+/* Compact workspace. Hidden panels retain their controls and unsaved values. */
+[hidden] { display: none !important; }
+.project-filters { display: grid; gap: 0.5rem; padding: 0.75rem; border-bottom: 1px solid var(--border); }
+.project-filters input { width: 100%; min-width: 0; padding: 0.55rem; background: var(--bg-raised); color: var(--text-primary); border: 1px solid var(--border); border-radius: var(--radius-sm); font: inherit; }
+.project-filters select { width: 100%; }
+.editor-tabs { position: sticky; top: 0; z-index: 40; display: flex; gap: 0.25rem; overflow-x: auto; padding: 0.6rem 0; margin-bottom: 1rem; background: var(--bg); border-bottom: 1px solid var(--border); }
+.editor-tabs button { flex-shrink: 0; padding: 0.6rem 0.9rem; background: transparent; border: 1px solid transparent; border-radius: var(--radius-sm); color: var(--text-secondary); font: inherit; cursor: pointer; }
+.editor-tabs button[aria-selected="true"] { background: var(--bg-selected); border-color: var(--border); color: var(--text-primary); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.main-panel, #admin-form-wrap { min-width: 0; }
+.editor-panel { grid-column: 1 / -1; display: grid; grid-template-columns: minmax(0, 1fr); gap: 1rem; min-width: 0; }
+.editor-panel > .gallery-media-workspace { grid-column: 1 / -1; margin: 0; padding: 1rem; background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius); }
+.framing-context { display: grid; gap: 0.4rem; color: var(--text-secondary); font-weight: 600; }
+.cover-focus-panels { min-width: 0; }
+.framing-context select { width: 100%; min-width: 0; }
+.form-actions { flex-wrap: wrap; background: var(--bg); }
+.form-card-grid { gap: 0.85rem; }
+.project-list-item { padding-block: 0.65rem; }
 
 /* Keep navigation accessible while the project editor scrolls independently. */
 @media (min-width: 761px) {
@@ -971,6 +990,9 @@ select option { background: var(--bg-raised); }
 }
 
 @media (max-width: 760px) {
+  .editor-tabs { position: relative; flex-wrap: wrap; overflow: visible; }
+  .media-input-row { grid-template-columns: minmax(0, 1fr); }
+  .form-actions { position: relative; }
   .admin-layout {
     grid-template-columns: 1fr;
     grid-template-areas:

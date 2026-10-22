@@ -26,12 +26,15 @@ test('selected navigation stays sharp through flicker on desktop and mobile', as
 });
 
 test('site settings saves reel with an empty optional gallery background', async ({ page }) => {
+  await page.route('**/data/projects-data.js*', route => route.fulfill({contentType:'application/javascript', body:'const PROJECTS_DATA = [{id:"fixture",slug:"fixture",title:"Fixture",section:"featured-work",order:1,size:"16-9",published:true}];'}));
   await page.route('**/config/supabase-config.js*', route => route.fulfill({
     contentType: 'application/javascript', body: 'window.SUPABASE_CONFIG = {};'
   }));
   await page.goto('/admin');
   await page.locator('#btn-site-settings').click();
+  await page.getByRole('tab', { name: 'Section Pages', exact: true }).click();
   await page.locator('#setting-galleryBackgroundVideo').fill('');
+  await page.getByRole('tab', { name: 'Landing Page', exact: true }).click();
   const reel = 'https://media.example.com/reel-v2.mp4';
   await page.locator('#setting-landingReelVideo').fill(reel);
   await page.locator('#btn-save-site-settings').click();
@@ -81,6 +84,7 @@ test('admin saves multiple video providers and includes uploaded files in backup
   await page.route('**/config/supabase-config.js*', route => route.fulfill({ contentType: 'application/javascript', body: 'window.SUPABASE_CONFIG = {};' }));
   await page.goto('/admin');
   await page.locator('#btn-new-project').click();
+  await page.getByRole('tab', { name: 'Media', exact: true }).click();
   await expect(page.locator('#btn-upload-youtubeUrl')).toBeVisible();
   const preview = 'https://example.com/preview.webm';
   await page.locator('#field-previewVideo').fill(preview);
@@ -99,6 +103,7 @@ test('admin saves multiple video providers and includes uploaded files in backup
 });
 
 test('admin full video upload uses Supabase independently of hover media', async ({ page }) => {
+  await page.route('**/data/projects-data.js*', route => route.fulfill({contentType:'application/javascript', body:'const PROJECTS_DATA = [{id:"fixture",slug:"fixture",title:"Fixture",section:"featured-work",order:1,size:"16-9",published:true}];'}));
   await page.route('**/data/supabase-service.js*', route => route.fulfill({ contentType: 'application/javascript', body: `
     window.portfolioBackend = {
       hasCredentials: () => true, isConfigured: () => true,
@@ -112,6 +117,7 @@ test('admin full video upload uses Supabase independently of hover media', async
   await page.goto('/admin');
   await page.locator('.project-list-item').first().click();
   const previousPreview = await page.locator('#field-previewVideo').inputValue();
+  await page.getByRole('tab', { name: 'Media', exact: true }).click();
   await page.locator('#file-youtubeUrl').setInputFiles({ name: 'full.mp4', mimeType: 'video/mp4', buffer: Buffer.from('mock upload') });
   await expect(page.locator('#field-youtubeUrl')).toHaveValue('https://example.supabase.co/storage/v1/object/public/portfolio-media/full.mp4');
   expect((await page.evaluate(() => window.__upload)).folder).toMatch(/^projects\/.+\/full-video$/);
@@ -648,9 +654,10 @@ test('desktop admin keeps project navigation accessible with independent scrolli
     const pane = page.locator('.main-panel');
     const list = page.locator('#admin-project-list');
     const before = await list.boundingBox();
-    await page.locator('#field-youtubeUrl').scrollIntoViewIfNeeded();
+    await page.getByRole('tab', { name: 'Media', exact: true }).click();
     await page.locator('#btn-save').click();
-    expect(await pane.evaluate(el => el.scrollTop)).toBeGreaterThan(300);
+    await pane.evaluate(el => { el.scrollTop = el.scrollHeight; });
+    expect(await pane.evaluate(el => el.scrollTop)).toBeGreaterThan(0);
     const after = await list.boundingBox();
     expect(after.y).toBeCloseTo(before.y, 1);
     expect(after.y + after.height).toBeLessThanOrEqual(851);
@@ -678,20 +685,25 @@ test('framing previews follow thumbnail ratios and simulated hero screens', asyn
   await page.goto('/admin');
   await page.locator('#btn-new-project').click();
   for (const [size, ratio] of [['16-9', 16 / 9], ['4-3', 4 / 3], ['9-16', 9 / 16]]) {
+    await page.getByRole('tab', { name: 'Media', exact: true }).click();
     await page.locator('#field-size').selectOption(size);
     for (const mode of ['desktop', 'mobile']) {
+      await page.locator('#framing-context').selectOption(mode === 'desktop' ? '0' : '2');
       const actual = await page.locator('#' + mode + '-focus-preview').evaluate(el => {
         const r = el.getBoundingClientRect(); return r.width / r.height;
       });
       expect(actual).toBeCloseTo(ratio, 2);
     }
   }
+  await page.locator('#framing-context').selectOption('3');
   await page.getByLabel('project-mobile preview screen', { exact: true }).selectOption('412x915');
   const ratio = await page.locator('#project-mobile-focus-preview').evaluate(el => {
     const r = el.getBoundingClientRect(); return r.width / r.height;
   });
   expect(ratio).toBeCloseTo(412 / (915 * 0.7 - 68), 2);
+  await page.locator('#framing-context').selectOption('4');
   await page.locator('#field-projectDesktopFocusX').fill('23');
+  await page.locator('#framing-context').selectOption('5');
   await page.locator('#field-heroMobileFocusX').fill('78');
   await page.locator('#btn-save').click();
   const saved = await page.evaluate(() => window.adminStorage.load().projects.find(p => p.title === 'UNTITLED PROJECT'));
@@ -711,6 +723,7 @@ test('hero previews use the same fallback media as their public surfaces', async
   await page.goto('/admin');
   await page.locator('#btn-new-project').click();
   const still = 'data:image/gif;base64,R0lGODlhAQABAAAAACw=';
+  await page.getByRole('tab', { name: 'Media', exact: true }).click();
   await page.locator('[data-still-url]').first().fill(still);
   await expect(page.locator('#hero-focus-media img')).toHaveAttribute('src', still);
   await expect(page.locator('#hero-mobile-focus-media img')).toHaveAttribute('src', still);
@@ -723,6 +736,7 @@ test('hero previews use the same fallback media as their public surfaces', async
   await expect(page.locator('#project-mobile-focus-media video')).toHaveAttribute('poster', still);
   await page.locator('#field-youtubeUrl').fill('https://www.youtube.com/watch?v=dQw4w9WgXcQ');
   await expect(page.locator('#project-mobile-focus-media img')).toHaveAttribute('src', still);
+  await page.locator('#framing-context').selectOption('4');
   await page.getByLabel('project-desktop preview screen', { exact: true }).selectOption('1440x900');
   const ratio = await page.locator('#project-desktop-focus-preview').evaluate(el => {
     const r = el.getBoundingClientRect(); return r.width / r.height;
